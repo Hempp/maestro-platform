@@ -22,7 +22,7 @@ const NODE_PALETTE = [
   { type: 'action', service: 'openai', label: 'OpenAI', icon: '🤖' },
   { type: 'action', service: 'http', label: 'HTTP Request', icon: '🌐' },
   { type: 'action', service: 'code', label: 'Code Block', icon: '📝' },
-  { type: 'condition', service: 'if', label: 'If/Else', icon: '🔀' },
+  { type: 'logic', service: 'if-else', label: 'If/Else', icon: '🔀' },
   { type: 'output', service: 'display', label: 'Display Output', icon: '📤' },
 ] as const;
 
@@ -79,7 +79,7 @@ export function WorkflowSandbox({
 
   // Execute the workflow
   const executeWorkflow = useCallback(async () => {
-    onChange({ ...state, status: 'executing' });
+    onChange({ ...state, status: 'executing', executionLog: [] });
 
     try {
       const response = await fetch('/api/sandbox/execute', {
@@ -87,16 +87,31 @@ export function WorkflowSandbox({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workflow: state.workflow,
-          sessionId: state.sessionId,
         }),
       });
 
       const result = await response.json();
 
+      // Map API logs to sandbox execution log format
+      const executionLog = (result.logs || []).map((log: {
+        nodeId: string;
+        event: string;
+        message: string;
+        timestamp: string;
+        data?: unknown;
+      }) => ({
+        timestamp: new Date(log.timestamp),
+        nodeId: log.nodeId,
+        event: log.event as 'start' | 'success' | 'error' | 'skip',
+        message: log.message,
+        data: log.data,
+      }));
+
       onChange({
         ...state,
-        executionLog: result.log,
+        executionLog,
         status: result.success ? 'complete' : 'building',
+        finalOutput: result.finalOutput,
       });
     } catch (error) {
       onChange({
@@ -105,7 +120,7 @@ export function WorkflowSandbox({
           timestamp: new Date(),
           nodeId: 'system',
           event: 'error',
-          error: 'Execution failed',
+          error: error instanceof Error ? error.message : 'Execution failed',
         }],
         status: 'building',
       });
@@ -248,10 +263,12 @@ export function WorkflowSandbox({
               className={`text-xs font-mono mb-1 ${
                 entry.event === 'error' ? 'text-red-400' :
                 entry.event === 'success' ? 'text-emerald-400' :
+                entry.event === 'start' ? 'text-amber-400' :
                 'text-slate-400'
               }`}
             >
               [{entry.event.toUpperCase()}] {entry.nodeId}
+              {entry.message && `: ${entry.message}`}
               {entry.error && `: ${entry.error}`}
             </div>
           ))}
@@ -275,10 +292,11 @@ function WorkflowNodeComponent({
   onConfigChange: (config: Record<string, unknown>) => void;
   executionStatus?: 'pending' | 'running' | 'success' | 'error';
 }) {
-  const nodeColors = {
+  const nodeColors: Record<string, string> = {
     trigger: 'border-purple-500 bg-purple-500/10',
     action: 'border-blue-500 bg-blue-500/10',
     condition: 'border-amber-500 bg-amber-500/10',
+    logic: 'border-amber-500 bg-amber-500/10',
     output: 'border-emerald-500 bg-emerald-500/10',
   };
 

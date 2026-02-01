@@ -121,7 +121,7 @@ export interface SandboxChallenge {
 
 export interface WorkflowNode {
   id: string;
-  type: 'trigger' | 'action' | 'condition' | 'output';
+  type: 'trigger' | 'action' | 'condition' | 'logic' | 'output';
   service: string;
   config: Record<string, unknown>;
   position: { x: number; y: number };
@@ -228,12 +228,14 @@ export interface SandboxState {
   workflow: WorkflowNode[];
   executionLog: ExecutionLogEntry[];
   status: 'idle' | 'building' | 'executing' | 'verifying' | 'complete';
+  finalOutput?: unknown;
 }
 
 export interface ExecutionLogEntry {
   timestamp: Date;
   nodeId: string;
   event: 'start' | 'success' | 'error' | 'skip';
+  message?: string;
   data?: unknown;
   error?: string;
 }
