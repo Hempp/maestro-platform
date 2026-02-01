@@ -11,11 +11,14 @@ export default function Home() {
             <Link href="/learn" className="text-slate-400 hover:text-white transition">
               Learn
             </Link>
-            <Link href="/credentials" className="text-slate-400 hover:text-white transition">
-              Credentials
+            <Link href="/dashboard" className="text-slate-400 hover:text-white transition">
+              Dashboard
+            </Link>
+            <Link href="/verify" className="text-slate-400 hover:text-white transition">
+              Verify
             </Link>
             <Link
-              href="/onboard"
+              href="/learn?tier=student"
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition"
             >
               Get Started
@@ -91,6 +94,103 @@ export default function Home() {
                   Upon verification, we mint a Soulbound Token to your wallet.
                   Non-transferable. Employer-verifiable. Permanently yours.
                 </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* What Makes Us Different */}
+        <section className="border-t border-slate-800 py-24 bg-gradient-to-b from-slate-950 to-slate-900">
+          <div className="max-w-7xl mx-auto px-6">
+            <h2 className="text-3xl font-bold text-center mb-4">
+              What AI-Only Platforms <span className="text-red-400">Ignore</span>
+            </h2>
+            <p className="text-slate-400 text-center mb-16 max-w-2xl mx-auto">
+              We solve the problems other platforms pretend don't exist
+            </p>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Hybrid Support */}
+              <div className="p-6 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 transition">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center text-xl">
+                    🤝
+                  </div>
+                  <h3 className="font-semibold">Hybrid Support System</h3>
+                </div>
+                <p className="text-slate-400 text-sm mb-3">
+                  AI handles routine queries. Complex issues escalate to human advisors within 2 hours.
+                </p>
+                <div className="text-xs text-blue-400">AI + Human, not AI vs Human</div>
+              </div>
+
+              {/* Beginner Mode */}
+              <div className="p-6 rounded-xl bg-slate-950 border border-slate-800 hover:border-purple-500/50 transition">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center text-xl">
+                    💡
+                  </div>
+                  <h3 className="font-semibold">Foundation Mode</h3>
+                </div>
+                <p className="text-slate-400 text-sm mb-3">
+                  Every concept explains the "why" before the "how." Real-world examples, not abstract theory.
+                </p>
+                <div className="text-xs text-purple-400">Understanding, not just steps</div>
+              </div>
+
+              {/* Blockchain Certs */}
+              <div className="p-6 rounded-xl bg-slate-950 border border-slate-800 hover:border-emerald-500/50 transition">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center text-xl">
+                    ⛓️
+                  </div>
+                  <h3 className="font-semibold">On-Chain Credentials</h3>
+                </div>
+                <p className="text-slate-400 text-sm mb-3">
+                  Tamper-proof certificates on Polygon. Employers verify instantly—no middleman needed.
+                </p>
+                <div className="text-xs text-emerald-400">Unfakeable proof of skills</div>
+              </div>
+
+              {/* Adaptive Pacing */}
+              <div className="p-6 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500/50 transition">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center text-xl">
+                    ⏰
+                  </div>
+                  <h3 className="font-semibold">Adaptive Pacing</h3>
+                </div>
+                <p className="text-slate-400 text-sm mb-3">
+                  Working 40+ hours? We adjust your workload automatically. Learning fits YOUR life.
+                </p>
+                <div className="text-xs text-amber-400">No burnout, sustainable progress</div>
+              </div>
+
+              {/* Mentor Check-ins */}
+              <div className="p-6 rounded-xl bg-slate-950 border border-slate-800 hover:border-pink-500/50 transition">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-pink-500/20 rounded-lg flex items-center justify-center text-xl">
+                    👤
+                  </div>
+                  <h3 className="font-semibold">Weekly Mentor Calls</h3>
+                </div>
+                <p className="text-slate-400 text-sm mb-3">
+                  Scheduled 1:1 check-ins with human mentors. We prevent dropout, not just record it.
+                </p>
+                <div className="text-xs text-pink-400">Real humans who care</div>
+              </div>
+
+              {/* Progress Dashboard */}
+              <div className="p-6 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500/50 transition">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center text-xl">
+                    📊
+                  </div>
+                  <h3 className="font-semibold">Full Transparency</h3>
+                </div>
+                <p className="text-slate-400 text-sm mb-3">
+                  Track everything in real-time: streak, competencies, estimated completion. No hidden metrics.
+                </p>
+                <div className="text-xs text-cyan-400">Your data, your dashboard</div>
               </div>
             </div>
           </div>
@@ -220,15 +320,44 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800 py-12">
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <div className="text-slate-500">© 2025 Maestro. Built for builders.</div>
-          <div className="flex items-center gap-6 text-slate-500">
-            <Link href="/verify" className="hover:text-white transition">
-              Verify Certificate
-            </Link>
-            <Link href="/employers" className="hover:text-white transition">
-              For Employers
-            </Link>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="text-xl font-bold mb-4">MAESTRO</div>
+              <p className="text-slate-500 text-sm">
+                AI workflow mastery with blockchain-verified credentials.
+              </p>
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-slate-300 mb-4">Learn</div>
+              <div className="space-y-2 text-sm text-slate-500">
+                <Link href="/learn?tier=student" className="block hover:text-white transition">Student Path</Link>
+                <Link href="/learn?tier=employee" className="block hover:text-white transition">Employee Path</Link>
+                <Link href="/learn?tier=owner" className="block hover:text-white transition">Owner Path</Link>
+              </div>
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-slate-300 mb-4">Platform</div>
+              <div className="space-y-2 text-sm text-slate-500">
+                <Link href="/dashboard" className="block hover:text-white transition">Dashboard</Link>
+                <Link href="/verify" className="block hover:text-white transition">Verify Certificate</Link>
+                <Link href="/learn?mode=foundation" className="block hover:text-white transition">Foundation Mode</Link>
+              </div>
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-slate-300 mb-4">Compliance</div>
+              <div className="space-y-2 text-sm text-slate-500">
+                <Link href="/accessibility" className="block hover:text-white transition">Accessibility (WCAG 2.1)</Link>
+                <Link href="/privacy" className="block hover:text-white transition">Privacy (FERPA-aligned)</Link>
+              </div>
+            </div>
+          </div>
+          <div className="pt-8 border-t border-slate-800 flex items-center justify-between text-sm text-slate-500">
+            <div>© 2025 Maestro. Built for builders.</div>
+            <div className="flex items-center gap-4">
+              <span className="text-emerald-500">●</span>
+              <span>WCAG 2.1 AA Compliant</span>
+            </div>
           </div>
         </div>
       </footer>

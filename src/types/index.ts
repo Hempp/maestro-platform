@@ -248,3 +248,251 @@ export interface TutorMessage {
   suggestedAction?: string;
   timestamp: Date;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HYBRID SUPPORT SYSTEM
+// AI handles routine, escalates complex to human advisors within 2 hours
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type SupportTicketStatus = 'pending' | 'ai_handling' | 'escalated' | 'human_assigned' | 'resolved';
+export type SupportPriority = 'low' | 'medium' | 'high' | 'critical';
+
+export interface SupportTicket {
+  id: string;
+  learnerId: string;
+  subject: string;
+  description: string;
+  category: 'technical' | 'content' | 'billing' | 'career' | 'other';
+  status: SupportTicketStatus;
+  priority: SupportPriority;
+  aiAttempts: number;
+  escalatedAt?: Date;
+  humanAdvisorId?: string;
+  estimatedResponseTime?: Date; // Within 2 hours for escalated
+  resolution?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SupportEscalationTrigger {
+  type: 'repeated_question' | 'sentiment_negative' | 'complexity_high' | 'explicit_request' | 'stuck_too_long';
+  threshold: number;
+  description: string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BEGINNER FOUNDATION MODE
+// Explains 'why' behind every concept, not just steps
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type LearningMode = 'foundation' | 'standard' | 'advanced';
+
+export interface FoundationContent {
+  akuId: string;
+  whyItMatters: string; // Real-world relevance
+  conceptOrigin: string; // Where this concept comes from
+  commonMisconceptions: string[];
+  realWorldExample: string;
+  prerequisiteKnowledge: string[];
+  businessImpact: string; // How this affects your career/business
+}
+
+export interface AKUWithFoundation extends AtomicKnowledgeUnit {
+  foundation?: FoundationContent;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BLOCKCHAIN-VERIFIED CERTIFICATIONS
+// Tamper-proof credentials employers can instantly verify on-chain
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type CertificationLevel = 'associate' | 'professional' | 'expert';
+
+export interface BlockchainCertificate {
+  tokenId: string;
+  contractAddress: string;
+  chain: 'polygon' | 'ethereum' | 'base';
+  holderAddress: string;
+
+  // Certificate details
+  certificationName: string;
+  level: CertificationLevel;
+  issueDate: Date;
+  expiryDate?: Date; // Some certs may expire
+
+  // Competency breakdown
+  competencies: {
+    name: string;
+    level: number; // 1-5
+    verifiedAt: Date;
+  }[];
+
+  // Anti-gaming metrics
+  struggleScore: number;
+  totalLearningTime: number; // hours
+  akusCompleted: number;
+
+  // Verification
+  ipfsMetadataHash: string;
+  transactionHash: string;
+  maestroSignature: string;
+
+  // Employer verification
+  verificationUrl: string;
+  qrCode: string;
+}
+
+export interface EmployerVerificationResult {
+  valid: boolean;
+  certificate?: BlockchainCertificate;
+  verifiedAt: Date;
+  verificationMethod: 'on_chain' | 'api' | 'qr_code';
+  warning?: string; // e.g., "Certificate expired"
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADAPTIVE PACING ENGINE
+// Adjusts workload for students working 40+ hrs/week
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type WorkSchedule = 'full_time_student' | 'part_time_worker' | 'full_time_worker' | 'overtime_worker';
+
+export interface LearnerSchedule {
+  learnerId: string;
+  workHoursPerWeek: number;
+  preferredLearningDays: ('mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun')[];
+  preferredLearningTimes: { start: string; end: string }[]; // e.g., "19:00" - "21:00"
+  timezone: string;
+  workSchedule: WorkSchedule;
+
+  // Adaptive settings
+  maxDailyLearningMinutes: number;
+  breakReminders: boolean;
+  weekendIntensive: boolean; // Allow longer sessions on weekends
+}
+
+export interface PacingRecommendation {
+  learnerId: string;
+  suggestedDailyMinutes: number;
+  suggestedAKUsPerWeek: number;
+  estimatedCompletionDate: Date;
+  burnoutRisk: 'low' | 'medium' | 'high';
+  recommendations: string[];
+
+  // Weekly plan
+  weeklyPlan: {
+    day: string;
+    akuIds: string[];
+    estimatedMinutes: number;
+  }[];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WEEKLY HUMAN MENTOR CHECK-INS
+// Scheduled 1:1 calls to prevent dropout
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type MentorSpecialty = 'career' | 'technical' | 'business' | 'general';
+export type CheckInStatus = 'scheduled' | 'completed' | 'missed' | 'rescheduled' | 'cancelled';
+
+export interface Mentor {
+  id: string;
+  name: string;
+  title: string;
+  specialty: MentorSpecialty[];
+  bio: string;
+  avatarUrl: string;
+  calendlyUrl: string;
+  maxWeeklySlots: number;
+  timezone: string;
+  languages: string[];
+}
+
+export interface MentorCheckIn {
+  id: string;
+  learnerId: string;
+  mentorId: string;
+  scheduledAt: Date;
+  duration: number; // minutes, typically 15-30
+  status: CheckInStatus;
+
+  // Pre-call info
+  learnerGoals: string[];
+  currentChallenges: string[];
+  progressSinceLastCall: {
+    akusCompleted: number;
+    struggleAreas: string[];
+    wins: string[];
+  };
+
+  // Post-call
+  notes?: string;
+  actionItems?: string[];
+  nextCheckInSuggested?: Date;
+  dropoutRisk?: 'low' | 'medium' | 'high';
+}
+
+export interface MentorMatchCriteria {
+  learnerTier: BusinessTier;
+  learnerGoals: string[];
+  preferredLanguage: string;
+  timezone: string;
+  specialtyNeeded?: MentorSpecialty;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROGRESS TRANSPARENCY DASHBOARD
+// Track your learning journey in real-time
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface ProgressDashboard {
+  learnerId: string;
+
+  // Overview
+  totalLearningTime: number; // hours
+  currentStreak: number; // days
+  longestStreak: number;
+
+  // Completion stats
+  akusCompleted: number;
+  akusTotal: number;
+  competenciesEarned: number;
+  certificatesEarned: number;
+
+  // Performance
+  averageStruggleScore: number;
+  hintsUsedTotal: number;
+  verificationAttempts: number;
+  firstTrySuccessRate: number; // percentage
+
+  // Time analysis
+  averageTimePerAKU: number; // minutes
+  fastestAKU: { id: string; title: string; time: number };
+  slowestAKU: { id: string; title: string; time: number };
+
+  // Weekly activity
+  weeklyActivity: {
+    date: string;
+    minutesLearned: number;
+    akusCompleted: number;
+  }[];
+
+  // Competency radar
+  competencyLevels: {
+    category: AKUCategory;
+    currentLevel: number; // 1-5
+    targetLevel: number;
+  }[];
+
+  // Milestones
+  milestones: {
+    name: string;
+    description: string;
+    achievedAt?: Date;
+    progress: number; // 0-100
+  }[];
+
+  // Predictions
+  estimatedCertificationDate?: Date;
+  predictedFinalStruggleScore?: number;
+}
