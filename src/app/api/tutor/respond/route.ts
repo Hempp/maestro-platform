@@ -47,21 +47,30 @@ export async function POST(request: NextRequest) {
       message,
       sandboxState,
       akuId,
-      conversationHistory,
+      conversationHistory = [],
     }: {
       message: string;
-      sandboxState: SandboxState;
-      akuId: string;
-      conversationHistory: TutorMessage[];
+      sandboxState?: SandboxState;
+      akuId?: string;
+      conversationHistory?: TutorMessage[];
     } = body;
 
+    if (!message) {
+      return NextResponse.json(
+        { error: 'Message is required' },
+        { status: 400 }
+      );
+    }
+
     // Build context about the sandbox
-    const sandboxContext = buildSandboxContext(sandboxState);
+    const sandboxContext = sandboxState
+      ? buildSandboxContext(sandboxState)
+      : 'No sandbox state provided.';
 
     // Build conversation for OpenAI
     const messages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: SOCRATIC_SYSTEM_PROMPT },
-      { role: 'system', content: `Current sandbox state: ${sandboxContext}` },
+      { role: 'system', content: `Current sandbox state: ${sandboxContext}${akuId ? ` Current AKU: ${akuId}` : ''}` },
       ...conversationHistory.map(msg => ({
         role: msg.role === 'tutor' ? 'assistant' as const : 'user' as const,
         content: msg.content,
@@ -70,7 +79,7 @@ export async function POST(request: NextRequest) {
     ];
 
     const response = await getOpenAI().chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages,
       max_tokens: 200,
       temperature: 0.7,
@@ -82,8 +91,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ response: tutorResponse });
   } catch (error) {
     console.error('Tutor API error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to generate response' },
+      { error: 'Failed to generate response', details: errorMessage },
       { status: 500 }
     );
   }
