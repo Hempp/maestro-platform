@@ -345,6 +345,140 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Success Stories */}
+        <section className="py-24 px-6 border-t border-slate-800">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-sm mb-4">
+                <span className="text-emerald-400">Real Results</span>
+              </div>
+              <h2 className="text-4xl font-bold mb-4">Success Stories</h2>
+              <p className="text-slate-400 text-lg">See how Phazur graduates are commanding AI in the real world</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              {/* Story 1: Student Path */}
+              <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-6 hover:border-purple-500/30 transition">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                    MR
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white">Marcus Rodriguez</div>
+                    <div className="text-sm text-slate-500">Career Switcher → Junior Dev</div>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <span className="inline-block px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full">
+                    Certified AI Associate
+                  </span>
+                </div>
+                <p className="text-slate-400 text-sm mb-4 leading-relaxed">
+                  "I was a barista with zero coding experience. Phazur taught me to build with Claude Code,
+                  not just chat with it. <span className="text-white">3 months later, I landed a $75k junior dev role.</span>
+                  The SBT on my LinkedIn was the conversation starter in every interview."
+                </p>
+                <div className="flex items-center gap-4 text-xs text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <span className="text-emerald-400">↑</span>
+                    <span>$75k starting salary</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-emerald-400">✓</span>
+                    <span>3 months to hire</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Story 2: Employee Path */}
+              <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-blue-500/30 rounded-2xl p-6 hover:border-blue-500/50 transition">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
+                    SK
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white">Sarah Kim</div>
+                    <div className="text-sm text-slate-500">Marketing Manager → AI Lead</div>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <span className="inline-block px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+                    Workflow Efficiency Lead
+                  </span>
+                </div>
+                <p className="text-slate-400 text-sm mb-4 leading-relaxed">
+                  "I was drowning in reports and emails. Now I have AI agents that
+                  <span className="text-white"> save me 12 hours every week.</span> My boss noticed.
+                  I got promoted to lead our company's AI initiatives—with a 40% raise."
+                </p>
+                <div className="flex items-center gap-4 text-xs text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <span className="text-emerald-400">↑</span>
+                    <span>12 hrs/week saved</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-emerald-400">✓</span>
+                    <span>40% salary increase</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Story 3: Owner Path */}
+              <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-6 hover:border-emerald-500/30 transition">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold">
+                    JP
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white">James Park</div>
+                    <div className="text-sm text-slate-500">Agency Owner → AI-First CEO</div>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <span className="inline-block px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full">
+                    AI Operations Master
+                  </span>
+                </div>
+                <p className="text-slate-400 text-sm mb-4 leading-relaxed">
+                  "I had 8 employees doing research and outreach. Now I have 2 employees and
+                  <span className="text-white"> 6 AI agents that work 24/7.</span> Revenue is up 3x,
+                  payroll is down 60%. The Operations Master credential proved I knew what I was doing."
+                </p>
+                <div className="flex items-center gap-4 text-xs text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <span className="text-emerald-400">↑</span>
+                    <span>3x revenue</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-emerald-400">↓</span>
+                    <span>60% payroll reduction</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats Bar */}
+            <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 p-6 bg-slate-900/50 rounded-2xl border border-slate-800">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-white mb-1">2,847</div>
+                <div className="text-sm text-slate-500">Certificates Minted</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-emerald-400 mb-1">94%</div>
+                <div className="text-sm text-slate-500">Completion Rate</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-400 mb-1">$52k</div>
+                <div className="text-sm text-slate-500">Avg. Salary Increase</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-400 mb-1">14 hrs</div>
+                <div className="text-sm text-slate-500">Avg. Weekly Time Saved</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Micro-Credentials */}
         <section className="py-24 px-6 border-t border-slate-800">
           <div className="max-w-5xl mx-auto">
