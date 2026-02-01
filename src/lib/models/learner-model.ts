@@ -19,7 +19,7 @@ import type {
 
 export class LearnerModelService {
   private pinecone: Pinecone;
-  private indexName = 'maestro-learners';
+  private indexName = 'phazur-learners';
 
   constructor() {
     this.pinecone = new Pinecone({
@@ -66,7 +66,7 @@ export class LearnerModelService {
         conditionalLogic: 0,
         chainOfThought: 0,
       },
-      preferredLearningStyle: 'hands-on', // Default for Maestro
+      preferredLearningStyle: 'hands-on', // Default for Phazur
       struggleAreas: [],
       masteredConcepts: [],
     };

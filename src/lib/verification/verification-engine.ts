@@ -273,9 +273,9 @@ export class VerificationEngine {
     const tier = this.getCertificateTier(result.struggleScore);
 
     return {
-      name: `Maestro Mastery: ${masteryPath}`,
-      description: `Verified completion of the ${masteryPath} mastery path on Maestro AI Academy. This Soulbound Token certifies hands-on competency in AI workflow deployment.`,
-      image: `ipfs://maestro-certificates/${tier.toLowerCase()}-badge.png`,
+      name: `Phazur Mastery: ${masteryPath}`,
+      description: `Verified completion of the ${masteryPath} mastery path on Phazur AI Academy. This Soulbound Token certifies hands-on competency in AI workflow deployment.`,
+      image: `ipfs://phazur-certificates/${tier.toLowerCase()}-badge.png`,
       attributes: [
         { trait_type: 'Mastery Path', value: masteryPath },
         { trait_type: 'Completion Tier', value: tier },
@@ -285,7 +285,7 @@ export class VerificationEngine {
         { trait_type: 'AKUs Completed', value: allCompletedAKUs.length },
         { trait_type: 'Verification Date', value: result.timestamp.toISOString() },
       ],
-      maestro: {
+      phazur: {
         masteryPath,
         akusCompleted: allCompletedAKUs,
         struggleScore: result.struggleScore,

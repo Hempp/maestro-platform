@@ -27,7 +27,7 @@ export function ProgressSidebar() {
     <div className="w-60 h-full bg-slate-900 border-r border-slate-800 flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-slate-800">
-        <div className="text-xl font-bold text-white mb-1">MAESTRO</div>
+        <div className="text-xl font-bold text-white mb-1">PHAZUR</div>
         {tierInfo && (
           <div className="text-xs text-slate-500 uppercase tracking-wide">
             {tierInfo.deliverable}

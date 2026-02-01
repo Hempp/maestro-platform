@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * MAESTRO WORKSPACE
+ * PHAZUR WORKSPACE
  * Split-screen learning environment:
  * - Left: Socratic AI Tutor
  * - Right: Workflow Sandbox
@@ -12,17 +12,17 @@ import { SocraticTutor } from '@/components/tutor/SocraticTutor';
 import { WorkflowSandbox } from '@/components/sandbox/WorkflowSandbox';
 import type { AtomicKnowledgeUnit, SandboxState, TutorMessage } from '@/types';
 
-interface MaestroWorkspaceProps {
+interface PhazurWorkspaceProps {
   aku: AtomicKnowledgeUnit;
   learnerId: string;
   onComplete: (sandboxState: SandboxState) => void;
 }
 
-export function MaestroWorkspace({
+export function PhazurWorkspace({
   aku,
   learnerId,
   onComplete,
-}: MaestroWorkspaceProps) {
+}: PhazurWorkspaceProps) {
   const [sandboxState, setSandboxState] = useState<SandboxState>({
     learnerId,
     sessionId: crypto.randomUUID(),
@@ -113,7 +113,7 @@ export function MaestroWorkspace({
       {/* Header */}
       <header className="h-14 border-b border-slate-800 flex items-center justify-between px-6">
         <div className="flex items-center gap-4">
-          <span className="text-xl font-bold text-white">MAESTRO</span>
+          <span className="text-xl font-bold text-white">PHAZUR</span>
           <span className="text-slate-500">|</span>
           <span className="text-slate-400">{aku.title}</span>
         </div>

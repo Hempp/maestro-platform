@@ -54,9 +54,9 @@ const CERTIFICATES: Record<string, CertificateWithPath> = {
 
     ipfsMetadataHash: 'QmStudent1234567890abcdefghijklmnopqrstuvw',
     transactionHash: '0x' + 'a'.repeat(64),
-    maestroSignature: '0xsig' + 'b'.repeat(128),
+    phazurSignature: '0xsig' + 'b'.repeat(128),
 
-    verificationUrl: 'https://maestro.ai/verify/student-demo',
+    verificationUrl: 'https://phazur.ai/verify/student-demo',
     qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...',
   },
 
@@ -90,9 +90,9 @@ const CERTIFICATES: Record<string, CertificateWithPath> = {
 
     ipfsMetadataHash: 'QmDemo1234567890abcdefghijklmnopqrstuvwxyz',
     transactionHash: '0x' + 'a'.repeat(64),
-    maestroSignature: '0xsig' + 'b'.repeat(128),
+    phazurSignature: '0xsig' + 'b'.repeat(128),
 
-    verificationUrl: 'https://maestro.ai/verify/demo',
+    verificationUrl: 'https://phazur.ai/verify/demo',
     qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...',
   },
 
@@ -127,9 +127,9 @@ const CERTIFICATES: Record<string, CertificateWithPath> = {
 
     ipfsMetadataHash: 'QmElite234567890abcdefghijklmnopqrstuvwxyz',
     transactionHash: '0x' + 'c'.repeat(64),
-    maestroSignature: '0xsig' + 'd'.repeat(128),
+    phazurSignature: '0xsig' + 'd'.repeat(128),
 
-    verificationUrl: 'https://maestro.ai/verify/elite',
+    verificationUrl: 'https://phazur.ai/verify/elite',
     qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...',
   },
 };

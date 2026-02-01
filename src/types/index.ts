@@ -1,5 +1,5 @@
 /**
- * MAESTRO-X TYPE DEFINITIONS
+ * PHAZUR TYPE DEFINITIONS
  * Core type system for the AI Workflow Mastery Platform
  */
 
@@ -207,8 +207,8 @@ export interface SBTMetadata {
     value: string | number;
   }[];
 
-  // Maestro-X specific
-  maestro: {
+  // Phazur specific
+  phazur: {
     masteryPath: string;
     akusCompleted: string[];
     struggleScore: number;
@@ -421,7 +421,7 @@ export interface BlockchainCertificate {
   // Verification
   ipfsMetadataHash: string;
   transactionHash: string;
-  maestroSignature: string;
+  phazurSignature: string;
 
   // Employer verification
   verificationUrl: string;

@@ -1,5 +1,5 @@
 /**
- * MAESTRO-X THREE-MODEL ARCHITECTURE
+ * PHAZUR THREE-MODEL ARCHITECTURE
  *
  * The core intelligence of the platform:
  * 1. Learner Model - Tracks "Interaction DNA" for each user

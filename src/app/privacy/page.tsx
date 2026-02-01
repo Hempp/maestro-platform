@@ -16,7 +16,7 @@ export default function PrivacyPage() {
       <header className="border-b border-slate-800 bg-slate-900">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <a href="/" className="text-xl font-bold text-white">
-            MAESTRO
+            PHAZUR
           </a>
         </div>
       </header>
@@ -29,8 +29,8 @@ export default function PrivacyPage() {
           <section className="mb-8">
             <h2 className="text-xl font-bold text-white mb-4">1. Educational Records Protection</h2>
             <p className="text-slate-300 mb-4">
-              Maestro is committed to protecting your educational records in alignment with
-              the Family Educational Rights and Privacy Act (FERPA) principles. While Maestro
+              Phazur is committed to protecting your educational records in alignment with
+              the Family Educational Rights and Privacy Act (FERPA) principles. While Phazur
               is not a FERPA-covered institution, we voluntarily adopt these standards to
               ensure the highest level of privacy protection for our learners.
             </p>
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
               <li>Certification name and date</li>
               <li>Competency levels achieved</li>
               <li>Struggle score</li>
-              <li>Maestro verification signature</li>
+              <li>Phazur verification signature</li>
             </ul>
             <p className="text-slate-400 mt-4 text-sm">
               Note: Blockchain data is immutable and cannot be deleted. Do not mint
@@ -132,7 +132,7 @@ export default function PrivacyPage() {
           <section className="mb-8">
             <h2 className="text-xl font-bold text-white mb-4">8. Children&apos;s Privacy</h2>
             <p className="text-slate-300">
-              Maestro is not intended for users under 13 years of age. We do not knowingly
+              Phazur is not intended for users under 13 years of age. We do not knowingly
               collect personal information from children under 13. If you believe we have
               collected such information, please contact us immediately.
             </p>
@@ -143,7 +143,7 @@ export default function PrivacyPage() {
             <p className="text-slate-300">
               For privacy-related inquiries or to exercise your rights:
             </p>
-            <p className="text-blue-400 mt-2">privacy@maestro.ai</p>
+            <p className="text-blue-400 mt-2">privacy@phazur.ai</p>
           </section>
         </div>
       </main>

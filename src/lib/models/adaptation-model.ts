@@ -168,7 +168,7 @@ export class AdaptationModelService {
     currentAKU: AtomicKnowledgeUnit,
     signals: { lastError?: string }
   ): Promise<string> {
-    const prompt = `You are a Socratic AI tutor for the Maestro platform.
+    const prompt = `You are a Socratic AI tutor for the Phazur platform.
 
 The learner is struggling with: "${currentAKU.title}"
 Their learning style preference: ${learner.interactionDNA.preferredLearningStyle}

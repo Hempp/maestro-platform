@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * PROGRESS TRANSPARENCY DASHBOARD
- * Real-time learning journey tracking
+ * PHAZUR ACADEMY DASHBOARD
+ * Real-time learning journey tracking with progress transparency
  */
 
 import { useEffect, useState } from 'react';
@@ -52,30 +52,51 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-xl font-bold text-white">
-              MAESTRO
+      {/* Header - Matches Landing Page */}
+      <header className="border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50">
+        <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="text-2xl font-bold tracking-tight text-white hover:text-blue-400 transition">
+              PHAZUR
             </Link>
-            <span className="text-slate-600">|</span>
-            <span className="text-slate-400">Progress Dashboard</span>
+            <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-full font-mono">
+              DASHBOARD
+            </span>
           </div>
-          <Link
-            href="/learn"
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition"
-          >
-            Continue Learning
-          </Link>
-        </div>
+          <div className="flex items-center gap-6">
+            <Link href="/" className="text-slate-400 hover:text-white transition text-sm">
+              Home
+            </Link>
+            <Link href="/guide/copilot" className="text-cyan-400 hover:text-cyan-300 transition text-sm font-medium">
+              Phazur
+            </Link>
+            <Link href="/terminal" className="text-slate-400 hover:text-white transition text-sm">
+              Terminal
+            </Link>
+            <Link
+              href="/learn"
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg font-medium transition"
+            >
+              Continue Learning
+            </Link>
+          </div>
+        </nav>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Your Learning Journey</h1>
+          <p className="text-slate-400">Track your progress toward AI mastery and certification</p>
+        </div>
+
         {/* Insights Banner */}
         {insights.length > 0 && (
-          <div className="mb-8 p-4 bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-700/50 rounded-xl">
-            <h2 className="text-sm font-semibold text-blue-400 mb-2">Insights</h2>
+          <div className="mb-8 p-4 bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-xl">
+            <h2 className="text-sm font-semibold text-blue-400 mb-2 flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+              AI Insights
+            </h2>
             <div className="space-y-1">
               {insights.map((insight, i) => (
                 <p key={i} className="text-slate-300 text-sm">{insight}</p>
@@ -116,8 +137,11 @@ export default function DashboardPage() {
         {/* Main Content Grid */}
         <div className="grid md:grid-cols-3 gap-6">
           {/* Weekly Activity */}
-          <div className="md:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Weekly Activity</h3>
+          <div className="md:col-span-2 bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <span className="w-2 h-2 bg-emerald-400 rounded-full" />
+              Weekly Activity
+            </h3>
             <div className="flex items-end gap-2 h-40">
               {dashboard?.weeklyActivity.map((day, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center">
@@ -140,8 +164,11 @@ export default function DashboardPage() {
           </div>
 
           {/* Performance Stats */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Performance</h3>
+          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-400 rounded-full" />
+              Performance
+            </h3>
             <div className="space-y-4">
               <ProgressItem
                 label="First-Try Success"
@@ -170,8 +197,11 @@ export default function DashboardPage() {
           </div>
 
           {/* Competency Radar */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Competencies</h3>
+          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <span className="w-2 h-2 bg-purple-400 rounded-full" />
+              Competencies
+            </h3>
             <div className="space-y-3">
               {dashboard?.competencyLevels.map((comp) => (
                 <div key={comp.category}>
@@ -195,8 +225,11 @@ export default function DashboardPage() {
           </div>
 
           {/* Milestones */}
-          <div className="md:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Milestones</h3>
+          <div className="md:col-span-2 bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <span className="w-2 h-2 bg-emerald-400 rounded-full" />
+              Milestones
+            </h3>
             <div className="space-y-4">
               {dashboard?.milestones.map((milestone, i) => (
                 <div key={i} className="flex items-center gap-4">
@@ -250,41 +283,83 @@ export default function DashboardPage() {
         )}
 
         {/* Quick Actions */}
-        <div className="mt-8 grid md:grid-cols-3 gap-4">
-          <Link
-            href="/learn"
-            className="p-4 bg-slate-900 border border-slate-800 rounded-xl hover:border-emerald-500/50 transition group"
-          >
-            <div className="text-2xl mb-2">📚</div>
-            <h4 className="font-semibold text-white group-hover:text-emerald-400 transition">
-              Continue Learning
-            </h4>
-            <p className="text-sm text-slate-500">Pick up where you left off</p>
-          </Link>
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+          <div className="grid md:grid-cols-4 gap-4">
+            <Link
+              href="/guide/copilot"
+              className="group relative p-6 bg-gradient-to-b from-slate-900 to-slate-950 border border-cyan-500/30 rounded-xl hover:border-cyan-500/50 transition-all duration-300"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-t-xl" />
+              <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mb-4">
+                <span className="text-white text-xl font-bold">P</span>
+              </div>
+              <h4 className="font-semibold text-white group-hover:text-cyan-400 transition mb-1">
+                Talk to Phazur
+              </h4>
+              <p className="text-sm text-slate-500">Your AI learning coach</p>
+            </Link>
 
-          <Link
-            href="/support"
-            className="p-4 bg-slate-900 border border-slate-800 rounded-xl hover:border-blue-500/50 transition group"
-          >
-            <div className="text-2xl mb-2">💬</div>
-            <h4 className="font-semibold text-white group-hover:text-blue-400 transition">
-              Get Support
-            </h4>
-            <p className="text-sm text-slate-500">AI help or human advisor</p>
-          </Link>
+            <Link
+              href="/learn"
+              className="group relative p-6 bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-xl hover:border-emerald-500/50 transition-all duration-300"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-t-xl opacity-0 group-hover:opacity-100 transition" />
+              <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center mb-4">
+                <span className="text-2xl">📚</span>
+              </div>
+              <h4 className="font-semibold text-white group-hover:text-emerald-400 transition mb-1">
+                Continue Learning
+              </h4>
+              <p className="text-sm text-slate-500">Pick up where you left off</p>
+            </Link>
 
-          <Link
-            href="/mentor"
-            className="p-4 bg-slate-900 border border-slate-800 rounded-xl hover:border-purple-500/50 transition group"
-          >
-            <div className="text-2xl mb-2">👤</div>
-            <h4 className="font-semibold text-white group-hover:text-purple-400 transition">
-              Schedule Mentor Call
-            </h4>
-            <p className="text-sm text-slate-500">Weekly 1:1 check-in</p>
-          </Link>
+            <Link
+              href="/terminal"
+              className="group relative p-6 bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-xl hover:border-blue-500/50 transition-all duration-300"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-t-xl opacity-0 group-hover:opacity-100 transition" />
+              <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-4">
+                <span className="text-2xl font-mono text-blue-400">$_</span>
+              </div>
+              <h4 className="font-semibold text-white group-hover:text-blue-400 transition mb-1">
+                Open Terminal
+              </h4>
+              <p className="text-sm text-slate-500">Practice AI commands</p>
+            </Link>
+
+            <Link
+              href="/verify"
+              className="group relative p-6 bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-xl hover:border-purple-500/50 transition-all duration-300"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-t-xl opacity-0 group-hover:opacity-100 transition" />
+              <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-4">
+                <span className="text-2xl">🔗</span>
+              </div>
+              <h4 className="font-semibold text-white group-hover:text-purple-400 transition mb-1">
+                Verify Certificate
+              </h4>
+              <p className="text-sm text-slate-500">Check blockchain credentials</p>
+            </Link>
+          </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-800 py-8 mt-12">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+          <div>© 2025 Phazur Academy. Build first, pay later.</div>
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1">
+              <span className="text-emerald-500">●</span>
+              Polygon Network
+            </span>
+            <Link href="/verify" className="hover:text-white transition">
+              Verify Certificate
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

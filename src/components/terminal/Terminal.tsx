@@ -3,7 +3,7 @@
 /**
  * PHAZUR_OS TERMINAL
  * Interactive terminal interface with typing animation
- * Single-click entry point for Maestro platform
+ * Single-click entry point for Phazur platform
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -48,7 +48,7 @@ export default function Terminal({
         { id: '4', type: 'system', content: 'Socratic Tutor Module... READY' },
         { id: '5', type: 'success', content: '' },
         { id: '6', type: 'success', content: '████████████████████████████████████████' },
-        { id: '7', type: 'success', content: '  PHAZUR_OS v2.0 LOADED - MAESTRO READY  ' },
+        { id: '7', type: 'success', content: '  PHAZUR_OS v2.0 LOADED - PHAZUR READY   ' },
         { id: '8', type: 'success', content: '████████████████████████████████████████' },
         { id: '9', type: 'system', content: '' },
         { id: '10', type: 'prompt', content: 'What is your primary goal?' },
@@ -224,7 +224,7 @@ export default function Terminal({
             <div className="w-3 h-3 rounded-full bg-green-500" />
           </div>
           <div className="flex-1 text-center text-slate-500 text-xs">
-            PHAZUR_OS v2.0 - Maestro AI Terminal
+            PHAZUR_OS v2.0 - Phazur AI Terminal
           </div>
         </div>
 
@@ -242,7 +242,7 @@ export default function Terminal({
           {/* Input Line */}
           {!isBooting && (
             <div className="flex items-center mt-2">
-              <span className="text-emerald-400 mr-2">maestro@phazur:~$</span>
+              <span className="text-emerald-400 mr-2">phazur@ai:~$</span>
               <input
                 ref={inputRef}
                 type="text"

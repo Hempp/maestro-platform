@@ -27,9 +27,9 @@ export default function Home() {
             <a href="#paths" className="text-slate-400 hover:text-white transition text-sm">
               Paths
             </a>
-            <a href="#why" className="text-slate-400 hover:text-white transition text-sm">
-              Why Phazur
-            </a>
+            <Link href="/guide/copilot" className="text-cyan-400 hover:text-cyan-300 transition text-sm font-medium">
+              Meet Phazur
+            </Link>
             <Link href="/verify" className="text-slate-400 hover:text-white transition text-sm">
               Verify
             </Link>
@@ -71,10 +71,11 @@ export default function Home() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/learn?tier=student"
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl text-lg font-semibold transition-all hover:scale-105 shadow-lg shadow-blue-500/25"
+                href="/guide/copilot"
+                className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl text-lg font-semibold transition-all hover:scale-105 shadow-lg shadow-cyan-500/25 flex items-center gap-2"
               >
-                Start Building for Free
+                <span className="text-xl font-bold">P</span>
+                Talk to Phazur
               </Link>
               <Link
                 href="/terminal"
@@ -561,6 +562,7 @@ export default function Home() {
             <div>
               <div className="text-sm font-semibold text-slate-300 mb-4">Platform</div>
               <div className="space-y-2 text-sm text-slate-500">
+                <Link href="/guide/copilot" className="block hover:text-cyan-400 transition text-cyan-400/70">Meet Phazur</Link>
                 <Link href="/terminal" className="block hover:text-white transition">Terminal</Link>
                 <Link href="/dashboard" className="block hover:text-white transition">Dashboard</Link>
                 <Link href="/verify" className="block hover:text-white transition">Verify Certificate</Link>

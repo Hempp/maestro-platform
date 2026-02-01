@@ -191,7 +191,7 @@ function checkImmediateEscalation(subject: string, description: string): boolean
 }
 
 async function generateAIResponse(ticket: SupportTicket, followUp?: string): Promise<string> {
-  const systemPrompt = `You are a helpful support assistant for Maestro, an AI workflow learning platform.
+  const systemPrompt = `You are a helpful support assistant for Phazur, an AI workflow learning platform.
 
 Your role:
 1. Answer questions about the platform, courses, and features

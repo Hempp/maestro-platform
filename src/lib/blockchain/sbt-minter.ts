@@ -54,7 +54,7 @@ export class SBTMinter {
         completedAKUs
       );
 
-      // Sign the verification (proves Maestro verified this)
+      // Sign the verification (proves Phazur verified this)
       const signedMetadata = await this.signMetadata(metadata);
 
       // Get the contract
@@ -67,7 +67,7 @@ export class SBTMinter {
         image: signedMetadata.image,
         attributes: signedMetadata.attributes,
         properties: {
-          maestro: signedMetadata.maestro,
+          phazur: signedMetadata.phazur,
         },
       });
 
@@ -87,19 +87,19 @@ export class SBTMinter {
   }
 
   /**
-   * Sign metadata with Maestro's verification signature
+   * Sign metadata with Phazur's verification signature
    */
   private async signMetadata(metadata: SBTMetadata): Promise<SBTMetadata> {
     // Create a hash of the critical verification data
     const verificationPayload = JSON.stringify({
-      masteryPath: metadata.maestro.masteryPath,
-      akusCompleted: metadata.maestro.akusCompleted,
-      struggleScore: metadata.maestro.struggleScore,
-      deploymentTimestamp: metadata.maestro.deploymentTimestamp,
-      workflowHash: metadata.maestro.workflowHash,
+      masteryPath: metadata.phazur.masteryPath,
+      akusCompleted: metadata.phazur.akusCompleted,
+      struggleScore: metadata.phazur.struggleScore,
+      deploymentTimestamp: metadata.phazur.deploymentTimestamp,
+      workflowHash: metadata.phazur.workflowHash,
     });
 
-    // Sign with the Maestro wallet
+    // Sign with the Phazur wallet
     const signer = this.sdk.getSigner();
     if (!signer) {
       throw new Error('No signer available');
@@ -109,8 +109,8 @@ export class SBTMinter {
 
     return {
       ...metadata,
-      maestro: {
-        ...metadata.maestro,
+      phazur: {
+        ...metadata.phazur,
         verificationSignature: signature,
       },
     };
@@ -153,28 +153,28 @@ export class SBTMinter {
   }
 
   /**
-   * Verify the Maestro signature on certificate metadata
+   * Verify the Phazur signature on certificate metadata
    */
   private async verifySignature(metadata: SBTMetadata): Promise<boolean> {
     try {
       const verificationPayload = JSON.stringify({
-        masteryPath: metadata.maestro.masteryPath,
-        akusCompleted: metadata.maestro.akusCompleted,
-        struggleScore: metadata.maestro.struggleScore,
-        deploymentTimestamp: metadata.maestro.deploymentTimestamp,
-        workflowHash: metadata.maestro.workflowHash,
+        masteryPath: metadata.phazur.masteryPath,
+        akusCompleted: metadata.phazur.akusCompleted,
+        struggleScore: metadata.phazur.struggleScore,
+        deploymentTimestamp: metadata.phazur.deploymentTimestamp,
+        workflowHash: metadata.phazur.workflowHash,
       });
 
       // Recover the signer address from the signature (ethers v5)
       const { utils } = await import('ethers');
       const recoveredAddress = utils.verifyMessage(
         verificationPayload,
-        metadata.maestro.verificationSignature
+        metadata.phazur.verificationSignature
       );
 
-      // Compare with known Maestro verification address
-      const maestroVerifierAddress = process.env.MAESTRO_VERIFIER_ADDRESS;
-      return recoveredAddress.toLowerCase() === maestroVerifierAddress?.toLowerCase();
+      // Compare with known Phazur verification address
+      const phazurVerifierAddress = process.env.PHAZUR_VERIFIER_ADDRESS;
+      return recoveredAddress.toLowerCase() === phazurVerifierAddress?.toLowerCase();
     } catch {
       return false;
     }
@@ -210,7 +210,7 @@ export class SBTMinter {
   ): Promise<boolean> {
     const certificates = await this.getCertificatesForWallet(walletAddress);
     return certificates.some(
-      cert => cert.metadata.maestro.masteryPath === masteryPath
+      cert => cert.metadata.phazur.masteryPath === masteryPath
     );
   }
 }
@@ -227,7 +227,7 @@ export const sbtMinter = new SBTMinter();
  * 1. Base: ERC721 Non-Transferable
  * 2. Network: Polygon (or Mumbai for testnet)
  * 3. Features:
- *    - Minting restricted to Maestro wallet
+ *    - Minting restricted to Phazur wallet
  *    - Transfer disabled (Soulbound)
  *    - Burn enabled (in case of revocation)
  *    - Metadata on IPFS
@@ -236,7 +236,7 @@ export const sbtMinter = new SBTMinter();
  * 1. Go to thirdweb.com/explore
  * 2. Deploy "NFT Collection" contract
  * 3. Disable transfers in contract settings
- * 4. Set Maestro wallet as minter
+ * 4. Set Phazur wallet as minter
  * 5. Save contract address to .env as SBT_CONTRACT_ADDRESS
  *
  * Or use this custom Solidity:
@@ -248,10 +248,10 @@ export const sbtMinter = new SBTMinter();
  * import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
  * import "@openzeppelin/contracts/access/Ownable.sol";
  *
- * contract MaestroSBT is ERC721, ERC721URIStorage, Ownable {
+ * contract PhazurSBT is ERC721, ERC721URIStorage, Ownable {
  *     uint256 private _tokenIdCounter;
  *
- *     constructor() ERC721("Maestro Mastery", "MAESTRO") Ownable(msg.sender) {}
+ *     constructor() ERC721("Phazur Mastery", "PHAZUR") Ownable(msg.sender) {}
  *
  *     function mint(address to, string memory uri) public onlyOwner returns (uint256) {
  *         uint256 tokenId = _tokenIdCounter++;

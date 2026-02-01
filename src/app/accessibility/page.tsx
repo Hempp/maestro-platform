@@ -16,7 +16,7 @@ export default function AccessibilityPage() {
       <header className="border-b border-slate-800 bg-slate-900">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <a href="/" className="text-xl font-bold text-white">
-            MAESTRO
+            PHAZUR
           </a>
         </div>
       </header>
@@ -28,7 +28,7 @@ export default function AccessibilityPage() {
           <section className="mb-8">
             <h2 className="text-xl font-bold text-white mb-4">Our Commitment</h2>
             <p className="text-slate-300 mb-4">
-              Maestro is committed to ensuring digital accessibility for people with
+              Phazur is committed to ensuring digital accessibility for people with
               disabilities. We continually improve the user experience for everyone and
               apply relevant accessibility standards.
             </p>
@@ -43,7 +43,7 @@ export default function AccessibilityPage() {
             </p>
             <div className="bg-emerald-900/30 border border-emerald-700 rounded-lg p-4">
               <p className="text-emerald-300 font-medium">
-                Maestro is designed to conform with WCAG 2.1 Level AA standards.
+                Phazur is designed to conform with WCAG 2.1 Level AA standards.
               </p>
             </div>
           </section>
@@ -88,7 +88,7 @@ export default function AccessibilityPage() {
           <section className="mb-8">
             <h2 className="text-xl font-bold text-white mb-4">Compatibility</h2>
             <p className="text-slate-300 mb-4">
-              Maestro is designed to be compatible with:
+              Phazur is designed to be compatible with:
             </p>
             <ul className="list-disc list-inside text-slate-300 space-y-2">
               <li>Recent versions of popular screen readers (NVDA, JAWS, VoiceOver)</li>
@@ -119,7 +119,7 @@ export default function AccessibilityPage() {
           <section className="mb-8">
             <h2 className="text-xl font-bold text-white mb-4">Assessment Methods</h2>
             <p className="text-slate-300 mb-4">
-              Maestro assesses accessibility through:
+              Phazur assesses accessibility through:
             </p>
             <ul className="list-disc list-inside text-slate-300 space-y-2">
               <li>Automated testing with axe-core and Lighthouse</li>
@@ -133,14 +133,14 @@ export default function AccessibilityPage() {
           <section className="mb-8">
             <h2 className="text-xl font-bold text-white mb-4">Feedback</h2>
             <p className="text-slate-300 mb-4">
-              We welcome your feedback on the accessibility of Maestro. If you encounter
+              We welcome your feedback on the accessibility of Phazur. If you encounter
               accessibility barriers, please contact us:
             </p>
             <ul className="list-none text-slate-300 space-y-2">
               <li>
                 <strong>Email:</strong>{' '}
-                <a href="mailto:accessibility@maestro.ai" className="text-blue-400 hover:underline">
-                  accessibility@maestro.ai
+                <a href="mailto:accessibility@phazur.ai" className="text-blue-400 hover:underline">
+                  accessibility@phazur.ai
                 </a>
               </li>
             </ul>
