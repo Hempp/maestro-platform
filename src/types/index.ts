@@ -302,9 +302,95 @@ export interface AKUWithFoundation extends AtomicKnowledgeUnit {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// BLOCKCHAIN-VERIFIED CERTIFICATIONS
-// Tamper-proof credentials employers can instantly verify on-chain
+// OFFICIAL CERTIFICATE HIERARCHY
+// Soulbound Tokens (SBTs) on Polygon blockchain
 // ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Main Path Certificates - Earned upon Capstone completion
+ */
+export type CertificatePath = 'student' | 'employee' | 'owner';
+
+export interface OfficialCertificate {
+  path: CertificatePath;
+  name: string;
+  designation: string;
+  focus: string;
+  outcome: string;
+}
+
+export const OFFICIAL_CERTIFICATES: Record<CertificatePath, OfficialCertificate> = {
+  student: {
+    path: 'student',
+    name: 'Certified AI Associate',
+    designation: 'Proof of Readiness',
+    focus: 'Core AI literacy, terminal command proficiency, and front-end implementation using Claude Code.',
+    outcome: 'Verifies to employers that you can work as a junior developer or AI-enabled marketer.',
+  },
+  employee: {
+    path: 'employee',
+    name: 'Workflow Efficiency Lead',
+    designation: 'Proof of ROI',
+    focus: 'Automation of manual 9-to-5 tasks, custom GPT integration for internal documentation, and API-driven data processing.',
+    outcome: 'Verifies that you can demonstrably save a company 10+ hours per week through automation.',
+  },
+  owner: {
+    path: 'owner',
+    name: 'AI Operations Master',
+    designation: 'Proof of Scalability',
+    focus: 'End-to-end business automation, deployment of autonomous agent chains for sales and marketing, and AI-driven organizational strategy.',
+    outcome: 'Verifies your ability to replace high-cost manual labor with automated AI systems.',
+  },
+};
+
+/**
+ * Micro-Credentials (Skill Badges) - Earned for mastering specific tools
+ */
+export type MicroCredentialId = 'claude_code_commander' | 'api_integrator_pro' | 'agentic_orchestrator';
+
+export interface MicroCredential {
+  id: MicroCredentialId;
+  name: string;
+  description: string;
+  requirements: string[];
+  iconEmoji: string;
+}
+
+export const MICRO_CREDENTIALS: Record<MicroCredentialId, MicroCredential> = {
+  claude_code_commander: {
+    id: 'claude_code_commander',
+    name: 'Claude Code Commander',
+    description: 'Deep terminal-based refactoring mastery',
+    requirements: [
+      'Complete 5 terminal-based refactoring challenges',
+      'Demonstrate proficiency in Claude Code CLI',
+      'Build a complete project using terminal workflows',
+    ],
+    iconEmoji: '⌨️',
+  },
+  api_integrator_pro: {
+    id: 'api_integrator_pro',
+    name: 'API Integrator Pro',
+    description: 'Building custom plugins for Gemini or OpenAI',
+    requirements: [
+      'Build 3 custom API integrations',
+      'Create a working plugin for an AI platform',
+      'Demonstrate error handling and rate limiting',
+    ],
+    iconEmoji: '🔌',
+  },
+  agentic_orchestrator: {
+    id: 'agentic_orchestrator',
+    name: 'Agentic Orchestrator',
+    description: 'Managing multi-agent systems that communicate',
+    requirements: [
+      'Deploy a multi-agent workflow',
+      'Demonstrate agent-to-agent communication',
+      'Build an autonomous task delegation system',
+    ],
+    iconEmoji: '🤖',
+  },
+};
 
 export type CertificationLevel = 'associate' | 'professional' | 'expert';
 

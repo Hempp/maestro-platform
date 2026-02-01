@@ -8,19 +8,46 @@
 
 import { useState } from 'react';
 
+interface MicroCredentialResult {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+}
+
 interface VerificationResult {
   valid: boolean;
   certificate?: {
-    holderName: string;
-    certification: string;
+    holderAddress: string;
+    certificationName: string;
+    path: 'student' | 'employee' | 'owner';
+    level: string;
     issueDate: string;
     competencies: {
       name: string;
       level: number;
     }[];
     struggleScore: number;
-    capstoneProject: string;
-    blockchainTxHash: string;
+    totalLearningTime: number;
+    akusCompleted: number;
+  };
+  officialCertificate?: {
+    name: string;
+    designation: string;
+    path: string;
+    focus: string;
+    outcome: string;
+  };
+  microCredentials?: MicroCredentialResult[];
+  interpretation?: {
+    struggleScore: { rating: string; description: string };
+    certificationLevel: string;
+    employerValue: string;
+  };
+  blockchainProof?: {
+    chain: string;
+    transactionHash: string;
+    verifyOnExplorer: string;
   };
   error?: string;
 }
@@ -162,6 +189,7 @@ export default function VerifyPage() {
           >
             {result.valid && result.certificate ? (
               <>
+                {/* Valid Header */}
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center">
                     <svg
@@ -189,42 +217,84 @@ export default function VerifyPage() {
                   </div>
                 </div>
 
+                {/* Official Certificate Banner */}
+                {result.officialCertificate && (
+                  <div className="mb-6 p-4 bg-gradient-to-r from-blue-900/50 to-purple-900/50 border border-blue-500/30 rounded-xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-2xl font-bold text-white">
+                        {result.officialCertificate.name}
+                      </h3>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        result.certificate.path === 'student' ? 'bg-purple-500/20 text-purple-400' :
+                        result.certificate.path === 'employee' ? 'bg-blue-500/20 text-blue-400' :
+                        'bg-emerald-500/20 text-emerald-400'
+                      }`}>
+                        {result.officialCertificate.designation}
+                      </span>
+                    </div>
+                    <p className="text-slate-300 text-sm mb-2">
+                      <strong>Focus:</strong> {result.officialCertificate.focus}
+                    </p>
+                    <p className="text-emerald-400 text-sm font-medium">
+                      {result.officialCertificate.outcome}
+                    </p>
+                  </div>
+                )}
+
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <div className="text-sm text-slate-400">Certificate Holder</div>
-                      <div className="text-lg text-white font-medium">
-                        {result.certificate.holderName}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-slate-400">Certification</div>
-                      <div className="text-lg text-white font-medium">
-                        {result.certificate.certification}
+                      <div className="text-sm text-slate-400">Holder Wallet</div>
+                      <div className="text-white font-mono text-sm">
+                        {result.certificate.holderAddress?.slice(0, 10)}...{result.certificate.holderAddress?.slice(-8)}
                       </div>
                     </div>
                     <div>
                       <div className="text-sm text-slate-400">Issue Date</div>
                       <div className="text-white">
-                        {result.certificate.issueDate}
+                        {new Date(result.certificate.issueDate).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-slate-400">Learning Time</div>
+                      <div className="text-white">
+                        {result.certificate.totalLearningTime?.toFixed(1)} hours
                       </div>
                     </div>
                     <div>
                       <div className="text-sm text-slate-400">Struggle Score</div>
-                      <div className="text-white">
-                        {result.certificate.struggleScore}/100{' '}
-                        <span className="text-slate-400">(lower is better)</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-white">{result.certificate.struggleScore}/100</span>
+                        {result.interpretation && (
+                          <span className={`px-2 py-0.5 rounded text-xs ${
+                            result.certificate.struggleScore <= 20 ? 'bg-emerald-500/20 text-emerald-400' :
+                            result.certificate.struggleScore <= 40 ? 'bg-blue-500/20 text-blue-400' :
+                            result.certificate.struggleScore <= 60 ? 'bg-amber-500/20 text-amber-400' :
+                            'bg-purple-500/20 text-purple-400'
+                          }`}>
+                            {result.interpretation.struggleScore.rating}
+                          </span>
+                        )}
                       </div>
+                      {result.interpretation && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          {result.interpretation.struggleScore.description}
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <div className="text-sm text-slate-400 mb-2">
-                        Verified Competencies
+                        Verified Competencies ({result.certificate.competencies?.length || 0})
                       </div>
                       <div className="space-y-2">
-                        {result.certificate.competencies.map((comp) => (
+                        {result.certificate.competencies?.map((comp) => (
                           <div
                             key={comp.name}
                             className="flex items-center justify-between bg-slate-800/50 px-3 py-2 rounded"
@@ -237,28 +307,46 @@ export default function VerifyPage() {
                         ))}
                       </div>
                     </div>
-                    <div>
-                      <div className="text-sm text-slate-400">Capstone Project</div>
-                      <div className="text-white">
-                        {result.certificate.capstoneProject}
-                      </div>
-                    </div>
                   </div>
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-slate-700">
-                  <div className="text-sm text-slate-400 mb-1">
-                    Blockchain Verification
+                {/* Micro-Credentials */}
+                {result.microCredentials && result.microCredentials.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-slate-700">
+                    <div className="text-sm text-slate-400 mb-3">Skill Badges Earned</div>
+                    <div className="flex flex-wrap gap-3">
+                      {result.microCredentials.map((mc) => (
+                        <div
+                          key={mc.id}
+                          className="flex items-center gap-2 px-3 py-2 bg-slate-800 rounded-lg border border-slate-700"
+                        >
+                          <span className="text-xl">{mc.icon}</span>
+                          <div>
+                            <div className="text-white text-sm font-medium">{mc.name}</div>
+                            <div className="text-slate-400 text-xs">{mc.description}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <a
-                    href={`https://polygonscan.com/tx/${result.certificate.blockchainTxHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 font-mono text-sm break-all"
-                  >
-                    {result.certificate.blockchainTxHash}
-                  </a>
-                </div>
+                )}
+
+                {/* Blockchain Proof */}
+                {result.blockchainProof && (
+                  <div className="mt-6 pt-6 border-t border-slate-700">
+                    <div className="text-sm text-slate-400 mb-1">
+                      Blockchain Verification ({result.blockchainProof.chain})
+                    </div>
+                    <a
+                      href={result.blockchainProof.verifyOnExplorer}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 font-mono text-sm break-all"
+                    >
+                      {result.blockchainProof.transactionHash}
+                    </a>
+                  </div>
+                )}
               </>
             ) : (
               <div className="flex items-center gap-3">

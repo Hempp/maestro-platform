@@ -53,9 +53,9 @@ export default function Terminal({
         { id: '9', type: 'system', content: '' },
         { id: '10', type: 'prompt', content: 'What is your primary goal?' },
         { id: '11', type: 'system', content: '' },
-        { id: '12', type: 'system', content: '  [A] New Career      - Build job-ready AI portfolio' },
-        { id: '13', type: 'system', content: '  [B] Work Efficiency - Automate your 9-5 tasks' },
-        { id: '14', type: 'system', content: '  [C] Scalable Business - AI operations at scale' },
+        { id: '12', type: 'system', content: '  [A] Certified AI Associate      - Proof of Readiness' },
+        { id: '13', type: 'system', content: '  [B] Workflow Efficiency Lead    - Proof of ROI' },
+        { id: '14', type: 'system', content: '  [C] AI Operations Master        - Proof of Scalability' },
         { id: '15', type: 'system', content: '' },
       ];
 
@@ -89,16 +89,33 @@ export default function Terminal({
   }, []);
 
   const handleGoalSelection = useCallback((goal: 'A' | 'B' | 'C') => {
+    // Official Certificate Names
     const goalMap = {
-      A: { name: 'STUDENT_PATH', desc: 'Career Development Track' },
-      B: { name: 'EMPLOYEE_PATH', desc: 'Efficiency Mastery Track' },
-      C: { name: 'OWNER_PATH', desc: 'Business Scaling Track' },
+      A: {
+        name: 'CERTIFIED_AI_ASSOCIATE',
+        cert: 'Certified AI Associate',
+        designation: 'Proof of Readiness',
+        desc: 'Core AI literacy, terminal proficiency, front-end implementation',
+      },
+      B: {
+        name: 'WORKFLOW_EFFICIENCY_LEAD',
+        cert: 'Workflow Efficiency Lead',
+        designation: 'Proof of ROI',
+        desc: 'Automation, custom GPT integration, API-driven processing',
+      },
+      C: {
+        name: 'AI_OPERATIONS_MASTER',
+        cert: 'AI Operations Master',
+        designation: 'Proof of Scalability',
+        desc: 'End-to-end automation, autonomous agent chains, AI strategy',
+      },
     };
 
     addLine('user', `> ${goal}`);
     addLine('system', '');
-    addLine('success', `[GOAL_SELECTED: ${goalMap[goal].name}]`);
-    addLine('system', `Provisioning Cloud Sandbox for ${goalMap[goal].desc}...`);
+    addLine('success', `[CERTIFICATE_PATH: ${goalMap[goal].name}]`);
+    addLine('system', `Target: ${goalMap[goal].cert} (${goalMap[goal].designation})`);
+    addLine('system', `Provisioning Cloud Sandbox...`);
 
     setTimeout(() => {
       addLine('success', 'Cloud Sandbox READY');
@@ -187,9 +204,9 @@ export default function Terminal({
   };
 
   const quickStartButtons = [
-    { cmd: 'run_student_onboarding', label: 'Career Path', color: 'purple' },
-    { cmd: 'audit_my_workflow', label: 'Efficiency Path', color: 'blue' },
-    { cmd: 'start_business_builder', label: 'Business Path', color: 'emerald' },
+    { cmd: 'run_student_onboarding', label: 'AI Associate', color: 'purple' },
+    { cmd: 'audit_my_workflow', label: 'Efficiency Lead', color: 'blue' },
+    { cmd: 'start_business_builder', label: 'Operations Master', color: 'emerald' },
   ];
 
   return (
