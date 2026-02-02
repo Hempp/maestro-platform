@@ -864,6 +864,7 @@ export default function DashboardPage() {
   const [showProgressPanel, setShowProgressPanel] = useState(true);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [activeView, setActiveView] = useState<ViewType>('home');
+  const [chatViewMode, setChatViewMode] = useState<'chat' | 'terminal'>('chat');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -1326,68 +1327,153 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {!showProgressPanel && (
-                <button
-                  onClick={() => setShowProgressPanel(true)}
-                  className="px-2.5 py-1 text-xs text-slate-600 hover:text-slate-400 bg-slate-800/50 rounded transition"
-                >
-                  Progress
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {/* View Mode Toggle */}
+                <div className="flex items-center bg-slate-800/50 rounded-lg p-0.5">
+                  <button
+                    onClick={() => setChatViewMode('chat')}
+                    className={`px-2.5 py-1 text-xs rounded-md transition ${
+                      chatViewMode === 'chat'
+                        ? 'bg-slate-700 text-slate-200'
+                        : 'text-slate-500 hover:text-slate-400'
+                    }`}
+                    title="Chat view"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setChatViewMode('terminal')}
+                    className={`px-2.5 py-1 text-xs rounded-md transition ${
+                      chatViewMode === 'terminal'
+                        ? 'bg-slate-700 text-slate-200'
+                        : 'text-slate-500 hover:text-slate-400'
+                    }`}
+                    title="Terminal view"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+
+                {!showProgressPanel && (
+                  <button
+                    onClick={() => setShowProgressPanel(true)}
+                    className="px-2.5 py-1 text-xs text-slate-600 hover:text-slate-400 bg-slate-800/50 rounded transition"
+                  >
+                    Progress
+                  </button>
+                )}
+              </div>
             </header>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              <div className="max-w-2xl mx-auto">
-                {messages.map((msg) => (
-                  <div key={msg.id} className="mb-4">
-                    {msg.role === 'assistant' ? (
-                      <div className="flex gap-2.5">
-                        <AIAvatar size="sm" />
-                        <div className="flex-1 space-y-1.5">
-                          {msg.content.map((paragraph, i) => (
-                            <div
-                              key={i}
-                              className="bg-slate-800/40 text-slate-300 px-3.5 py-2.5 rounded-lg rounded-tl-sm max-w-fit"
-                            >
-                              <p className="whitespace-pre-wrap leading-relaxed text-sm">{paragraph}</p>
+            <div className={`flex-1 overflow-y-auto ${chatViewMode === 'terminal' ? 'bg-[#0a0c0f]' : ''}`}>
+              {chatViewMode === 'chat' ? (
+                /* Chat View */
+                <div className="px-6 py-4">
+                  <div className="max-w-2xl mx-auto">
+                    {messages.map((msg) => (
+                      <div key={msg.id} className="mb-4">
+                        {msg.role === 'assistant' ? (
+                          <div className="flex gap-2.5">
+                            <AIAvatar size="sm" />
+                            <div className="flex-1 space-y-1.5">
+                              {msg.content.map((paragraph, i) => (
+                                <div
+                                  key={i}
+                                  className="bg-slate-800/40 text-slate-300 px-3.5 py-2.5 rounded-lg rounded-tl-sm max-w-fit"
+                                >
+                                  <p className="whitespace-pre-wrap leading-relaxed text-sm">{paragraph}</p>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ) : (
+                          <div className="flex justify-end">
+                            <div className="bg-slate-700/60 text-slate-200 px-3.5 py-2 rounded-lg rounded-tr-sm max-w-xs">
+                              <p className="text-sm">{msg.content[0]}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="flex justify-end">
-                        <div className="bg-slate-700/60 text-slate-200 px-3.5 py-2 rounded-lg rounded-tr-sm max-w-xs">
-                          <p className="text-sm">{msg.content[0]}</p>
+                    ))}
+
+                    {isTyping && (
+                      <div className="flex gap-2.5 mb-4">
+                        <AIAvatar size="sm" />
+                        <div className="bg-slate-800/40 px-3.5 py-2.5 rounded-lg rounded-tl-sm">
+                          <div className="flex gap-1">
+                            <span className="w-1.5 h-1.5 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-1.5 h-1.5 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-1.5 h-1.5 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
                         </div>
                       </div>
                     )}
-                  </div>
-                ))}
 
-                {isTyping && (
-                  <div className="flex gap-2.5 mb-4">
-                    <AIAvatar size="sm" />
-                    <div className="bg-slate-800/40 px-3.5 py-2.5 rounded-lg rounded-tl-sm">
-                      <div className="flex gap-1">
-                        <span className="w-1.5 h-1.5 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-1.5 h-1.5 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-1.5 h-1.5 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      </div>
+                    <div ref={messagesEndRef} />
+                  </div>
+                </div>
+              ) : (
+                /* Terminal View */
+                <div className="p-4 font-mono text-sm">
+                  {/* Terminal Header */}
+                  <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-800/40">
+                    <div className="flex gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-red-500/60" />
+                      <span className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                      <span className="w-3 h-3 rounded-full bg-green-500/60" />
                     </div>
+                    <span className="text-slate-600 text-xs ml-2">phazur@coach ~ {selectedPath ? `/${selectedPath}` : ''}</span>
                   </div>
-                )}
 
-                <div ref={messagesEndRef} />
-              </div>
+                  {/* Terminal Messages */}
+                  <div className="space-y-3">
+                    {messages.map((msg, msgIndex) => (
+                      <div key={msg.id}>
+                        {msg.role === 'assistant' ? (
+                          <div className="space-y-1">
+                            <div className="flex items-start gap-2">
+                              <span className="text-cyan-400 select-none">phazur$</span>
+                              <span className="text-slate-500 text-xs">#{msgIndex + 1}</span>
+                            </div>
+                            {msg.content.map((paragraph, i) => (
+                              <p key={i} className="text-slate-300 pl-[4.5rem] whitespace-pre-wrap leading-relaxed">
+                                {paragraph}
+                              </p>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex items-start gap-2">
+                            <span className="text-emerald-400 select-none">user$</span>
+                            <span className="text-slate-200">{msg.content[0]}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {isTyping && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-cyan-400 select-none">phazur$</span>
+                        <span className="text-slate-500 animate-pulse">_</span>
+                      </div>
+                    )}
+
+                    <div ref={messagesEndRef} />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Input Area */}
-            <div className="px-6 pb-4">
-              <div className="max-w-2xl mx-auto">
+            <div className={`px-6 pb-4 ${chatViewMode === 'terminal' ? 'bg-[#0a0c0f]' : ''}`}>
+              <div className={chatViewMode === 'terminal' ? '' : 'max-w-2xl mx-auto'}>
                 {requiresAuth ? (
                   /* Auth Gate - Show after 3 messages for unauthenticated users */
-                  <div className="p-4 bg-slate-800/30 border border-slate-800/60 rounded-lg">
+                  <div className={`p-4 ${chatViewMode === 'terminal' ? 'bg-slate-900/50 border-slate-800/40' : 'bg-slate-800/30 border-slate-800/60'} border rounded-lg`}>
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
                         <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1414,6 +1500,54 @@ export default function DashboardPage() {
                           </Link>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                ) : chatViewMode === 'terminal' ? (
+                  /* Terminal Input */
+                  <div className="font-mono">
+                    {/* Terminal Suggestions */}
+                    {messages.length > 0 && (messages[messages.length - 1].suggestions || suggestions.length > 0) && !isTyping && (
+                      <div className="mb-2 flex gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
+                        <span className="text-slate-600 select-none">hints:</span>
+                        {(messages[messages.length - 1].suggestions || suggestions)?.map((suggestion, i) => (
+                          <button
+                            key={i}
+                            onClick={() => handleSuggestionClick(suggestion)}
+                            className="text-cyan-500/70 hover:text-cyan-400 transition whitespace-nowrap"
+                          >
+                            [{i + 1}] {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Terminal Input Line */}
+                    <div className="flex items-center gap-2 border-t border-slate-800/40 pt-3">
+                      <span className="text-emerald-400 select-none">user$</span>
+                      <input
+                        ref={inputRef as React.RefObject<HTMLInputElement>}
+                        type="text"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleUserResponse();
+                          }
+                        }}
+                        placeholder="type your message..."
+                        className="flex-1 bg-transparent text-slate-200 placeholder-slate-700 focus:outline-none text-sm"
+                        disabled={isTyping}
+                      />
+                      <button
+                        onClick={() => handleUserResponse()}
+                        disabled={!inputValue.trim() || isTyping}
+                        className="text-slate-600 hover:text-slate-400 disabled:opacity-30 transition"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 ) : (
