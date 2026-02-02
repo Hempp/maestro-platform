@@ -287,17 +287,24 @@ function ProgressCheckpoint({
   );
 }
 
-// Video Card component
+// Video result interface
+interface VideoResult {
+  id: string;
+  title: string;
+  thumbnail: string;
+  channelTitle: string;
+  duration?: string;
+  viewCount?: string;
+  url: string;
+}
+
+// Video Card component - supports real YouTube thumbnails
 function VideoCard({
-  title,
-  duration,
-  thumbnail,
+  video,
   isPlaying = false,
   onClick,
 }: {
-  title: string;
-  duration: string;
-  thumbnail: string;
+  video: VideoResult;
   isPlaying?: boolean;
   onClick?: () => void;
 }) {
@@ -308,21 +315,44 @@ function VideoCard({
         isPlaying ? 'bg-cyan-500/10 border border-cyan-500/30' : 'hover:bg-slate-800/40'
       }`}
     >
-      <div className="relative w-16 h-10 bg-slate-800 rounded flex-shrink-0 flex items-center justify-center overflow-hidden">
-        <span className="text-lg">{thumbnail}</span>
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+      <div className="relative w-20 h-12 bg-slate-800 rounded flex-shrink-0 overflow-hidden">
+        {video.thumbnail ? (
+          <img
+            src={video.thumbnail}
+            alt={video.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-slate-600">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition">
           {isPlaying ? (
-            <div className="w-3 h-3 border-2 border-white rounded-sm" />
+            <div className="w-4 h-4 border-2 border-white rounded-sm" />
           ) : (
-            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
           )}
         </div>
+        {video.duration && (
+          <span className="absolute bottom-0.5 right-0.5 px-1 bg-black/80 text-[9px] text-white rounded">
+            {video.duration}
+          </span>
+        )}
       </div>
-      <div className="flex-1 text-left">
-        <h4 className={`text-xs font-medium ${isPlaying ? 'text-cyan-400' : 'text-slate-300'}`}>{title}</h4>
-        <p className="text-[10px] text-slate-600 mt-0.5">{duration}</p>
+      <div className="flex-1 text-left min-w-0">
+        <h4 className={`text-xs font-medium line-clamp-2 ${isPlaying ? 'text-cyan-400' : 'text-slate-300'}`}>
+          {video.title}
+        </h4>
+        <p className="text-[10px] text-slate-600 mt-0.5 truncate">{video.channelTitle}</p>
+        {video.viewCount && (
+          <p className="text-[10px] text-slate-700">{video.viewCount}</p>
+        )}
       </div>
     </button>
   );
@@ -340,7 +370,38 @@ function TutorSidebar({
   messages: Array<{ role: string; content: string[] }>;
   onClose: () => void;
 }) {
-  const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+  const [playingVideo, setPlayingVideo] = useState<VideoResult | null>(null);
+  const [videos, setVideos] = useState<VideoResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [videoSource, setVideoSource] = useState<'youtube' | 'mock'>('mock');
+
+  // Fetch videos from API when path or step changes
+  useEffect(() => {
+    const fetchVideos = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/tutor/videos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            path: selectedPath,
+            step: currentStep,
+            maxResults: 5,
+          }),
+        });
+        const data = await response.json();
+        setVideos(data.videos || []);
+        setVideoSource(data.source || 'mock');
+      } catch (error) {
+        console.error('Failed to fetch videos:', error);
+        setVideos([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchVideos();
+  }, [selectedPath, currentStep]);
 
   // Determine current topic based on messages and step
   const getCurrentTopic = () => {
@@ -348,39 +409,6 @@ function TutorSidebar({
     if (currentStep < 2) return 'Introduction & Setup';
     if (currentStep < 4) return 'Core Concepts';
     return 'Building Projects';
-  };
-
-  // Get contextual videos based on path and progress
-  const getRelevantVideos = () => {
-    const baseVideos = [
-      { id: '1', title: 'Terminal Basics', duration: '5:32', thumbnail: '💻' },
-      { id: '2', title: 'Your First Command', duration: '3:45', thumbnail: '⌨️' },
-      { id: '3', title: 'File Navigation', duration: '4:18', thumbnail: '📁' },
-    ];
-
-    if (selectedPath === 'student') {
-      return [
-        ...baseVideos,
-        { id: '4', title: 'Portfolio Setup', duration: '8:21', thumbnail: '🎨' },
-        { id: '5', title: 'Deploy to Vercel', duration: '6:15', thumbnail: '🚀' },
-      ];
-    } else if (selectedPath === 'employee') {
-      return [
-        { id: '1', title: 'Workflow Analysis', duration: '6:42', thumbnail: '📊' },
-        { id: '2', title: 'Building GPTs', duration: '9:15', thumbnail: '🤖' },
-        { id: '3', title: 'Email Automation', duration: '7:33', thumbnail: '📧' },
-        { id: '4', title: 'API Basics', duration: '5:48', thumbnail: '🔗' },
-      ];
-    } else if (selectedPath === 'owner') {
-      return [
-        { id: '1', title: 'Operations Mapping', duration: '8:12', thumbnail: '🗺️' },
-        { id: '2', title: 'Agent Architecture', duration: '11:45', thumbnail: '🏗️' },
-        { id: '3', title: 'Multi-Agent Setup', duration: '14:22', thumbnail: '🔄' },
-        { id: '4', title: 'Scaling Systems', duration: '9:38', thumbnail: '📈' },
-      ];
-    }
-
-    return baseVideos;
   };
 
   // Get progress steps based on path
@@ -396,7 +424,6 @@ function TutorSidebar({
   };
 
   const progressSteps = getProgressSteps();
-  const videos = getRelevantVideos();
 
   return (
     <aside className="w-72 border-l border-slate-800/40 flex flex-col bg-[#0f1115] overflow-hidden">
@@ -457,22 +484,30 @@ function TutorSidebar({
         </div>
 
         {/* Relevant Videos */}
-        <CollapsibleSection title="Videos" defaultOpen={true}>
-          <div className="space-y-1">
-            {videos.slice(0, 4).map((video) => (
-              <VideoCard
-                key={video.id}
-                title={video.title}
-                duration={video.duration}
-                thumbnail={video.thumbnail}
-                isPlaying={playingVideo === video.id}
-                onClick={() => setPlayingVideo(playingVideo === video.id ? null : video.id)}
-              />
-            ))}
-          </div>
-          <button className="w-full mt-2 text-[10px] text-cyan-500/70 hover:text-cyan-400 transition">
-            View all videos →
-          </button>
+        <CollapsibleSection title={`Videos ${videoSource === 'youtube' ? '' : '(Demo)'}`} defaultOpen={true}>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="w-5 h-5 border-2 border-slate-700 border-t-cyan-500 rounded-full animate-spin" />
+            </div>
+          ) : videos.length > 0 ? (
+            <div className="space-y-1">
+              {videos.slice(0, 4).map((video) => (
+                <VideoCard
+                  key={video.id}
+                  video={video}
+                  isPlaying={playingVideo?.id === video.id}
+                  onClick={() => setPlayingVideo(playingVideo?.id === video.id ? null : video)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-600 text-center py-4">No videos found</p>
+          )}
+          {videos.length > 4 && (
+            <button className="w-full mt-2 text-[10px] text-cyan-500/70 hover:text-cyan-400 transition">
+              View all {videos.length} videos →
+            </button>
+          )}
         </CollapsibleSection>
 
         {/* Context / Resources */}
@@ -507,36 +542,58 @@ function TutorSidebar({
         </CollapsibleSection>
       </div>
 
-      {/* Video Player Preview (when playing) */}
+      {/* Video Player - YouTube Embed */}
       {playingVideo && (
         <div className="border-t border-slate-800/40 p-3 bg-slate-900/50">
-          <div className="relative aspect-video bg-slate-800 rounded-lg overflow-hidden mb-2">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <span className="text-3xl mb-2 block">
-                  {videos.find(v => v.id === playingVideo)?.thumbnail}
-                </span>
-                <p className="text-xs text-slate-400">Video Player</p>
-              </div>
-            </div>
-            {/* Playback controls */}
-            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
-              <div className="flex items-center gap-2">
-                <button className="text-white">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+          <div className="relative aspect-video bg-black rounded-lg overflow-hidden mb-2">
+            {playingVideo.url && playingVideo.url !== '#' ? (
+              <iframe
+                src={`https://www.youtube.com/embed/${playingVideo.id}?autoplay=1&rel=0`}
+                title={playingVideo.title}
+                className="absolute inset-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <svg className="w-12 h-12 text-slate-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                </button>
-                <div className="flex-1 h-1 bg-slate-700 rounded-full">
-                  <div className="w-1/3 h-full bg-cyan-500 rounded-full" />
+                  <p className="text-xs text-slate-500">Demo Video</p>
+                  <p className="text-[10px] text-slate-600 mt-1">Add YouTube API key to enable</p>
                 </div>
-                <span className="text-[10px] text-slate-400">1:24</span>
               </div>
-            </div>
+            )}
           </div>
-          <p className="text-xs text-slate-300 font-medium">
-            {videos.find(v => v.id === playingVideo)?.title}
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-slate-300 font-medium line-clamp-2">{playingVideo.title}</p>
+              <p className="text-[10px] text-slate-600 mt-0.5">{playingVideo.channelTitle}</p>
+            </div>
+            <button
+              onClick={() => setPlayingVideo(null)}
+              className="p-1 text-slate-600 hover:text-slate-400 transition flex-shrink-0"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          {playingVideo.url && playingVideo.url !== '#' && (
+            <a
+              href={playingVideo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 mt-2 text-[10px] text-cyan-500/70 hover:text-cyan-400 transition"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Open in YouTube
+            </a>
+          )}
         </div>
       )}
     </aside>
