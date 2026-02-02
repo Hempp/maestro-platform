@@ -1,6 +1,7 @@
 /**
  * ADMIN SESSIONS API
- * CRUD operations for live sessions with Google Meet
+ * CRUD operations for live sessions with Google Meet/Zoom
+ * Supports tiered access (student/employee/owner) with seat purchases
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -120,7 +121,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { courseId, title, description, scheduledAt, durationMinutes, googleMeetLink } = body;
+    const {
+      courseId,
+      title,
+      description,
+      scheduledAt,
+      durationMinutes,
+      googleMeetLink,
+      zoomLink,
+      platform,
+      targetTier,
+      seatPrice,
+      maxSeats,
+      earlyBirdPrice,
+      earlyBirdDeadline,
+    } = body;
 
     if (!courseId || !title || !scheduledAt) {
       return NextResponse.json(
@@ -151,6 +166,13 @@ export async function POST(request: NextRequest) {
         scheduled_at: scheduledAt,
         duration_minutes: durationMinutes || 60,
         google_meet_link: googleMeetLink,
+        zoom_link: zoomLink,
+        platform: platform || 'google_meet',
+        target_tier: targetTier || 'student',
+        seat_price: seatPrice || 0,
+        max_seats: maxSeats || 100,
+        early_bird_price: earlyBirdPrice,
+        early_bird_deadline: earlyBirdDeadline,
         status: 'scheduled',
       })
       .select()
@@ -204,6 +226,13 @@ export async function PATCH(request: NextRequest) {
     if (updates.scheduledAt) allowedUpdates.scheduled_at = updates.scheduledAt;
     if (updates.durationMinutes) allowedUpdates.duration_minutes = updates.durationMinutes;
     if (updates.googleMeetLink !== undefined) allowedUpdates.google_meet_link = updates.googleMeetLink;
+    if (updates.zoomLink !== undefined) allowedUpdates.zoom_link = updates.zoomLink;
+    if (updates.platform) allowedUpdates.platform = updates.platform;
+    if (updates.targetTier) allowedUpdates.target_tier = updates.targetTier;
+    if (updates.seatPrice !== undefined) allowedUpdates.seat_price = updates.seatPrice;
+    if (updates.maxSeats !== undefined) allowedUpdates.max_seats = updates.maxSeats;
+    if (updates.earlyBirdPrice !== undefined) allowedUpdates.early_bird_price = updates.earlyBirdPrice;
+    if (updates.earlyBirdDeadline !== undefined) allowedUpdates.early_bird_deadline = updates.earlyBirdDeadline;
     if (updates.status) allowedUpdates.status = updates.status;
     if (updates.recordingUrl !== undefined) allowedUpdates.recording_url = updates.recordingUrl;
     if (updates.notes !== undefined) allowedUpdates.notes = updates.notes;

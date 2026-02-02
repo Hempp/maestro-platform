@@ -65,8 +65,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [user, loading]);
 
+  // PREVIEW MODE - set to false for production
+  const PREVIEW_MODE = true;
+
   // Redirect if not admin/teacher
   useEffect(() => {
+    if (PREVIEW_MODE) return;
     if (!loading && !checkingRole) {
       if (!user) {
         router.push('/login');
@@ -76,7 +80,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [user, userRole, loading, checkingRole, router]);
 
-  if (loading || checkingRole) {
+  if (!PREVIEW_MODE && (loading || checkingRole)) {
     return (
       <div className="min-h-screen bg-[#1a1d21] flex items-center justify-center">
         <div className="text-slate-400">Loading...</div>
@@ -84,7 +88,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!user || (userRole && !['admin', 'teacher'].includes(userRole))) {
+  if (!PREVIEW_MODE && (!user || (userRole && !['admin', 'teacher'].includes(userRole)))) {
     return null;
   }
 

@@ -2,11 +2,14 @@
 
 /**
  * ADMIN LIVE SESSIONS PAGE
- * Schedule and manage live sessions with Google Meet
+ * Schedule and manage live sessions with Google Meet/Zoom
  */
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+
+// Force dynamic rendering to avoid static generation issues with useSearchParams
+export const dynamic = 'force-dynamic';
 
 interface Session {
   id: string;
@@ -15,6 +18,11 @@ interface Session {
   scheduled_at: string;
   duration_minutes: number;
   google_meet_link: string | null;
+  zoom_link: string | null;
+  platform: 'google_meet' | 'zoom';
+  target_tier: 'student' | 'employee' | 'owner';
+  seat_price: number;
+  max_seats: number;
   status: 'scheduled' | 'live' | 'completed' | 'cancelled';
   recording_url: string | null;
   course: {
@@ -47,7 +55,12 @@ function CreateSessionModal({
   const [description, setDescription] = useState('');
   const [scheduledAt, setScheduledAt] = useState('');
   const [duration, setDuration] = useState(60);
+  const [platform, setPlatform] = useState<'google_meet' | 'zoom'>('google_meet');
   const [meetLink, setMeetLink] = useState('');
+  const [zoomLink, setZoomLink] = useState('');
+  const [targetTier, setTargetTier] = useState<'student' | 'employee' | 'owner'>('student');
+  const [seatPrice, setSeatPrice] = useState(0);
+  const [maxSeats, setMaxSeats] = useState(100);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -55,6 +68,16 @@ function CreateSessionModal({
     e.preventDefault();
     if (!courseId || !title || !scheduledAt) {
       setError('Course, title, and scheduled time are required');
+      return;
+    }
+
+    // Validate platform link
+    if (platform === 'google_meet' && !meetLink) {
+      setError('Google Meet link is required');
+      return;
+    }
+    if (platform === 'zoom' && !zoomLink) {
+      setError('Zoom link is required');
       return;
     }
 
@@ -71,7 +94,12 @@ function CreateSessionModal({
           description: description || null,
           scheduledAt: new Date(scheduledAt).toISOString(),
           durationMinutes: duration,
-          googleMeetLink: meetLink || null,
+          platform,
+          googleMeetLink: platform === 'google_meet' ? meetLink : null,
+          zoomLink: platform === 'zoom' ? zoomLink : null,
+          targetTier,
+          seatPrice: seatPrice || 0,
+          maxSeats: maxSeats || 100,
         }),
       });
 
@@ -170,22 +198,118 @@ function CreateSessionModal({
             </div>
           </div>
 
+          {/* Platform Selection */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              Google Meet Link
-              <span className="text-slate-500 font-normal ml-1">(optional)</span>
-            </label>
-            <input
-              type="url"
-              value={meetLink}
-              onChange={(e) => setMeetLink(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
-              placeholder="https://meet.google.com/xxx-xxxx-xxx"
-            />
-            <p className="text-slate-500 text-xs mt-1">
-              Create a meeting in Google Calendar and paste the link here
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">Platform</label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setPlatform('google_meet')}
+                className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium transition ${
+                  platform === 'google_meet'
+                    ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                    : 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:border-slate-600'
+                }`}
+              >
+                Google Meet
+              </button>
+              <button
+                type="button"
+                onClick={() => setPlatform('zoom')}
+                className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium transition ${
+                  platform === 'zoom'
+                    ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                    : 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:border-slate-600'
+                }`}
+              >
+                Zoom
+              </button>
+            </div>
+          </div>
+
+          {/* Platform Link */}
+          {platform === 'google_meet' ? (
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Google Meet Link</label>
+              <input
+                type="url"
+                value={meetLink}
+                onChange={(e) => setMeetLink(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+                placeholder="https://meet.google.com/xxx-xxxx-xxx"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Zoom Link</label>
+              <input
+                type="url"
+                value={zoomLink}
+                onChange={(e) => setZoomLink(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+                placeholder="https://zoom.us/j/xxxxxxxxx"
+              />
+            </div>
+          )}
+
+          {/* Target Tier */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">Target Audience</label>
+            <div className="flex gap-2">
+              {(['student', 'employee', 'owner'] as const).map((tier) => (
+                <button
+                  key={tier}
+                  type="button"
+                  onClick={() => setTargetTier(tier)}
+                  className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium capitalize transition ${
+                    targetTier === tier
+                      ? tier === 'student'
+                        ? 'bg-purple-500/20 border-purple-500/50 text-purple-400'
+                        : tier === 'employee'
+                        ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                        : 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
+                      : 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:border-slate-600'
+                  }`}
+                >
+                  {tier}
+                </button>
+              ))}
+            </div>
+            <p className="text-slate-500 text-xs mt-1.5">
+              {targetTier === 'student' && 'All users can access for free'}
+              {targetTier === 'employee' && 'Employees & Owners free. Students can purchase a seat.'}
+              {targetTier === 'owner' && 'Owners free. Students & Employees can purchase a seat.'}
             </p>
           </div>
+
+          {/* Pricing (only for employee/owner tiers) */}
+          {targetTier !== 'student' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Seat Price ($)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={seatPrice}
+                  onChange={(e) => setSeatPrice(parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-cyan-500/50"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Max Seats</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={maxSeats}
+                  onChange={(e) => setMaxSeats(parseInt(e.target.value) || 100)}
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-cyan-500/50"
+                  placeholder="100"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button
@@ -226,6 +350,14 @@ function SessionCard({
     cancelled: 'bg-slate-500/20 text-slate-400',
   };
 
+  const tierColors: Record<string, string> = {
+    student: 'bg-purple-500/20 text-purple-400',
+    employee: 'bg-blue-500/20 text-blue-400',
+    owner: 'bg-emerald-500/20 text-emerald-400',
+  };
+
+  const meetLink = session.platform === 'zoom' ? session.zoom_link : session.google_meet_link;
+
   return (
     <div className="bg-slate-800/30 rounded-xl border border-slate-700/50 p-5 hover:border-slate-600/50 transition">
       <div className="flex items-start justify-between mb-3">
@@ -233,9 +365,31 @@ function SessionCard({
           <div className="text-slate-400 text-sm">{session.course?.title}</div>
           <h3 className="text-white font-semibold">{session.title}</h3>
         </div>
-        <span className={`px-2 py-1 rounded text-xs capitalize ${statusColors[session.status]}`}>
-          {session.status}
+        <div className="flex gap-2">
+          <span className={`px-2 py-1 rounded text-xs capitalize ${tierColors[session.target_tier || 'student']}`}>
+            {session.target_tier || 'student'}
+          </span>
+          <span className={`px-2 py-1 rounded text-xs capitalize ${statusColors[session.status]}`}>
+            {session.status}
+          </span>
+        </div>
+      </div>
+
+      {/* Platform & Price badges */}
+      <div className="flex items-center gap-2 mb-3">
+        <span className={`px-2 py-0.5 rounded text-xs ${session.platform === 'zoom' ? 'bg-blue-500/10 text-blue-400' : 'bg-cyan-500/10 text-cyan-400'}`}>
+          {session.platform === 'zoom' ? 'Zoom' : 'Google Meet'}
         </span>
+        {session.seat_price > 0 && (
+          <span className="px-2 py-0.5 rounded text-xs bg-amber-500/10 text-amber-400">
+            ${session.seat_price} / seat
+          </span>
+        )}
+        {session.max_seats && (
+          <span className="px-2 py-0.5 rounded text-xs bg-slate-500/10 text-slate-400">
+            {session.enrollmentCount}/{session.max_seats} seats
+          </span>
+        )}
       </div>
 
       <div className="space-y-2 text-sm mb-4">
@@ -269,17 +423,21 @@ function SessionCard({
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2">
-        {session.google_meet_link && session.status !== 'completed' && session.status !== 'cancelled' && (
+        {meetLink && session.status !== 'completed' && session.status !== 'cancelled' && (
           <a
-            href={session.google_meet_link}
+            href={meetLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/20 text-cyan-400 rounded-lg text-sm hover:bg-cyan-500/30 transition"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition ${
+              session.platform === 'zoom'
+                ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                : 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30'
+            }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            {session.status === 'live' ? 'Join Live' : 'Join Meet'}
+            {session.status === 'live' ? 'Join Live' : `Join ${session.platform === 'zoom' ? 'Zoom' : 'Meet'}`}
           </a>
         )}
 
@@ -325,7 +483,7 @@ function SessionCard({
   );
 }
 
-export default function LiveSessionsPage() {
+function LiveSessionsPageContent() {
   const searchParams = useSearchParams();
   const courseIdParam = searchParams.get('courseId');
 
@@ -494,5 +652,13 @@ export default function LiveSessionsPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function LiveSessionsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-slate-400">Loading...</div>}>
+      <LiveSessionsPageContent />
+    </Suspense>
   );
 }
