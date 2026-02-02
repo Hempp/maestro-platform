@@ -15,6 +15,7 @@ import { useProgress } from '@/hooks/useProgress';
 import { useRealtime } from '@/hooks/useRealtime';
 
 type PathType = 'student' | 'employee' | 'owner' | null;
+type ViewType = 'home' | 'live-courses' | 'community' | 'projects' | 'discussions' | 'leaderboards';
 
 interface Certificate {
   id: string;
@@ -215,11 +216,748 @@ function CertificateCard({
   );
 }
 
+// Live Courses View
+function LiveCoursesView() {
+  const upcomingCourses = [
+    {
+      id: '1',
+      title: 'Terminal Mastery Workshop',
+      instructor: 'Alex Chen',
+      date: 'Feb 5, 2026',
+      time: '2:00 PM EST',
+      spots: 12,
+      level: 'Beginner',
+      thumbnail: '🖥️',
+    },
+    {
+      id: '2',
+      title: 'Building AI Agents from Scratch',
+      instructor: 'Sarah Park',
+      date: 'Feb 8, 2026',
+      time: '11:00 AM EST',
+      spots: 8,
+      level: 'Advanced',
+      thumbnail: '🤖',
+    },
+    {
+      id: '3',
+      title: 'API Integration Deep Dive',
+      instructor: 'Marcus Johnson',
+      date: 'Feb 12, 2026',
+      time: '3:00 PM EST',
+      spots: 20,
+      level: 'Intermediate',
+      thumbnail: '🔗',
+    },
+  ];
+
+  const liveCourse = {
+    title: 'Claude Code: Advanced Techniques',
+    instructor: 'Dr. Maya Rodriguez',
+    viewers: 156,
+    started: '45 min ago',
+  };
+
+  return (
+    <div className="p-6 overflow-y-auto h-full">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold text-white mb-6">Live Courses</h1>
+
+        {/* Live Now Banner */}
+        <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+              <span className="text-red-400 font-semibold text-sm uppercase tracking-wide">Live Now</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-white font-medium">{liveCourse.title}</h3>
+              <p className="text-slate-400 text-sm">{liveCourse.instructor} · {liveCourse.viewers} watching · Started {liveCourse.started}</p>
+            </div>
+            <button className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition">
+              Join Now
+            </button>
+          </div>
+        </div>
+
+        {/* Upcoming Schedule */}
+        <h2 className="text-lg font-semibold text-white mb-4">Upcoming Sessions</h2>
+        <div className="grid gap-4">
+          {upcomingCourses.map((course) => (
+            <div key={course.id} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-800/70 transition">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-slate-700 rounded-lg flex items-center justify-center text-2xl">
+                  {course.thumbnail}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-white font-medium">{course.title}</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      course.level === 'Beginner' ? 'bg-emerald-500/20 text-emerald-400' :
+                      course.level === 'Intermediate' ? 'bg-blue-500/20 text-blue-400' :
+                      'bg-purple-500/20 text-purple-400'
+                    }`}>
+                      {course.level}
+                    </span>
+                  </div>
+                  <p className="text-slate-400 text-sm">{course.instructor}</p>
+                  <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {course.date}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {course.time}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {course.spots} spots left
+                    </span>
+                  </div>
+                </div>
+                <button className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition">
+                  Reserve Spot
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Preview */}
+        <div className="mt-8 p-4 bg-slate-800/30 border border-slate-700/50 rounded-xl">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-medium">February 2026</h3>
+            <div className="flex gap-2">
+              <button className="p-1 text-slate-400 hover:text-white">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button className="p-1 text-slate-400 hover:text-white">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-7 gap-1 text-center text-sm">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} className="text-slate-500 py-2">{day}</div>
+            ))}
+            {Array.from({ length: 28 }, (_, i) => i + 1).map(day => (
+              <div
+                key={day}
+                className={`py-2 rounded-lg ${
+                  [5, 8, 12].includes(day)
+                    ? 'bg-emerald-500/20 text-emerald-400 font-medium'
+                    : day === 1
+                    ? 'bg-blue-500/20 text-blue-400 font-medium'
+                    : 'text-slate-400 hover:bg-slate-700/50'
+                }`}
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Community Feed View (X-style)
+function CommunityFeedView() {
+  const posts = [
+    {
+      id: '1',
+      author: { name: 'Alex Chen', handle: '@alexchen', avatar: 'A', verified: true },
+      content: 'Just deployed my first AI agent! It handles customer support tickets and has already saved 20+ hours this week. The Owner path is 🔥',
+      timestamp: '2h',
+      likes: 45,
+      comments: 12,
+      shares: 5,
+      badges: ['AI Operations Master'],
+      image: null,
+    },
+    {
+      id: '2',
+      author: { name: 'Sarah Park', handle: '@sarahpark', avatar: 'S', verified: true },
+      content: 'Completed the Terminal Foundations module! Here\'s my portfolio site I built with Claude Code assistance. Feeling like a real developer now.',
+      timestamp: '4h',
+      likes: 89,
+      comments: 23,
+      shares: 8,
+      badges: ['Certified AI Associate'],
+      image: '🖥️ Portfolio Preview',
+    },
+    {
+      id: '3',
+      author: { name: 'Marcus Johnson', handle: '@marcusj', avatar: 'M', verified: false },
+      content: 'Question for the community: What API integrations have been most valuable for your workflow automations? Looking to optimize my Employee path capstone project.',
+      timestamp: '6h',
+      likes: 32,
+      comments: 47,
+      shares: 3,
+      badges: [],
+      image: null,
+    },
+    {
+      id: '4',
+      author: { name: 'Emily Rodriguez', handle: '@emilydev', avatar: 'E', verified: true },
+      content: 'New personal best: Built an entire landing page in 15 minutes using AI-assisted coding. The future of development is HERE.',
+      timestamp: '8h',
+      likes: 156,
+      comments: 34,
+      shares: 21,
+      badges: ['Workflow Efficiency Lead', 'Certified AI Associate'],
+      image: null,
+    },
+  ];
+
+  return (
+    <div className="flex h-full">
+      {/* Main Feed */}
+      <div className="flex-1 border-r border-slate-800/50 overflow-y-auto">
+        <div className="sticky top-0 bg-[#1e2227]/95 backdrop-blur-sm border-b border-slate-800/50 p-4 z-10">
+          <h1 className="text-xl font-bold text-white">Community Feed</h1>
+        </div>
+
+        {/* Compose */}
+        <div className="p-4 border-b border-slate-800/50">
+          <div className="flex gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white font-medium flex-shrink-0">
+              G
+            </div>
+            <div className="flex-1">
+              <textarea
+                placeholder="Share your progress..."
+                className="w-full bg-transparent text-white placeholder-slate-500 resize-none focus:outline-none text-lg"
+                rows={2}
+              />
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-800/50">
+                <div className="flex gap-2">
+                  <button className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-full transition">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                  <button className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-full transition">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                  </button>
+                </div>
+                <button className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-medium text-sm transition">
+                  Post
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Posts */}
+        {posts.map((post) => (
+          <div key={post.id} className="p-4 border-b border-slate-800/50 hover:bg-slate-800/20 transition">
+            <div className="flex gap-3">
+              <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-medium flex-shrink-0">
+                {post.author.avatar}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1 flex-wrap">
+                  <span className="font-medium text-white">{post.author.name}</span>
+                  {post.author.verified && (
+                    <svg className="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                  )}
+                  <span className="text-slate-500">{post.author.handle}</span>
+                  <span className="text-slate-600">·</span>
+                  <span className="text-slate-500">{post.timestamp}</span>
+                </div>
+                {post.badges.length > 0 && (
+                  <div className="flex gap-1 mt-1 flex-wrap">
+                    {post.badges.map((badge, i) => (
+                      <span key={i} className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full">
+                        {badge}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="text-slate-200 mt-2 whitespace-pre-wrap">{post.content}</p>
+                {post.image && (
+                  <div className="mt-3 p-8 bg-slate-800/50 border border-slate-700/50 rounded-xl text-center text-slate-400">
+                    {post.image}
+                  </div>
+                )}
+                <div className="flex items-center gap-6 mt-3">
+                  <button className="flex items-center gap-2 text-slate-500 hover:text-blue-400 transition">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <span className="text-sm">{post.comments}</span>
+                  </button>
+                  <button className="flex items-center gap-2 text-slate-500 hover:text-emerald-400 transition">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span className="text-sm">{post.shares}</span>
+                  </button>
+                  <button className="flex items-center gap-2 text-slate-500 hover:text-red-400 transition">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    <span className="text-sm">{post.likes}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Trending Sidebar */}
+      <div className="w-80 p-4 overflow-y-auto hidden lg:block">
+        <div className="bg-slate-800/50 rounded-xl p-4 mb-4">
+          <h3 className="text-white font-semibold mb-3">Trending Topics</h3>
+          <div className="space-y-3">
+            {['#ClaudeCode', '#AIAutomation', '#PortfolioProject', '#CapstoneComplete'].map((tag) => (
+              <div key={tag} className="text-emerald-400 hover:text-emerald-300 cursor-pointer text-sm">
+                {tag}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-slate-800/50 rounded-xl p-4">
+          <h3 className="text-white font-semibold mb-3">Top Earners This Week</h3>
+          <div className="space-y-3">
+            {[
+              { name: 'Alex Chen', akus: 12 },
+              { name: 'Sarah Park', akus: 10 },
+              { name: 'Emily Rodriguez', akus: 8 },
+            ].map((user, i) => (
+              <div key={user.name} className="flex items-center gap-2">
+                <span className="text-slate-500 text-sm w-4">{i + 1}.</span>
+                <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-white text-xs">
+                  {user.name[0]}
+                </div>
+                <span className="text-slate-300 text-sm flex-1">{user.name}</span>
+                <span className="text-emerald-400 text-sm">{user.akus} AKUs</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Projects View
+function ProjectsView() {
+  const projects = [
+    {
+      id: '1',
+      title: 'AI-Powered Portfolio',
+      description: 'Personal portfolio website built with Next.js and Claude Code assistance',
+      status: 'completed',
+      progress: 100,
+      tech: ['Next.js', 'Tailwind', 'Vercel'],
+      lastUpdated: '2 days ago',
+    },
+    {
+      id: '2',
+      title: 'Email Automation Bot',
+      description: 'Automated email responses using GPT-4 and Gmail API',
+      status: 'in-progress',
+      progress: 65,
+      tech: ['Python', 'OpenAI', 'Gmail API'],
+      lastUpdated: '5 hours ago',
+    },
+    {
+      id: '3',
+      title: 'Customer Support Agent',
+      description: 'Multi-agent system for handling support tickets',
+      status: 'in-progress',
+      progress: 30,
+      tech: ['Claude', 'Supabase', 'Next.js'],
+      lastUpdated: '1 day ago',
+    },
+  ];
+
+  return (
+    <div className="p-6 overflow-y-auto h-full">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-white">My Projects</h1>
+          <button className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Project
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+            <div className="text-2xl font-bold text-white">3</div>
+            <div className="text-slate-400 text-sm">Total Projects</div>
+          </div>
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+            <div className="text-2xl font-bold text-emerald-400">1</div>
+            <div className="text-slate-400 text-sm">Completed</div>
+          </div>
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+            <div className="text-2xl font-bold text-blue-400">2</div>
+            <div className="text-slate-400 text-sm">In Progress</div>
+          </div>
+        </div>
+
+        {/* Project Cards */}
+        <div className="space-y-4">
+          {projects.map((project) => (
+            <div key={project.id} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 hover:bg-slate-800/70 transition">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h3 className="text-white font-semibold text-lg">{project.title}</h3>
+                  <p className="text-slate-400 text-sm mt-1">{project.description}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  project.status === 'completed'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'bg-blue-500/20 text-blue-400'
+                }`}>
+                  {project.status === 'completed' ? 'Completed' : 'In Progress'}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {project.tech.map((t) => (
+                  <span key={t} className="px-2 py-1 bg-slate-700/50 text-slate-300 rounded text-xs">
+                    {t}
+                  </span>
+                ))}
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex-1 mr-4">
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-slate-500">Progress</span>
+                    <span className="text-slate-400">{project.progress}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        project.status === 'completed' ? 'bg-emerald-500' : 'bg-blue-500'
+                      }`}
+                      style={{ width: `${project.progress}%` }}
+                    />
+                  </div>
+                </div>
+                <span className="text-slate-500 text-xs">Updated {project.lastUpdated}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Discussions View
+function DiscussionsView() {
+  const discussions = [
+    {
+      id: '1',
+      title: 'Best practices for prompt engineering?',
+      author: 'Alex Chen',
+      replies: 23,
+      views: 156,
+      lastReply: '10 min ago',
+      tags: ['AI', 'Tips'],
+      pinned: true,
+    },
+    {
+      id: '2',
+      title: 'How to handle API rate limits in production',
+      author: 'Sarah Park',
+      replies: 15,
+      views: 89,
+      lastReply: '1 hour ago',
+      tags: ['API', 'Production'],
+      pinned: false,
+    },
+    {
+      id: '3',
+      title: 'Showcase: My first automation workflow',
+      author: 'Marcus Johnson',
+      replies: 8,
+      views: 45,
+      lastReply: '3 hours ago',
+      tags: ['Showcase', 'Automation'],
+      pinned: false,
+    },
+    {
+      id: '4',
+      title: 'Terminal shortcuts everyone should know',
+      author: 'Emily Rodriguez',
+      replies: 34,
+      views: 234,
+      lastReply: '5 hours ago',
+      tags: ['Terminal', 'Tips'],
+      pinned: false,
+    },
+  ];
+
+  const categories = [
+    { name: 'General', count: 45 },
+    { name: 'Help & Support', count: 23 },
+    { name: 'Showcase', count: 12 },
+    { name: 'Resources', count: 8 },
+    { name: 'Off-Topic', count: 5 },
+  ];
+
+  return (
+    <div className="flex h-full">
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold text-white">Discussions</h1>
+              <button className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition">
+                New Discussion
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="relative mb-6">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search discussions..."
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50"
+              />
+            </div>
+
+            {/* Discussion List */}
+            <div className="space-y-2">
+              {discussions.map((discussion) => (
+                <div key={discussion.id} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-800/70 transition cursor-pointer">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-medium flex-shrink-0">
+                      {discussion.author[0]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {discussion.pinned && (
+                          <span className="text-emerald-400">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M16 4v8l2 2v2h-6v6l-1 1-1-1v-6H4v-2l2-2V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2z" />
+                            </svg>
+                          </span>
+                        )}
+                        <h3 className="text-white font-medium">{discussion.title}</h3>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {discussion.tags.map((tag) => (
+                          <span key={tag} className="text-xs px-2 py-0.5 bg-slate-700/50 text-slate-400 rounded">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                        <span>{discussion.author}</span>
+                        <span>{discussion.replies} replies</span>
+                        <span>{discussion.views} views</span>
+                        <span>Last reply {discussion.lastReply}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Categories Sidebar */}
+      <div className="w-64 border-l border-slate-800/50 p-4 overflow-y-auto hidden lg:block">
+        <h3 className="text-white font-semibold mb-3">Categories</h3>
+        <div className="space-y-1">
+          {categories.map((cat) => (
+            <button key={cat.name} className="w-full flex items-center justify-between px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition text-sm">
+              <span>{cat.name}</span>
+              <span className="text-slate-600">{cat.count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Leaderboards View
+function LeaderboardsView() {
+  const leaderboard = [
+    { rank: 1, name: 'Alex Chen', akus: 47, streak: 21, badges: 5, change: 0 },
+    { rank: 2, name: 'Sarah Park', akus: 42, streak: 18, badges: 4, change: 1 },
+    { rank: 3, name: 'Emily Rodriguez', akus: 38, streak: 15, badges: 4, change: -1 },
+    { rank: 4, name: 'Marcus Johnson', akus: 35, streak: 12, badges: 3, change: 2 },
+    { rank: 5, name: 'Jordan Lee', akus: 32, streak: 10, badges: 3, change: 0 },
+    { rank: 6, name: 'Taylor Kim', akus: 28, streak: 8, badges: 2, change: -2 },
+    { rank: 7, name: 'Morgan Davis', akus: 25, streak: 7, badges: 2, change: 1 },
+    { rank: 8, name: 'Casey Wilson', akus: 22, streak: 5, badges: 2, change: 0 },
+    { rank: 9, name: 'Riley Thompson', akus: 20, streak: 4, badges: 1, change: 3 },
+    { rank: 10, name: 'Quinn Brown', akus: 18, streak: 3, badges: 1, change: -1 },
+  ];
+
+  return (
+    <div className="p-6 overflow-y-auto h-full">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold text-white mb-6">Leaderboards</h1>
+
+        {/* Filters */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {['All Time', 'This Month', 'This Week', 'Today'].map((filter, i) => (
+            <button
+              key={filter}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
+                i === 0
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-slate-800/50 text-slate-400 hover:text-white'
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+
+        {/* Top 3 Podium */}
+        <div className="flex items-end justify-center gap-4 mb-8 h-48">
+          {/* 2nd Place */}
+          <div className="flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full bg-slate-600 flex items-center justify-center text-white text-2xl font-bold mb-2">
+              S
+            </div>
+            <span className="text-white font-medium text-sm">{leaderboard[1].name}</span>
+            <span className="text-slate-400 text-xs">{leaderboard[1].akus} AKUs</span>
+            <div className="w-24 h-24 bg-gradient-to-t from-slate-400/20 to-slate-400/5 rounded-t-lg mt-2 flex items-center justify-center">
+              <span className="text-3xl font-bold text-slate-400">2</span>
+            </div>
+          </div>
+          {/* 1st Place */}
+          <div className="flex flex-col items-center">
+            <div className="w-20 h-20 rounded-full bg-yellow-500 flex items-center justify-center text-white text-3xl font-bold mb-2 ring-4 ring-yellow-500/30">
+              A
+            </div>
+            <span className="text-white font-semibold">{leaderboard[0].name}</span>
+            <span className="text-yellow-400 text-sm">{leaderboard[0].akus} AKUs</span>
+            <div className="w-28 h-32 bg-gradient-to-t from-yellow-500/20 to-yellow-500/5 rounded-t-lg mt-2 flex items-center justify-center">
+              <span className="text-4xl font-bold text-yellow-400">1</span>
+            </div>
+          </div>
+          {/* 3rd Place */}
+          <div className="flex flex-col items-center">
+            <div className="w-14 h-14 rounded-full bg-orange-700 flex items-center justify-center text-white text-xl font-bold mb-2">
+              E
+            </div>
+            <span className="text-white font-medium text-sm">{leaderboard[2].name}</span>
+            <span className="text-slate-400 text-xs">{leaderboard[2].akus} AKUs</span>
+            <div className="w-20 h-16 bg-gradient-to-t from-orange-700/20 to-orange-700/5 rounded-t-lg mt-2 flex items-center justify-center">
+              <span className="text-2xl font-bold text-orange-600">3</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Full Leaderboard Table */}
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-700/50">
+                <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">Rank</th>
+                <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">User</th>
+                <th className="text-center py-3 px-4 text-slate-400 font-medium text-sm">AKUs</th>
+                <th className="text-center py-3 px-4 text-slate-400 font-medium text-sm">Streak</th>
+                <th className="text-center py-3 px-4 text-slate-400 font-medium text-sm">Badges</th>
+                <th className="text-center py-3 px-4 text-slate-400 font-medium text-sm">Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaderboard.map((user) => (
+                <tr key={user.rank} className="border-b border-slate-700/30 last:border-0 hover:bg-slate-800/30 transition">
+                  <td className="py-3 px-4">
+                    <span className={`font-bold ${
+                      user.rank === 1 ? 'text-yellow-400' :
+                      user.rank === 2 ? 'text-slate-400' :
+                      user.rank === 3 ? 'text-orange-600' :
+                      'text-slate-500'
+                    }`}>
+                      #{user.rank}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white text-sm font-medium">
+                        {user.name[0]}
+                      </div>
+                      <span className="text-white font-medium">{user.name}</span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-center text-emerald-400 font-semibold">{user.akus}</td>
+                  <td className="py-3 px-4 text-center">
+                    <span className="inline-flex items-center gap-1 text-orange-400">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.66 11.2C17.43 10.9 17.15 10.64 16.89 10.38C16.22 9.78 15.46 9.35 14.82 8.72C13.33 7.26 13 4.85 13.95 3C13 3.23 12.17 3.75 11.46 4.32C8.87 6.4 7.85 10.07 9.07 13.22C9.11 13.32 9.15 13.42 9.15 13.55C9.15 13.77 9 13.97 8.8 14.05C8.57 14.15 8.33 14.09 8.14 13.93C8.08 13.88 8.04 13.83 8 13.76C6.87 12.33 6.69 10.28 7.45 8.64C5.78 10 4.87 12.3 5 14.47C5.06 14.97 5.12 15.47 5.29 15.97C5.43 16.57 5.7 17.17 6 17.7C7.08 19.43 8.95 20.67 10.96 20.92C13.1 21.19 15.39 20.8 17.03 19.32C18.86 17.66 19.5 15 18.56 12.72L18.43 12.46C18.22 12 17.66 11.2 17.66 11.2Z" />
+                      </svg>
+                      {user.streak}d
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-center text-slate-400">{user.badges}</td>
+                  <td className="py-3 px-4 text-center">
+                    {user.change > 0 ? (
+                      <span className="text-emerald-400 flex items-center justify-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                        {user.change}
+                      </span>
+                    ) : user.change < 0 ? (
+                      <span className="text-red-400 flex items-center justify-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                        {Math.abs(user.change)}
+                      </span>
+                    ) : (
+                      <span className="text-slate-600">-</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [selectedPath, setSelectedPath] = useState<PathType>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [showProgressPanel, setShowProgressPanel] = useState(true);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [activeView, setActiveView] = useState<ViewType>('home');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -444,8 +1182,9 @@ export default function DashboardPage() {
         {/* Main Navigation */}
         <nav className="px-3 space-y-1">
           <NavItem
-            active
+            active={activeView === 'home'}
             label="Home"
+            onClick={() => setActiveView('home')}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -478,8 +1217,9 @@ export default function DashboardPage() {
         {/* Course & Community Features */}
         <nav className="px-3 space-y-1">
           <NavItem
-            locked
+            active={activeView === 'live-courses'}
             label="Live Courses"
+            onClick={() => setActiveView('live-courses')}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -487,8 +1227,9 @@ export default function DashboardPage() {
             }
           />
           <NavItem
-            locked
+            active={activeView === 'community'}
             label="Community Feed"
+            onClick={() => setActiveView('community')}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
@@ -496,8 +1237,9 @@ export default function DashboardPage() {
             }
           />
           <NavItem
-            locked
+            active={activeView === 'projects'}
             label="Projects"
+            onClick={() => setActiveView('projects')}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -505,8 +1247,9 @@ export default function DashboardPage() {
             }
           />
           <NavItem
-            locked
+            active={activeView === 'discussions'}
             label="Discussions"
+            onClick={() => setActiveView('discussions')}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
@@ -514,8 +1257,9 @@ export default function DashboardPage() {
             }
           />
           <NavItem
-            locked
+            active={activeView === 'leaderboards'}
             label="Leaderboards"
+            onClick={() => setActiveView('leaderboards')}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
@@ -661,117 +1405,131 @@ export default function DashboardPage() {
         </aside>
       )}
 
-      {/* Main Chat Area */}
+      {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800/50">
-          <div className="flex items-center gap-3">
-            <CheckeredAvatar size="sm" />
-            <div>
-              <h1 className="text-white font-semibold">Phazur AI Coach</h1>
-              <p className="text-slate-500 text-xs">
-                {selectedPath ? `${PATH_INFO[selectedPath].title} Path` : 'Choose your path to begin'}
-              </p>
-            </div>
-          </div>
+        {activeView === 'home' ? (
+          <>
+            {/* Header */}
+            <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800/50">
+              <div className="flex items-center gap-3">
+                <CheckeredAvatar size="sm" />
+                <div>
+                  <h1 className="text-white font-semibold">Phazur AI Coach</h1>
+                  <p className="text-slate-500 text-xs">
+                    {selectedPath ? `${PATH_INFO[selectedPath].title} Path` : 'Choose your path to begin'}
+                  </p>
+                </div>
+              </div>
 
-          {!showProgressPanel && (
-            <button
-              onClick={() => setShowProgressPanel(true)}
-              className="px-3 py-1.5 text-sm text-slate-400 hover:text-white bg-slate-800 rounded-lg transition"
-            >
-              Show Progress
-            </button>
-          )}
-        </header>
+              {!showProgressPanel && (
+                <button
+                  onClick={() => setShowProgressPanel(true)}
+                  className="px-3 py-1.5 text-sm text-slate-400 hover:text-white bg-slate-800 rounded-lg transition"
+                >
+                  Show Progress
+                </button>
+              )}
+            </header>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-6 py-6">
-          <div className="max-w-2xl mx-auto">
-            {messages.map((msg) => (
-              <div key={msg.id} className="mb-6">
-                {msg.role === 'assistant' ? (
-                  <div className="flex gap-3">
-                    <CheckeredAvatar size="sm" />
-                    <div className="flex-1 space-y-2">
-                      {msg.content.map((paragraph, i) => (
-                        <div
-                          key={i}
-                          className="bg-[#2a2d32] text-slate-200 px-4 py-3 rounded-2xl rounded-tl-md max-w-fit"
-                        >
-                          <p className="whitespace-pre-wrap leading-relaxed text-sm">{paragraph}</p>
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto px-6 py-6">
+              <div className="max-w-2xl mx-auto">
+                {messages.map((msg) => (
+                  <div key={msg.id} className="mb-6">
+                    {msg.role === 'assistant' ? (
+                      <div className="flex gap-3">
+                        <CheckeredAvatar size="sm" />
+                        <div className="flex-1 space-y-2">
+                          {msg.content.map((paragraph, i) => (
+                            <div
+                              key={i}
+                              className="bg-[#2a2d32] text-slate-200 px-4 py-3 rounded-2xl rounded-tl-md max-w-fit"
+                            >
+                              <p className="whitespace-pre-wrap leading-relaxed text-sm">{paragraph}</p>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-end">
+                        <div className="bg-emerald-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-md max-w-xs">
+                          <p className="text-sm">{msg.content[0]}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="flex justify-end">
-                    <div className="bg-emerald-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-md max-w-xs">
-                      <p className="text-sm">{msg.content[0]}</p>
+                ))}
+
+                {isTyping && (
+                  <div className="flex gap-3 mb-6">
+                    <CheckeredAvatar size="sm" />
+                    <div className="bg-[#2a2d32] px-4 py-3 rounded-2xl rounded-tl-md">
+                      <div className="flex gap-1.5">
+                        <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
                     </div>
                   </div>
                 )}
-              </div>
-            ))}
 
-            {isTyping && (
-              <div className="flex gap-3 mb-6">
-                <CheckeredAvatar size="sm" />
-                <div className="bg-[#2a2d32] px-4 py-3 rounded-2xl rounded-tl-md">
-                  <div className="flex gap-1.5">
-                    <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            {/* Input Area */}
+            <div className="px-6 pb-6">
+              <div className="max-w-2xl mx-auto">
+                {/* Suggestion pills */}
+                {messages.length > 0 && (messages[messages.length - 1].suggestions || suggestions.length > 0) && !isTyping && (
+                  <div className="mb-3 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                    {(messages[messages.length - 1].suggestions || suggestions)?.map((suggestion, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="flex-shrink-0 px-4 py-2 bg-[#2a2d32] hover:bg-[#3a3d42] text-slate-300 text-sm rounded-full border border-slate-700 hover:border-slate-600 transition whitespace-nowrap"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
                   </div>
+                )}
+
+                {/* Input */}
+                <div className="relative">
+                  <textarea
+                    ref={inputRef}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Message Phazur..."
+                    rows={1}
+                    className="w-full px-4 py-3 pr-12 bg-[#2a2d32] border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 resize-none text-sm"
+                  />
+                  <button
+                    onClick={() => handleUserResponse()}
+                    disabled={!inputValue.trim() || isTyping}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-emerald-400 disabled:opacity-30 disabled:hover:text-slate-400 transition"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </button>
                 </div>
               </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-
-        {/* Input Area */}
-        <div className="px-6 pb-6">
-          <div className="max-w-2xl mx-auto">
-            {/* Suggestion pills */}
-            {messages.length > 0 && (messages[messages.length - 1].suggestions || suggestions.length > 0) && !isTyping && (
-              <div className="mb-3 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-                {(messages[messages.length - 1].suggestions || suggestions)?.map((suggestion, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="flex-shrink-0 px-4 py-2 bg-[#2a2d32] hover:bg-[#3a3d42] text-slate-300 text-sm rounded-full border border-slate-700 hover:border-slate-600 transition whitespace-nowrap"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Input */}
-            <div className="relative">
-              <textarea
-                ref={inputRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Message Phazur..."
-                rows={1}
-                className="w-full px-4 py-3 pr-12 bg-[#2a2d32] border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 resize-none text-sm"
-              />
-              <button
-                onClick={() => handleUserResponse()}
-                disabled={!inputValue.trim() || isTyping}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-emerald-400 disabled:opacity-30 disabled:hover:text-slate-400 transition"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </button>
             </div>
-          </div>
-        </div>
+          </>
+        ) : activeView === 'live-courses' ? (
+          <LiveCoursesView />
+        ) : activeView === 'community' ? (
+          <CommunityFeedView />
+        ) : activeView === 'projects' ? (
+          <ProjectsView />
+        ) : activeView === 'discussions' ? (
+          <DiscussionsView />
+        ) : activeView === 'leaderboards' ? (
+          <LeaderboardsView />
+        ) : null}
       </main>
     </div>
   );
