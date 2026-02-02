@@ -209,6 +209,340 @@ function CertificateCard({
   );
 }
 
+// Collapsible Section component
+function CollapsibleSection({
+  title,
+  defaultOpen = true,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border border-slate-800/40 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-3 bg-slate-800/20 hover:bg-slate-800/30 transition"
+      >
+        <span className="text-sm font-medium text-slate-300">{title}</span>
+        <svg
+          className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isOpen && <div className="p-3 bg-slate-900/20">{children}</div>}
+    </div>
+  );
+}
+
+// Progress Checkpoint component
+function ProgressCheckpoint({
+  completed,
+  current,
+  label,
+  isLast = false,
+}: {
+  completed: boolean;
+  current: boolean;
+  label: string;
+  isLast?: boolean;
+}) {
+  return (
+    <div className="flex items-center">
+      <div className="flex flex-col items-center">
+        <div
+          className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-all ${
+            completed
+              ? 'bg-slate-700 border-slate-600'
+              : current
+              ? 'bg-cyan-500/20 border-cyan-500'
+              : 'bg-slate-800/50 border-slate-700'
+          }`}
+        >
+          {completed ? (
+            <svg className="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : current ? (
+            <div className="w-2 h-2 bg-cyan-500 rounded-full" />
+          ) : (
+            <div className="w-2 h-2 bg-slate-700 rounded-full" />
+          )}
+        </div>
+        {!isLast && (
+          <div className={`w-0.5 h-4 ${completed ? 'bg-slate-600' : 'bg-slate-800'}`} />
+        )}
+      </div>
+      <span className={`ml-3 text-xs ${current ? 'text-cyan-400' : completed ? 'text-slate-400' : 'text-slate-600'}`}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// Video Card component
+function VideoCard({
+  title,
+  duration,
+  thumbnail,
+  isPlaying = false,
+  onClick,
+}: {
+  title: string;
+  duration: string;
+  thumbnail: string;
+  isPlaying?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-start gap-3 p-2 rounded-lg transition ${
+        isPlaying ? 'bg-cyan-500/10 border border-cyan-500/30' : 'hover:bg-slate-800/40'
+      }`}
+    >
+      <div className="relative w-16 h-10 bg-slate-800 rounded flex-shrink-0 flex items-center justify-center overflow-hidden">
+        <span className="text-lg">{thumbnail}</span>
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+          {isPlaying ? (
+            <div className="w-3 h-3 border-2 border-white rounded-sm" />
+          ) : (
+            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          )}
+        </div>
+      </div>
+      <div className="flex-1 text-left">
+        <h4 className={`text-xs font-medium ${isPlaying ? 'text-cyan-400' : 'text-slate-300'}`}>{title}</h4>
+        <p className="text-[10px] text-slate-600 mt-0.5">{duration}</p>
+      </div>
+    </button>
+  );
+}
+
+// Tutor Sidebar component
+function TutorSidebar({
+  currentStep,
+  selectedPath,
+  messages,
+  onClose,
+}: {
+  currentStep: number;
+  selectedPath: 'student' | 'employee' | 'owner' | null;
+  messages: Array<{ role: string; content: string[] }>;
+  onClose: () => void;
+}) {
+  const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+
+  // Determine current topic based on messages and step
+  const getCurrentTopic = () => {
+    if (!selectedPath) return 'Getting Started';
+    if (currentStep < 2) return 'Introduction & Setup';
+    if (currentStep < 4) return 'Core Concepts';
+    return 'Building Projects';
+  };
+
+  // Get contextual videos based on path and progress
+  const getRelevantVideos = () => {
+    const baseVideos = [
+      { id: '1', title: 'Terminal Basics', duration: '5:32', thumbnail: '💻' },
+      { id: '2', title: 'Your First Command', duration: '3:45', thumbnail: '⌨️' },
+      { id: '3', title: 'File Navigation', duration: '4:18', thumbnail: '📁' },
+    ];
+
+    if (selectedPath === 'student') {
+      return [
+        ...baseVideos,
+        { id: '4', title: 'Portfolio Setup', duration: '8:21', thumbnail: '🎨' },
+        { id: '5', title: 'Deploy to Vercel', duration: '6:15', thumbnail: '🚀' },
+      ];
+    } else if (selectedPath === 'employee') {
+      return [
+        { id: '1', title: 'Workflow Analysis', duration: '6:42', thumbnail: '📊' },
+        { id: '2', title: 'Building GPTs', duration: '9:15', thumbnail: '🤖' },
+        { id: '3', title: 'Email Automation', duration: '7:33', thumbnail: '📧' },
+        { id: '4', title: 'API Basics', duration: '5:48', thumbnail: '🔗' },
+      ];
+    } else if (selectedPath === 'owner') {
+      return [
+        { id: '1', title: 'Operations Mapping', duration: '8:12', thumbnail: '🗺️' },
+        { id: '2', title: 'Agent Architecture', duration: '11:45', thumbnail: '🏗️' },
+        { id: '3', title: 'Multi-Agent Setup', duration: '14:22', thumbnail: '🔄' },
+        { id: '4', title: 'Scaling Systems', duration: '9:38', thumbnail: '📈' },
+      ];
+    }
+
+    return baseVideos;
+  };
+
+  // Get progress steps based on path
+  const getProgressSteps = () => {
+    if (selectedPath === 'student') {
+      return ['Welcome', 'Terminal Setup', 'First Commands', 'Build Project', 'Deploy'];
+    } else if (selectedPath === 'employee') {
+      return ['Assessment', 'Workflow Map', 'Build GPT', 'Automations', 'Report'];
+    } else if (selectedPath === 'owner') {
+      return ['Audit', 'Agent Design', 'Build Agent', 'Orchestrate', 'Deploy'];
+    }
+    return ['Start', 'Learn', 'Build', 'Ship'];
+  };
+
+  const progressSteps = getProgressSteps();
+  const videos = getRelevantVideos();
+
+  return (
+    <aside className="w-72 border-l border-slate-800/40 flex flex-col bg-[#0f1115] overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/40">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded bg-cyan-500/20 flex items-center justify-center">
+            <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <span className="text-sm font-medium text-slate-300">Tutor</span>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-1 text-slate-600 hover:text-slate-400 transition"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {/* Progress Section */}
+        <CollapsibleSection title="Progress" defaultOpen={true}>
+          <div className="space-y-0">
+            {progressSteps.map((step, index) => (
+              <ProgressCheckpoint
+                key={step}
+                completed={index < currentStep}
+                current={index === currentStep}
+                label={step}
+                isLast={index === progressSteps.length - 1}
+              />
+            ))}
+          </div>
+          <p className="text-[10px] text-slate-600 mt-3">
+            Track your progress through the learning path.
+          </p>
+        </CollapsibleSection>
+
+        {/* Current Topic */}
+        <div className="flex items-center justify-between p-3 bg-slate-800/30 border border-slate-800/40 rounded-lg">
+          <div>
+            <p className="text-[10px] text-slate-600 uppercase tracking-wider">Current Topic</p>
+            <p className="text-sm font-medium text-slate-300">{getCurrentTopic()}</p>
+          </div>
+          <div className="flex items-center gap-1">
+            <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Relevant Videos */}
+        <CollapsibleSection title="Videos" defaultOpen={true}>
+          <div className="space-y-1">
+            {videos.slice(0, 4).map((video) => (
+              <VideoCard
+                key={video.id}
+                title={video.title}
+                duration={video.duration}
+                thumbnail={video.thumbnail}
+                isPlaying={playingVideo === video.id}
+                onClick={() => setPlayingVideo(playingVideo === video.id ? null : video.id)}
+              />
+            ))}
+          </div>
+          <button className="w-full mt-2 text-[10px] text-cyan-500/70 hover:text-cyan-400 transition">
+            View all videos →
+          </button>
+        </CollapsibleSection>
+
+        {/* Context / Resources */}
+        <CollapsibleSection title="Context" defaultOpen={false}>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 p-2 bg-slate-800/30 rounded">
+              <div className="w-8 h-8 bg-slate-800 rounded flex items-center justify-center">
+                <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-slate-400">Getting Started Guide</p>
+                <p className="text-[10px] text-slate-600">PDF • 2.4 MB</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 p-2 bg-slate-800/30 rounded">
+              <div className="w-8 h-8 bg-slate-800 rounded flex items-center justify-center">
+                <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-slate-400">Documentation</p>
+                <p className="text-[10px] text-slate-600">External link</p>
+              </div>
+            </div>
+          </div>
+          <p className="text-[10px] text-slate-600 mt-3">
+            Resources related to your current task.
+          </p>
+        </CollapsibleSection>
+      </div>
+
+      {/* Video Player Preview (when playing) */}
+      {playingVideo && (
+        <div className="border-t border-slate-800/40 p-3 bg-slate-900/50">
+          <div className="relative aspect-video bg-slate-800 rounded-lg overflow-hidden mb-2">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <span className="text-3xl mb-2 block">
+                  {videos.find(v => v.id === playingVideo)?.thumbnail}
+                </span>
+                <p className="text-xs text-slate-400">Video Player</p>
+              </div>
+            </div>
+            {/* Playback controls */}
+            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+              <div className="flex items-center gap-2">
+                <button className="text-white">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                  </svg>
+                </button>
+                <div className="flex-1 h-1 bg-slate-700 rounded-full">
+                  <div className="w-1/3 h-full bg-cyan-500 rounded-full" />
+                </div>
+                <span className="text-[10px] text-slate-400">1:24</span>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-slate-300 font-medium">
+            {videos.find(v => v.id === playingVideo)?.title}
+          </p>
+        </div>
+      )}
+    </aside>
+  );
+}
+
 // Live Courses View
 function LiveCoursesView() {
   const upcomingCourses = [
@@ -867,6 +1201,7 @@ export default function DashboardPage() {
   const [chatViewMode, setChatViewMode] = useState<'chat' | 'terminal'>('chat');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const terminalInputRef = useRef<HTMLInputElement>(null);
 
   // Backend hooks
   const { user, loading: authLoading } = useAuth();
@@ -1188,129 +1523,6 @@ export default function DashboardPage() {
         </div>
       </aside>
 
-      {/* Progress Panel */}
-      {showProgressPanel && (
-        <aside className="w-64 border-r border-slate-800/40 flex flex-col bg-[#13151a] flex-shrink-0 overflow-y-auto">
-          {/* Progress Header */}
-          <div className="p-4 border-b border-slate-800/40">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-slate-300 text-sm font-medium">Progress</h2>
-              <button
-                onClick={() => setShowProgressPanel(false)}
-                className="text-slate-600 hover:text-slate-400 transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Progress Ring */}
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <ProgressRing progress={progressPercent} />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-white font-medium text-sm">{Math.round(progressPercent)}%</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-white text-sm font-medium">{completedAkus} AKUs</p>
-                <p className="text-slate-600 text-xs">of {targetAkus} needed</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="p-4 border-b border-slate-800/40">
-            <h3 className="text-slate-600 text-[10px] uppercase tracking-wider mb-2">Stats</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-slate-800/30 rounded-lg p-2.5">
-                <div className="text-lg font-semibold text-white">{stats?.currentStreak || 0}</div>
-                <p className="text-slate-600 text-[10px]">Day Streak</p>
-              </div>
-              <div className="bg-slate-800/30 rounded-lg p-2.5">
-                <div className="text-lg font-semibold text-white">{Math.round((stats?.totalTimeSpent || 0) / 60)}h</div>
-                <p className="text-slate-600 text-[10px]">Time</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Current Path */}
-          {selectedPath && (
-            <div className="p-4 border-b border-slate-800/40">
-              <h3 className="text-slate-600 text-[10px] uppercase tracking-wider mb-2">Current Path</h3>
-              <div className={`p-3 rounded-lg border ${PATH_INFO[selectedPath].styles.border} ${PATH_INFO[selectedPath].styles.bg}`}>
-                <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-lg ${PATH_INFO[selectedPath].styles.bgIcon} flex items-center justify-center ${PATH_INFO[selectedPath].styles.text}`}>
-                    {selectedPath === 'student' && (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l9-5-9-5-9 5 9 5z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                      </svg>
-                    )}
-                    {selectedPath === 'employee' && (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    )}
-                    {selectedPath === 'owner' && (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                      </svg>
-                    )}
-                  </div>
-                  <div>
-                    <h4 className="text-white font-medium text-sm">{PATH_INFO[selectedPath].title}</h4>
-                    <p className="text-slate-600 text-xs">{PATH_INFO[selectedPath].subtitle}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Certificates */}
-          <div className="p-4 flex-1">
-            <h3 className="text-slate-600 text-[10px] uppercase tracking-wider mb-2">Certificates</h3>
-            <div className="space-y-2">
-              <CertificateCard
-                name="Certified AI Associate"
-                designation="Proof of Readiness"
-                earned={hasCertificate('student')}
-                progress={completedAkus}
-                required={10}
-                color="purple"
-              />
-              <CertificateCard
-                name="Workflow Efficiency Lead"
-                designation="Proof of ROI"
-                earned={hasCertificate('employee')}
-                progress={completedAkus}
-                required={15}
-                color="cyan"
-              />
-              <CertificateCard
-                name="AI Operations Master"
-                designation="Proof of Scalability"
-                earned={hasCertificate('owner')}
-                progress={completedAkus}
-                required={20}
-                color="emerald"
-              />
-            </div>
-          </div>
-
-          {/* Online indicator */}
-          {presence.onlineUsers > 0 && (
-            <div className="p-4 border-t border-slate-800/40">
-              <div className="flex items-center gap-2 text-xs text-slate-600">
-                <div className="w-1.5 h-1.5 bg-emerald-500/80 rounded-full" />
-                {presence.onlineUsers} online
-              </div>
-            </div>
-          )}
-        </aside>
-      )}
-
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0">
         {activeView === 'home' ? (
@@ -1361,9 +1573,12 @@ export default function DashboardPage() {
                 {!showProgressPanel && (
                   <button
                     onClick={() => setShowProgressPanel(true)}
-                    className="px-2.5 py-1 text-xs text-slate-600 hover:text-slate-400 bg-slate-800/50 rounded transition"
+                    className="px-2.5 py-1 text-xs text-slate-600 hover:text-slate-400 bg-slate-800/50 rounded transition flex items-center gap-1.5"
                   >
-                    Progress
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    Tutor
                   </button>
                 )}
               </div>
@@ -1525,7 +1740,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2 border-t border-slate-800/40 pt-3">
                       <span className="text-emerald-400 select-none">user$</span>
                       <input
-                        ref={inputRef as React.RefObject<HTMLInputElement>}
+                        ref={terminalInputRef}
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
@@ -1605,6 +1820,16 @@ export default function DashboardPage() {
           <LeaderboardsView />
         ) : null}
       </main>
+
+      {/* Tutor Sidebar - Right Side */}
+      {showProgressPanel && (
+        <TutorSidebar
+          currentStep={currentStep}
+          selectedPath={selectedPath}
+          messages={messages}
+          onClose={() => setShowProgressPanel(false)}
+        />
+      )}
     </div>
   );
 }
