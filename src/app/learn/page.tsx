@@ -20,6 +20,17 @@ interface Module {
   status: 'locked' | 'available' | 'in_progress' | 'completed';
 }
 
+interface Certificate {
+  id: string;
+  certificate_type: string;
+  issued_at: string;
+  metadata: {
+    certificationName: string;
+    designation: string;
+    akusCompleted: number;
+  };
+}
+
 const CURRICULUM: Record<string, Module[]> = {
   student: [
     {
@@ -286,10 +297,29 @@ export default function LearnPage() {
   const { stats } = useProgress();
   const [selectedTier, setSelectedTier] = useState<'student' | 'employee' | 'owner'>('student');
   const [modules, setModules] = useState<Module[]>(CURRICULUM.student);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
 
   useEffect(() => {
     setModules(CURRICULUM[selectedTier]);
   }, [selectedTier]);
+
+  // Fetch certificates
+  useEffect(() => {
+    async function fetchCertificates() {
+      try {
+        const response = await fetch('/api/certificates');
+        if (response.ok) {
+          const data = await response.json();
+          setCertificates(data.certificates || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch certificates:', error);
+      }
+    }
+    if (user) {
+      fetchCertificates();
+    }
+  }, [user]);
 
   const tierInfo = TIER_INFO[selectedTier];
   const completedModules = modules.filter((m) => m.status === 'completed').length;
@@ -413,6 +443,72 @@ export default function LearnPage() {
             </p>
           )}
         </div>
+
+        {/* Certificates Earned */}
+        {certificates.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-white mb-4">Certificates Earned</h2>
+            <div className="grid md:grid-cols-3 gap-4">
+              {certificates.map((cert) => {
+                const certColor = cert.certificate_type === 'student'
+                  ? 'emerald'
+                  : cert.certificate_type === 'employee'
+                  ? 'blue'
+                  : 'purple';
+
+                return (
+                  <div
+                    key={cert.id}
+                    className={`p-5 rounded-xl border ${
+                      certColor === 'emerald'
+                        ? 'bg-emerald-500/10 border-emerald-500/30'
+                        : certColor === 'blue'
+                        ? 'bg-blue-500/10 border-blue-500/30'
+                        : 'bg-purple-500/10 border-purple-500/30'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        certColor === 'emerald'
+                          ? 'bg-emerald-500/20'
+                          : certColor === 'blue'
+                          ? 'bg-blue-500/20'
+                          : 'bg-purple-500/20'
+                      }`}>
+                        <svg className={`w-6 h-6 ${
+                          certColor === 'emerald'
+                            ? 'text-emerald-400'
+                            : certColor === 'blue'
+                            ? 'text-blue-400'
+                            : 'text-purple-400'
+                        }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`font-semibold ${
+                          certColor === 'emerald'
+                            ? 'text-emerald-400'
+                            : certColor === 'blue'
+                            ? 'text-blue-400'
+                            : 'text-purple-400'
+                        }`}>
+                          {cert.metadata?.certificationName || TIER_INFO[cert.certificate_type as keyof typeof TIER_INFO]?.cert}
+                        </h3>
+                        <p className="text-slate-400 text-sm mt-1">
+                          {cert.metadata?.designation || 'Verified Credential'}
+                        </p>
+                        <p className="text-slate-500 text-xs mt-2">
+                          Issued {new Date(cert.issued_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Module Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
