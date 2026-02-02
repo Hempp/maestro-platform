@@ -7,10 +7,13 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Routes that require authentication
-const protectedRoutes = ['/dashboard'];
+const protectedRoutes = ['/dashboard', '/admin'];
 
 // Routes that should redirect to dashboard if already authenticated
 const authRoutes = ['/login', '/signup'];
+
+// Admin routes (require admin/teacher role - checked in layout)
+const adminRoutes = ['/admin'];
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -56,17 +59,19 @@ export async function middleware(request: NextRequest) {
   // Check if it's an auth route
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
-  // Redirect to login if accessing protected route without auth
-  // For now, allow unauthenticated access to dashboard for demo purposes
-  // Uncomment below to enable auth protection
-  /*
-  if (isProtectedRoute && !user) {
+  // Check if accessing admin routes
+  const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
+
+  // Redirect to login if accessing admin route without auth
+  if (isAdminRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
-  */
+
+  // Note: Role-based admin access is checked in the admin layout component
+  // This middleware only ensures authentication for admin routes
 
   // Redirect to dashboard if accessing auth routes while authenticated
   if (isAuthRoute && user) {
