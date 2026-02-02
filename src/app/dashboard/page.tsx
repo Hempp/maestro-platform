@@ -37,9 +37,10 @@ const PATH_INFO = {
     price: '$49',
     requiredAkus: 10,
     styles: {
-      border: 'border-emerald-500/30',
-      bg: 'bg-emerald-500/10',
-      bgIcon: 'bg-emerald-500/20',
+      border: 'border-purple-500/20',
+      bg: 'bg-purple-500/5',
+      bgIcon: 'bg-purple-500/10',
+      text: 'text-purple-400',
     },
   },
   employee: {
@@ -49,9 +50,10 @@ const PATH_INFO = {
     price: '$199',
     requiredAkus: 15,
     styles: {
-      border: 'border-blue-500/30',
-      bg: 'bg-blue-500/10',
-      bgIcon: 'bg-blue-500/20',
+      border: 'border-cyan-500/20',
+      bg: 'bg-cyan-500/5',
+      bgIcon: 'bg-cyan-500/10',
+      text: 'text-cyan-400',
     },
   },
   owner: {
@@ -61,34 +63,26 @@ const PATH_INFO = {
     price: '$499',
     requiredAkus: 20,
     styles: {
-      border: 'border-purple-500/30',
-      bg: 'bg-purple-500/10',
-      bgIcon: 'bg-purple-500/20',
+      border: 'border-emerald-500/20',
+      bg: 'bg-emerald-500/5',
+      bgIcon: 'bg-emerald-500/10',
+      text: 'text-emerald-400',
     },
   },
 };
 
-// Checkered avatar component
-function CheckeredAvatar({ size = 'md' }: { size?: 'sm' | 'md' }) {
-  const sizeClass = size === 'sm' ? 'w-8 h-8' : 'w-10 h-10';
+// AI Avatar component - clean minimal design
+function AIAvatar({ size = 'md' }: { size?: 'sm' | 'md' }) {
+  const sizeClass = size === 'sm' ? 'w-8 h-8' : 'w-9 h-9';
   return (
-    <div className={`${sizeClass} rounded-lg bg-slate-800 p-1.5 flex-shrink-0`}>
-      <div className="grid grid-cols-4 gap-0.5 w-full h-full">
-        {[...Array(16)].map((_, i) => (
-          <div
-            key={i}
-            className={`rounded-[1px] ${
-              (Math.floor(i / 4) + i) % 2 === 0 ? 'bg-slate-600' : 'bg-slate-700'
-            }`}
-          />
-        ))}
-      </div>
+    <div className={`${sizeClass} rounded-lg bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center flex-shrink-0`}>
+      <span className="text-slate-400 font-medium text-sm">P</span>
     </div>
   );
 }
 
-// Progress ring component
-function ProgressRing({ progress, size = 60, strokeWidth = 6 }: { progress: number; size?: number; strokeWidth?: number }) {
+// Progress ring component - subtle styling
+function ProgressRing({ progress, size = 56, strokeWidth = 5 }: { progress: number; size?: number; strokeWidth?: number }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (progress / 100) * circumference;
@@ -102,7 +96,7 @@ function ProgressRing({ progress, size = 60, strokeWidth = 6 }: { progress: numb
         fill="none"
         stroke="currentColor"
         strokeWidth={strokeWidth}
-        className="text-slate-700"
+        className="text-slate-800"
       />
       <circle
         cx={size / 2}
@@ -114,13 +108,13 @@ function ProgressRing({ progress, size = 60, strokeWidth = 6 }: { progress: numb
         strokeDasharray={circumference}
         strokeDashoffset={offset}
         strokeLinecap="round"
-        className="text-emerald-500 transition-all duration-500"
+        className="text-cyan-500 transition-all duration-300"
       />
     </svg>
   );
 }
 
-// Navigation item component
+// Navigation item component - clean minimal
 function NavItem({
   icon,
   label,
@@ -137,17 +131,17 @@ function NavItem({
   onClick?: () => void;
 }) {
   const content = (
-    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+    <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
       active
-        ? 'bg-slate-700/80 text-white'
+        ? 'bg-slate-800/80 text-white'
         : locked
-          ? 'text-slate-600 cursor-not-allowed'
-          : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+          ? 'text-slate-700 cursor-not-allowed'
+          : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/40'
     }`}>
-      <span className="w-6 h-6 flex items-center justify-center">{icon}</span>
-      <span className="font-medium text-sm flex-1">{label}</span>
+      <span className="w-5 h-5 flex items-center justify-center">{icon}</span>
+      <span className="text-sm flex-1">{label}</span>
       {locked && (
-        <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-3.5 h-3.5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
       )}
@@ -165,14 +159,14 @@ function NavItem({
   );
 }
 
-// Certificate card component
+// Certificate card component - refined styling
 function CertificateCard({
   name,
   designation,
   earned,
   progress,
   required,
-  color = 'emerald'
+  color = 'purple'
 }: {
   name: string;
   designation: string;
@@ -181,34 +175,32 @@ function CertificateCard({
   required: number;
   color?: string;
 }) {
-  const colorClasses: Record<string, { bg: string; border: string; text: string }> = {
-    emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
-    blue: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400' },
-    purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400' },
+  const colorClasses: Record<string, { bg: string; bar: string; text: string }> = {
+    purple: { bg: 'bg-purple-500/5', bar: 'bg-purple-500', text: 'text-purple-400' },
+    cyan: { bg: 'bg-cyan-500/5', bar: 'bg-cyan-500', text: 'text-cyan-400' },
+    emerald: { bg: 'bg-emerald-500/5', bar: 'bg-emerald-500', text: 'text-emerald-400' },
   };
-  const colors = colorClasses[color] || colorClasses.emerald;
+  const colors = colorClasses[color] || colorClasses.purple;
 
   return (
-    <div className={`p-3 rounded-lg border ${earned ? colors.border : 'border-slate-700'} ${earned ? colors.bg : 'bg-slate-800/50'}`}>
+    <div className={`p-3 rounded-lg border border-slate-800/60 ${earned ? colors.bg : 'bg-slate-800/30'}`}>
       <div className="flex items-start justify-between mb-2">
         <div>
-          <h4 className={`text-sm font-medium ${earned ? colors.text : 'text-slate-300'}`}>{name}</h4>
-          <p className="text-xs text-slate-500">{designation}</p>
+          <h4 className={`text-xs font-medium ${earned ? colors.text : 'text-slate-400'}`}>{name}</h4>
+          <p className="text-[10px] text-slate-600 mt-0.5">{designation}</p>
         </div>
         {earned ? (
-          <div className={`w-6 h-6 rounded-full ${colors.bg} flex items-center justify-center`}>
-            <svg className={`w-4 h-4 ${colors.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
+          <svg className={`w-4 h-4 ${colors.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
         ) : (
-          <span className="text-xs text-slate-500">{progress}/{required} AKUs</span>
+          <span className="text-[10px] text-slate-600">{progress}/{required}</span>
         )}
       </div>
       {!earned && (
-        <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+        <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
           <div
-            className={`h-full ${colors.bg.replace('/10', '')} rounded-full transition-all duration-500`}
+            className={`h-full ${colors.bar} rounded-full transition-all duration-300`}
             style={{ width: `${Math.min((progress / required) * 100, 100)}%` }}
           />
         </div>
@@ -228,7 +220,6 @@ function LiveCoursesView() {
       time: '2:00 PM EST',
       spots: 12,
       level: 'Beginner',
-      thumbnail: '🖥️',
     },
     {
       id: '2',
@@ -238,7 +229,6 @@ function LiveCoursesView() {
       time: '11:00 AM EST',
       spots: 8,
       level: 'Advanced',
-      thumbnail: '🤖',
     },
     {
       id: '3',
@@ -248,7 +238,6 @@ function LiveCoursesView() {
       time: '3:00 PM EST',
       spots: 20,
       level: 'Intermediate',
-      thumbnail: '🔗',
     },
   ];
 
@@ -261,73 +250,70 @@ function LiveCoursesView() {
 
   return (
     <div className="p-6 overflow-y-auto h-full">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-6">Live Courses</h1>
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-xl font-semibold text-white mb-6">Live Courses</h1>
 
         {/* Live Now Banner */}
-        <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 rounded-xl p-4 mb-6">
+        <div className="bg-slate-800/40 border border-slate-700/40 rounded-lg p-4 mb-6">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400/75 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500/80"></span>
               </span>
-              <span className="text-red-400 font-semibold text-sm uppercase tracking-wide">Live Now</span>
+              <span className="text-red-400/80 font-medium text-xs uppercase tracking-wide">Live</span>
             </div>
             <div className="flex-1">
-              <h3 className="text-white font-medium">{liveCourse.title}</h3>
-              <p className="text-slate-400 text-sm">{liveCourse.instructor} · {liveCourse.viewers} watching · Started {liveCourse.started}</p>
+              <h3 className="text-white font-medium text-sm">{liveCourse.title}</h3>
+              <p className="text-slate-500 text-xs">{liveCourse.instructor} · {liveCourse.viewers} watching</p>
             </div>
-            <button className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition">
-              Join Now
+            <button className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition">
+              Join
             </button>
           </div>
         </div>
 
         {/* Upcoming Schedule */}
-        <h2 className="text-lg font-semibold text-white mb-4">Upcoming Sessions</h2>
-        <div className="grid gap-4">
+        <h2 className="text-sm font-medium text-slate-400 mb-3">Upcoming Sessions</h2>
+        <div className="space-y-2">
           {upcomingCourses.map((course) => (
-            <div key={course.id} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-800/70 transition">
+            <div key={course.id} className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-4 hover:bg-slate-800/50 transition">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-slate-700 rounded-lg flex items-center justify-center text-2xl">
-                  {course.thumbnail}
+                <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center text-slate-500">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-white font-medium">{course.title}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      course.level === 'Beginner' ? 'bg-emerald-500/20 text-emerald-400' :
-                      course.level === 'Intermediate' ? 'bg-blue-500/20 text-blue-400' :
-                      'bg-purple-500/20 text-purple-400'
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h3 className="text-white font-medium text-sm">{course.title}</h3>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                      course.level === 'Beginner' ? 'bg-slate-700/50 text-slate-400' :
+                      course.level === 'Intermediate' ? 'bg-slate-700/50 text-slate-400' :
+                      'bg-slate-700/50 text-slate-400'
                     }`}>
                       {course.level}
                     </span>
                   </div>
-                  <p className="text-slate-400 text-sm">{course.instructor}</p>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                  <p className="text-slate-500 text-xs">{course.instructor}</p>
+                  <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-600">
                     <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       {course.date}
                     </span>
                     <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       {course.time}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      {course.spots} spots left
-                    </span>
+                    <span>{course.spots} spots</span>
                   </div>
                 </div>
-                <button className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition">
-                  Reserve Spot
+                <button className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition">
+                  Reserve
                 </button>
               </div>
             </div>
@@ -335,35 +321,35 @@ function LiveCoursesView() {
         </div>
 
         {/* Calendar Preview */}
-        <div className="mt-8 p-4 bg-slate-800/30 border border-slate-700/50 rounded-xl">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-white font-medium">February 2026</h3>
-            <div className="flex gap-2">
-              <button className="p-1 text-slate-400 hover:text-white">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mt-6 p-4 bg-slate-800/20 border border-slate-800/40 rounded-lg">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-slate-300 font-medium text-sm">February 2026</h3>
+            <div className="flex gap-1">
+              <button className="p-1 text-slate-600 hover:text-slate-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <button className="p-1 text-slate-400 hover:text-white">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button className="p-1 text-slate-600 hover:text-slate-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-7 gap-1 text-center text-sm">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="text-slate-500 py-2">{day}</div>
+          <div className="grid grid-cols-7 gap-1 text-center text-xs">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+              <div key={i} className="text-slate-600 py-1.5">{day}</div>
             ))}
             {Array.from({ length: 28 }, (_, i) => i + 1).map(day => (
               <div
                 key={day}
-                className={`py-2 rounded-lg ${
+                className={`py-1.5 rounded ${
                   [5, 8, 12].includes(day)
-                    ? 'bg-emerald-500/20 text-emerald-400 font-medium'
+                    ? 'bg-cyan-500/10 text-cyan-400/80'
                     : day === 1
-                    ? 'bg-blue-500/20 text-blue-400 font-medium'
-                    : 'text-slate-400 hover:bg-slate-700/50'
+                    ? 'bg-slate-700/30 text-slate-400'
+                    : 'text-slate-600 hover:bg-slate-800/40'
                 }`}
               >
                 {day}
@@ -376,89 +362,72 @@ function LiveCoursesView() {
   );
 }
 
-// Community Feed View (X-style)
+// Community Feed View
 function CommunityFeedView() {
   const posts = [
     {
       id: '1',
       author: { name: 'Alex Chen', handle: '@alexchen', avatar: 'A', verified: true },
-      content: 'Just deployed my first AI agent! It handles customer support tickets and has already saved 20+ hours this week. The Owner path is 🔥',
+      content: 'Just deployed my first AI agent! It handles customer support tickets and has already saved 20+ hours this week.',
       timestamp: '2h',
       likes: 45,
       comments: 12,
-      shares: 5,
       badges: ['AI Operations Master'],
-      image: null,
     },
     {
       id: '2',
       author: { name: 'Sarah Park', handle: '@sarahpark', avatar: 'S', verified: true },
-      content: 'Completed the Terminal Foundations module! Here\'s my portfolio site I built with Claude Code assistance. Feeling like a real developer now.',
+      content: 'Completed the Terminal Foundations module! Here\'s my portfolio site I built with Claude Code assistance.',
       timestamp: '4h',
       likes: 89,
       comments: 23,
-      shares: 8,
       badges: ['Certified AI Associate'],
-      image: '🖥️ Portfolio Preview',
     },
     {
       id: '3',
       author: { name: 'Marcus Johnson', handle: '@marcusj', avatar: 'M', verified: false },
-      content: 'Question for the community: What API integrations have been most valuable for your workflow automations? Looking to optimize my Employee path capstone project.',
+      content: 'Question for the community: What API integrations have been most valuable for your workflow automations?',
       timestamp: '6h',
       likes: 32,
       comments: 47,
-      shares: 3,
       badges: [],
-      image: null,
-    },
-    {
-      id: '4',
-      author: { name: 'Emily Rodriguez', handle: '@emilydev', avatar: 'E', verified: true },
-      content: 'New personal best: Built an entire landing page in 15 minutes using AI-assisted coding. The future of development is HERE.',
-      timestamp: '8h',
-      likes: 156,
-      comments: 34,
-      shares: 21,
-      badges: ['Workflow Efficiency Lead', 'Certified AI Associate'],
-      image: null,
     },
   ];
 
   return (
     <div className="flex h-full">
       {/* Main Feed */}
-      <div className="flex-1 border-r border-slate-800/50 overflow-y-auto">
-        <div className="sticky top-0 bg-[#1e2227]/95 backdrop-blur-sm border-b border-slate-800/50 p-4 z-10">
-          <h1 className="text-xl font-bold text-white">Community Feed</h1>
+      <div className="flex-1 border-r border-slate-800/40 overflow-y-auto">
+        <div className="sticky top-0 bg-[#0f1115]/95 backdrop-blur-sm border-b border-slate-800/40 px-6 py-4 z-10">
+          <h1 className="text-lg font-semibold text-white">Community</h1>
         </div>
 
         {/* Compose */}
-        <div className="p-4 border-b border-slate-800/50">
+        <div className="px-6 py-4 border-b border-slate-800/40">
           <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white font-medium flex-shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-sm font-medium flex-shrink-0">
               G
             </div>
             <div className="flex-1">
               <textarea
                 placeholder="Share your progress..."
-                className="w-full bg-transparent text-white placeholder-slate-500 resize-none focus:outline-none text-lg"
+                className="w-full bg-transparent text-white placeholder-slate-600 resize-none focus:outline-none text-sm"
                 rows={2}
               />
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-800/50">
-                <div className="flex gap-2">
-                  <button className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-full transition">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/40">
+                <div className="flex gap-1">
+                  <button className="p-1.5 text-slate-600 hover:text-slate-400 rounded transition">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </button>
-                  <button className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-full transition">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button className="p-1.5 text-slate-600 hover:text-slate-400 rounded transition">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                     </svg>
                   </button>
                 </div>
-                <button className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-medium text-sm transition">
+                <button className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition">
                   Post
                 </button>
               </div>
@@ -468,56 +437,45 @@ function CommunityFeedView() {
 
         {/* Posts */}
         {posts.map((post) => (
-          <div key={post.id} className="p-4 border-b border-slate-800/50 hover:bg-slate-800/20 transition">
+          <div key={post.id} className="px-6 py-4 border-b border-slate-800/40 hover:bg-slate-800/10 transition">
             <div className="flex gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-medium flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-sm font-medium flex-shrink-0">
                 {post.author.avatar}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1 flex-wrap">
-                  <span className="font-medium text-white">{post.author.name}</span>
+                <div className="flex items-center gap-1.5 flex-wrap text-xs">
+                  <span className="font-medium text-slate-300">{post.author.name}</span>
                   {post.author.verified && (
-                    <svg className="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 text-cyan-500/70" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                     </svg>
                   )}
-                  <span className="text-slate-500">{post.author.handle}</span>
-                  <span className="text-slate-600">·</span>
-                  <span className="text-slate-500">{post.timestamp}</span>
+                  <span className="text-slate-600">{post.author.handle}</span>
+                  <span className="text-slate-700">·</span>
+                  <span className="text-slate-600">{post.timestamp}</span>
                 </div>
                 {post.badges.length > 0 && (
                   <div className="flex gap-1 mt-1 flex-wrap">
                     {post.badges.map((badge, i) => (
-                      <span key={i} className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full">
+                      <span key={i} className="text-[10px] px-1.5 py-0.5 bg-slate-800/60 text-slate-500 rounded">
                         {badge}
                       </span>
                     ))}
                   </div>
                 )}
-                <p className="text-slate-200 mt-2 whitespace-pre-wrap">{post.content}</p>
-                {post.image && (
-                  <div className="mt-3 p-8 bg-slate-800/50 border border-slate-700/50 rounded-xl text-center text-slate-400">
-                    {post.image}
-                  </div>
-                )}
-                <div className="flex items-center gap-6 mt-3">
-                  <button className="flex items-center gap-2 text-slate-500 hover:text-blue-400 transition">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <p className="text-slate-300 mt-2 text-sm leading-relaxed">{post.content}</p>
+                <div className="flex items-center gap-4 mt-2">
+                  <button className="flex items-center gap-1.5 text-slate-600 hover:text-slate-400 transition text-xs">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
-                    <span className="text-sm">{post.comments}</span>
+                    {post.comments}
                   </button>
-                  <button className="flex items-center gap-2 text-slate-500 hover:text-emerald-400 transition">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span className="text-sm">{post.shares}</span>
-                  </button>
-                  <button className="flex items-center gap-2 text-slate-500 hover:text-red-400 transition">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button className="flex items-center gap-1.5 text-slate-600 hover:text-slate-400 transition text-xs">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
-                    <span className="text-sm">{post.likes}</span>
+                    {post.likes}
                   </button>
                 </div>
               </div>
@@ -527,32 +485,32 @@ function CommunityFeedView() {
       </div>
 
       {/* Trending Sidebar */}
-      <div className="w-80 p-4 overflow-y-auto hidden lg:block">
-        <div className="bg-slate-800/50 rounded-xl p-4 mb-4">
-          <h3 className="text-white font-semibold mb-3">Trending Topics</h3>
-          <div className="space-y-3">
-            {['#ClaudeCode', '#AIAutomation', '#PortfolioProject', '#CapstoneComplete'].map((tag) => (
-              <div key={tag} className="text-emerald-400 hover:text-emerald-300 cursor-pointer text-sm">
+      <div className="w-64 p-4 overflow-y-auto hidden lg:block">
+        <div className="bg-slate-800/20 border border-slate-800/40 rounded-lg p-3 mb-3">
+          <h3 className="text-slate-400 font-medium text-xs mb-2">Trending</h3>
+          <div className="space-y-2">
+            {['#ClaudeCode', '#AIAutomation', '#Portfolio'].map((tag) => (
+              <div key={tag} className="text-slate-500 hover:text-slate-300 cursor-pointer text-xs">
                 {tag}
               </div>
             ))}
           </div>
         </div>
-        <div className="bg-slate-800/50 rounded-xl p-4">
-          <h3 className="text-white font-semibold mb-3">Top Earners This Week</h3>
-          <div className="space-y-3">
+        <div className="bg-slate-800/20 border border-slate-800/40 rounded-lg p-3">
+          <h3 className="text-slate-400 font-medium text-xs mb-2">Top Earners</h3>
+          <div className="space-y-2">
             {[
               { name: 'Alex Chen', akus: 12 },
               { name: 'Sarah Park', akus: 10 },
               { name: 'Emily Rodriguez', akus: 8 },
             ].map((user, i) => (
-              <div key={user.name} className="flex items-center gap-2">
-                <span className="text-slate-500 text-sm w-4">{i + 1}.</span>
-                <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-white text-xs">
+              <div key={user.name} className="flex items-center gap-2 text-xs">
+                <span className="text-slate-700 w-3">{i + 1}.</span>
+                <div className="w-5 h-5 rounded bg-slate-800 flex items-center justify-center text-slate-500 text-[10px]">
                   {user.name[0]}
                 </div>
-                <span className="text-slate-300 text-sm flex-1">{user.name}</span>
-                <span className="text-emerald-400 text-sm">{user.akus} AKUs</span>
+                <span className="text-slate-500 flex-1">{user.name}</span>
+                <span className="text-slate-600">{user.akus}</span>
               </div>
             ))}
           </div>
@@ -568,7 +526,7 @@ function ProjectsView() {
     {
       id: '1',
       title: 'AI-Powered Portfolio',
-      description: 'Personal portfolio website built with Next.js and Claude Code assistance',
+      description: 'Personal portfolio website built with Next.js',
       status: 'completed',
       progress: 100,
       tech: ['Next.js', 'Tailwind', 'Vercel'],
@@ -577,7 +535,7 @@ function ProjectsView() {
     {
       id: '2',
       title: 'Email Automation Bot',
-      description: 'Automated email responses using GPT-4 and Gmail API',
+      description: 'Automated email responses using GPT-4',
       status: 'in-progress',
       progress: 65,
       tech: ['Python', 'OpenAI', 'Gmail API'],
@@ -586,7 +544,7 @@ function ProjectsView() {
     {
       id: '3',
       title: 'Customer Support Agent',
-      description: 'Multi-agent system for handling support tickets',
+      description: 'Multi-agent system for support tickets',
       status: 'in-progress',
       progress: 30,
       tech: ['Claude', 'Supabase', 'Next.js'],
@@ -596,73 +554,67 @@ function ProjectsView() {
 
   return (
     <div className="p-6 overflow-y-auto h-full">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-white">My Projects</h1>
-          <button className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <h1 className="text-xl font-semibold text-white">Projects</h1>
+          <button className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
             </svg>
-            New Project
+            New
           </button>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-            <div className="text-2xl font-bold text-white">3</div>
-            <div className="text-slate-400 text-sm">Total Projects</div>
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-3">
+            <div className="text-lg font-semibold text-white">3</div>
+            <div className="text-slate-600 text-xs">Total</div>
           </div>
-          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-            <div className="text-2xl font-bold text-emerald-400">1</div>
-            <div className="text-slate-400 text-sm">Completed</div>
+          <div className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-3">
+            <div className="text-lg font-semibold text-slate-400">1</div>
+            <div className="text-slate-600 text-xs">Completed</div>
           </div>
-          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-            <div className="text-2xl font-bold text-blue-400">2</div>
-            <div className="text-slate-400 text-sm">In Progress</div>
+          <div className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-3">
+            <div className="text-lg font-semibold text-slate-400">2</div>
+            <div className="text-slate-600 text-xs">In Progress</div>
           </div>
         </div>
 
         {/* Project Cards */}
-        <div className="space-y-4">
+        <div className="space-y-2">
           {projects.map((project) => (
-            <div key={project.id} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 hover:bg-slate-800/70 transition">
-              <div className="flex items-start justify-between mb-3">
+            <div key={project.id} className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-4 hover:bg-slate-800/50 transition">
+              <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h3 className="text-white font-semibold text-lg">{project.title}</h3>
-                  <p className="text-slate-400 text-sm mt-1">{project.description}</p>
+                  <h3 className="text-white font-medium text-sm">{project.title}</h3>
+                  <p className="text-slate-500 text-xs mt-0.5">{project.description}</p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
                   project.status === 'completed'
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : 'bg-blue-500/20 text-blue-400'
+                    ? 'bg-slate-700/50 text-slate-400'
+                    : 'bg-slate-700/50 text-slate-500'
                 }`}>
-                  {project.status === 'completed' ? 'Completed' : 'In Progress'}
+                  {project.status === 'completed' ? 'Done' : 'Active'}
                 </span>
               </div>
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex flex-wrap gap-1 mb-3">
                 {project.tech.map((t) => (
-                  <span key={t} className="px-2 py-1 bg-slate-700/50 text-slate-300 rounded text-xs">
+                  <span key={t} className="px-1.5 py-0.5 bg-slate-800/60 text-slate-500 rounded text-[10px]">
                     {t}
                   </span>
                 ))}
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex-1 mr-4">
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-slate-500">Progress</span>
-                    <span className="text-slate-400">{project.progress}%</span>
-                  </div>
-                  <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${
-                        project.status === 'completed' ? 'bg-emerald-500' : 'bg-blue-500'
-                      }`}
+                      className="h-full bg-cyan-500/60 rounded-full transition-all"
                       style={{ width: `${project.progress}%` }}
                     />
                   </div>
                 </div>
-                <span className="text-slate-500 text-xs">Updated {project.lastUpdated}</span>
+                <span className="text-slate-600 text-[10px]">{project.progress}%</span>
               </div>
             </div>
           ))}
@@ -687,42 +639,31 @@ function DiscussionsView() {
     },
     {
       id: '2',
-      title: 'How to handle API rate limits in production',
+      title: 'How to handle API rate limits',
       author: 'Sarah Park',
       replies: 15,
       views: 89,
       lastReply: '1 hour ago',
-      tags: ['API', 'Production'],
+      tags: ['API'],
       pinned: false,
     },
     {
       id: '3',
-      title: 'Showcase: My first automation workflow',
+      title: 'Showcase: My first automation',
       author: 'Marcus Johnson',
       replies: 8,
       views: 45,
       lastReply: '3 hours ago',
-      tags: ['Showcase', 'Automation'],
-      pinned: false,
-    },
-    {
-      id: '4',
-      title: 'Terminal shortcuts everyone should know',
-      author: 'Emily Rodriguez',
-      replies: 34,
-      views: 234,
-      lastReply: '5 hours ago',
-      tags: ['Terminal', 'Tips'],
+      tags: ['Showcase'],
       pinned: false,
     },
   ];
 
   const categories = [
     { name: 'General', count: 45 },
-    { name: 'Help & Support', count: 23 },
+    { name: 'Help', count: 23 },
     { name: 'Showcase', count: 12 },
     { name: 'Resources', count: 8 },
-    { name: 'Off-Topic', count: 5 },
   ];
 
   return (
@@ -732,55 +673,52 @@ function DiscussionsView() {
         <div className="p-6">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold text-white">Discussions</h1>
-              <button className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition">
-                New Discussion
+              <h1 className="text-xl font-semibold text-white">Discussions</h1>
+              <button className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition">
+                New
               </button>
             </div>
 
             {/* Search */}
-            <div className="relative mb-6">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="relative mb-4">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
                 type="text"
-                placeholder="Search discussions..."
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50"
+                placeholder="Search..."
+                className="w-full pl-9 pr-4 py-2 bg-slate-800/30 border border-slate-800/40 rounded-lg text-white placeholder-slate-600 focus:outline-none focus:border-slate-700 text-sm"
               />
             </div>
 
             {/* Discussion List */}
             <div className="space-y-2">
               {discussions.map((discussion) => (
-                <div key={discussion.id} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-800/70 transition cursor-pointer">
+                <div key={discussion.id} className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-3 hover:bg-slate-800/50 transition cursor-pointer">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-medium flex-shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-500 text-sm font-medium flex-shrink-0">
                       {discussion.author[0]}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {discussion.pinned && (
-                          <span className="text-emerald-400">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M16 4v8l2 2v2h-6v6l-1 1-1-1v-6H4v-2l2-2V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2z" />
-                            </svg>
-                          </span>
+                          <svg className="w-3 h-3 text-cyan-500/70" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16 4v8l2 2v2h-6v6l-1 1-1-1v-6H4v-2l2-2V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2z" />
+                          </svg>
                         )}
-                        <h3 className="text-white font-medium">{discussion.title}</h3>
+                        <h3 className="text-slate-300 font-medium text-sm">{discussion.title}</h3>
                       </div>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                         {discussion.tags.map((tag) => (
-                          <span key={tag} className="text-xs px-2 py-0.5 bg-slate-700/50 text-slate-400 rounded">
+                          <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-slate-800/60 text-slate-600 rounded">
                             {tag}
                           </span>
                         ))}
                       </div>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-600">
                         <span>{discussion.author}</span>
                         <span>{discussion.replies} replies</span>
                         <span>{discussion.views} views</span>
-                        <span>Last reply {discussion.lastReply}</span>
                       </div>
                     </div>
                   </div>
@@ -792,13 +730,13 @@ function DiscussionsView() {
       </div>
 
       {/* Categories Sidebar */}
-      <div className="w-64 border-l border-slate-800/50 p-4 overflow-y-auto hidden lg:block">
-        <h3 className="text-white font-semibold mb-3">Categories</h3>
-        <div className="space-y-1">
+      <div className="w-52 border-l border-slate-800/40 p-4 overflow-y-auto hidden lg:block">
+        <h3 className="text-slate-500 font-medium text-xs mb-2">Categories</h3>
+        <div className="space-y-0.5">
           {categories.map((cat) => (
-            <button key={cat.name} className="w-full flex items-center justify-between px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition text-sm">
+            <button key={cat.name} className="w-full flex items-center justify-between px-2 py-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 rounded transition text-xs">
               <span>{cat.name}</span>
-              <span className="text-slate-600">{cat.count}</span>
+              <span className="text-slate-700">{cat.count}</span>
             </button>
           ))}
         </div>
@@ -810,32 +748,30 @@ function DiscussionsView() {
 // Leaderboards View
 function LeaderboardsView() {
   const leaderboard = [
-    { rank: 1, name: 'Alex Chen', akus: 47, streak: 21, badges: 5, change: 0 },
-    { rank: 2, name: 'Sarah Park', akus: 42, streak: 18, badges: 4, change: 1 },
-    { rank: 3, name: 'Emily Rodriguez', akus: 38, streak: 15, badges: 4, change: -1 },
-    { rank: 4, name: 'Marcus Johnson', akus: 35, streak: 12, badges: 3, change: 2 },
-    { rank: 5, name: 'Jordan Lee', akus: 32, streak: 10, badges: 3, change: 0 },
-    { rank: 6, name: 'Taylor Kim', akus: 28, streak: 8, badges: 2, change: -2 },
-    { rank: 7, name: 'Morgan Davis', akus: 25, streak: 7, badges: 2, change: 1 },
-    { rank: 8, name: 'Casey Wilson', akus: 22, streak: 5, badges: 2, change: 0 },
-    { rank: 9, name: 'Riley Thompson', akus: 20, streak: 4, badges: 1, change: 3 },
-    { rank: 10, name: 'Quinn Brown', akus: 18, streak: 3, badges: 1, change: -1 },
+    { rank: 1, name: 'Alex Chen', akus: 47, streak: 21, change: 0 },
+    { rank: 2, name: 'Sarah Park', akus: 42, streak: 18, change: 1 },
+    { rank: 3, name: 'Emily Rodriguez', akus: 38, streak: 15, change: -1 },
+    { rank: 4, name: 'Marcus Johnson', akus: 35, streak: 12, change: 2 },
+    { rank: 5, name: 'Jordan Lee', akus: 32, streak: 10, change: 0 },
+    { rank: 6, name: 'Taylor Kim', akus: 28, streak: 8, change: -2 },
+    { rank: 7, name: 'Morgan Davis', akus: 25, streak: 7, change: 1 },
+    { rank: 8, name: 'Casey Wilson', akus: 22, streak: 5, change: 0 },
   ];
 
   return (
     <div className="p-6 overflow-y-auto h-full">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-6">Leaderboards</h1>
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-xl font-semibold text-white mb-6">Leaderboard</h1>
 
         {/* Filters */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {['All Time', 'This Month', 'This Week', 'Today'].map((filter, i) => (
+        <div className="flex gap-1 mb-6">
+          {['All Time', 'Month', 'Week'].map((filter, i) => (
             <button
               key={filter}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                 i === 0
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-slate-800/50 text-slate-400 hover:text-white'
+                  ? 'bg-slate-800 text-slate-300'
+                  : 'text-slate-600 hover:text-slate-400'
               }`}
             >
               {filter}
@@ -843,106 +779,75 @@ function LeaderboardsView() {
           ))}
         </div>
 
-        {/* Top 3 Podium */}
-        <div className="flex items-end justify-center gap-4 mb-8 h-48">
+        {/* Top 3 */}
+        <div className="flex items-end justify-center gap-6 mb-8">
           {/* 2nd Place */}
           <div className="flex flex-col items-center">
-            <div className="w-16 h-16 rounded-full bg-slate-600 flex items-center justify-center text-white text-2xl font-bold mb-2">
+            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-sm font-medium mb-1.5">
               S
             </div>
-            <span className="text-white font-medium text-sm">{leaderboard[1].name}</span>
-            <span className="text-slate-400 text-xs">{leaderboard[1].akus} AKUs</span>
-            <div className="w-24 h-24 bg-gradient-to-t from-slate-400/20 to-slate-400/5 rounded-t-lg mt-2 flex items-center justify-center">
-              <span className="text-3xl font-bold text-slate-400">2</span>
+            <span className="text-slate-400 text-xs">{leaderboard[1].name}</span>
+            <span className="text-slate-600 text-[10px]">{leaderboard[1].akus} AKUs</span>
+            <div className="w-16 h-12 bg-slate-800/40 rounded-t mt-2 flex items-center justify-center">
+              <span className="text-lg font-semibold text-slate-600">2</span>
             </div>
           </div>
           {/* 1st Place */}
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 rounded-full bg-yellow-500 flex items-center justify-center text-white text-3xl font-bold mb-2 ring-4 ring-yellow-500/30">
+            <div className="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center text-slate-300 font-medium mb-1.5">
               A
             </div>
-            <span className="text-white font-semibold">{leaderboard[0].name}</span>
-            <span className="text-yellow-400 text-sm">{leaderboard[0].akus} AKUs</span>
-            <div className="w-28 h-32 bg-gradient-to-t from-yellow-500/20 to-yellow-500/5 rounded-t-lg mt-2 flex items-center justify-center">
-              <span className="text-4xl font-bold text-yellow-400">1</span>
+            <span className="text-slate-300 text-xs font-medium">{leaderboard[0].name}</span>
+            <span className="text-slate-500 text-[10px]">{leaderboard[0].akus} AKUs</span>
+            <div className="w-20 h-16 bg-slate-800/50 rounded-t mt-2 flex items-center justify-center">
+              <span className="text-xl font-semibold text-slate-500">1</span>
             </div>
           </div>
           {/* 3rd Place */}
           <div className="flex flex-col items-center">
-            <div className="w-14 h-14 rounded-full bg-orange-700 flex items-center justify-center text-white text-xl font-bold mb-2">
+            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-slate-500 text-sm font-medium mb-1.5">
               E
             </div>
-            <span className="text-white font-medium text-sm">{leaderboard[2].name}</span>
-            <span className="text-slate-400 text-xs">{leaderboard[2].akus} AKUs</span>
-            <div className="w-20 h-16 bg-gradient-to-t from-orange-700/20 to-orange-700/5 rounded-t-lg mt-2 flex items-center justify-center">
-              <span className="text-2xl font-bold text-orange-600">3</span>
+            <span className="text-slate-500 text-xs">{leaderboard[2].name}</span>
+            <span className="text-slate-600 text-[10px]">{leaderboard[2].akus} AKUs</span>
+            <div className="w-14 h-8 bg-slate-800/30 rounded-t mt-2 flex items-center justify-center">
+              <span className="text-base font-semibold text-slate-600">3</span>
             </div>
           </div>
         </div>
 
-        {/* Full Leaderboard Table */}
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
+        {/* Full Leaderboard */}
+        <div className="bg-slate-800/20 border border-slate-800/40 rounded-lg overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-700/50">
-                <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">Rank</th>
-                <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">User</th>
-                <th className="text-center py-3 px-4 text-slate-400 font-medium text-sm">AKUs</th>
-                <th className="text-center py-3 px-4 text-slate-400 font-medium text-sm">Streak</th>
-                <th className="text-center py-3 px-4 text-slate-400 font-medium text-sm">Badges</th>
-                <th className="text-center py-3 px-4 text-slate-400 font-medium text-sm">Change</th>
+              <tr className="border-b border-slate-800/40">
+                <th className="text-left py-2.5 px-4 text-slate-600 font-medium text-[10px] uppercase tracking-wider">Rank</th>
+                <th className="text-left py-2.5 px-4 text-slate-600 font-medium text-[10px] uppercase tracking-wider">User</th>
+                <th className="text-right py-2.5 px-4 text-slate-600 font-medium text-[10px] uppercase tracking-wider">AKUs</th>
+                <th className="text-right py-2.5 px-4 text-slate-600 font-medium text-[10px] uppercase tracking-wider">Streak</th>
               </tr>
             </thead>
             <tbody>
               {leaderboard.map((user) => (
-                <tr key={user.rank} className="border-b border-slate-700/30 last:border-0 hover:bg-slate-800/30 transition">
-                  <td className="py-3 px-4">
-                    <span className={`font-bold ${
-                      user.rank === 1 ? 'text-yellow-400' :
-                      user.rank === 2 ? 'text-slate-400' :
-                      user.rank === 3 ? 'text-orange-600' :
-                      'text-slate-500'
-                    }`}>
-                      #{user.rank}
-                    </span>
+                <tr key={user.rank} className="border-b border-slate-800/30 last:border-0 hover:bg-slate-800/20 transition">
+                  <td className="py-2.5 px-4">
+                    <span className="text-slate-500 text-xs">#{user.rank}</span>
                   </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white text-sm font-medium">
+                  <td className="py-2.5 px-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-slate-500 text-[10px] font-medium">
                         {user.name[0]}
                       </div>
-                      <span className="text-white font-medium">{user.name}</span>
+                      <span className="text-slate-400 text-xs">{user.name}</span>
+                      {user.change !== 0 && (
+                        <span className={`text-[10px] ${user.change > 0 ? 'text-slate-600' : 'text-slate-600'}`}>
+                          {user.change > 0 ? '+' : ''}{user.change}
+                        </span>
+                      )}
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-center text-emerald-400 font-semibold">{user.akus}</td>
-                  <td className="py-3 px-4 text-center">
-                    <span className="inline-flex items-center gap-1 text-orange-400">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.66 11.2C17.43 10.9 17.15 10.64 16.89 10.38C16.22 9.78 15.46 9.35 14.82 8.72C13.33 7.26 13 4.85 13.95 3C13 3.23 12.17 3.75 11.46 4.32C8.87 6.4 7.85 10.07 9.07 13.22C9.11 13.32 9.15 13.42 9.15 13.55C9.15 13.77 9 13.97 8.8 14.05C8.57 14.15 8.33 14.09 8.14 13.93C8.08 13.88 8.04 13.83 8 13.76C6.87 12.33 6.69 10.28 7.45 8.64C5.78 10 4.87 12.3 5 14.47C5.06 14.97 5.12 15.47 5.29 15.97C5.43 16.57 5.7 17.17 6 17.7C7.08 19.43 8.95 20.67 10.96 20.92C13.1 21.19 15.39 20.8 17.03 19.32C18.86 17.66 19.5 15 18.56 12.72L18.43 12.46C18.22 12 17.66 11.2 17.66 11.2Z" />
-                      </svg>
-                      {user.streak}d
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-center text-slate-400">{user.badges}</td>
-                  <td className="py-3 px-4 text-center">
-                    {user.change > 0 ? (
-                      <span className="text-emerald-400 flex items-center justify-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                        </svg>
-                        {user.change}
-                      </span>
-                    ) : user.change < 0 ? (
-                      <span className="text-red-400 flex items-center justify-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                        {Math.abs(user.change)}
-                      </span>
-                    ) : (
-                      <span className="text-slate-600">-</span>
-                    )}
-                  </td>
+                  <td className="py-2.5 px-4 text-right text-slate-400 text-xs">{user.akus}</td>
+                  <td className="py-2.5 px-4 text-right text-slate-600 text-xs">{user.streak}d</td>
                 </tr>
               ))}
             </tbody>
@@ -1167,19 +1072,19 @@ export default function DashboardPage() {
   const hasCertificate = (type: string) => certificates.some(c => c.certificate_type === type);
 
   return (
-    <div className="h-screen bg-[#1a1d21] flex overflow-hidden">
-      {/* Left Sidebar - Expanded Navigation */}
-      <aside className="w-56 border-r border-slate-800/50 flex flex-col bg-[#1a1d21] flex-shrink-0">
+    <div className="h-screen bg-[#0f1115] flex overflow-hidden">
+      {/* Left Sidebar - Clean Navigation */}
+      <aside className="w-52 border-r border-slate-800/40 flex flex-col bg-[#0f1115] flex-shrink-0">
         {/* Logo */}
-        <div className="p-4 mb-2">
-          <Link href="/" className="flex items-center gap-3">
-            <Image src="/logo.png" alt="Phazur" width={36} height={36} className="invert" />
-            <span className="text-white font-semibold text-lg">Phazur</span>
+        <div className="px-4 py-5">
+          <Link href="/" className="flex items-center gap-2.5">
+            <Image src="/logo.png" alt="Phazur" width={28} height={28} className="invert opacity-80" />
+            <span className="text-white font-medium">Phazur</span>
           </Link>
         </div>
 
         {/* Main Navigation */}
-        <nav className="px-3 space-y-1">
+        <nav className="px-3 space-y-0.5">
           <NavItem
             active={activeView === 'home'}
             label="Home"
@@ -1202,10 +1107,10 @@ export default function DashboardPage() {
         </nav>
 
         {/* Divider */}
-        <div className="mx-4 my-4 border-t border-slate-800/50" />
+        <div className="mx-4 my-3 border-t border-slate-800/40" />
 
         {/* Course & Community Features */}
-        <nav className="px-3 space-y-1">
+        <nav className="px-3 space-y-0.5">
           <NavItem
             active={activeView === 'live-courses'}
             label="Live Courses"
@@ -1262,14 +1167,14 @@ export default function DashboardPage() {
         <div className="flex-1" />
 
         {/* User Profile */}
-        <div className="p-4 border-t border-slate-800/50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white font-medium">
+        <div className="p-4 border-t border-slate-800/40">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-sm font-medium">
               {user?.email?.charAt(0).toUpperCase() || 'G'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-medium truncate">{user?.email || 'Guest'}</p>
-              <p className="text-slate-500 text-xs">{selectedPath ? PATH_INFO[selectedPath].title : 'Choose a path'}</p>
+              <p className="text-slate-300 text-xs font-medium truncate">{user?.email || 'Guest'}</p>
+              <p className="text-slate-600 text-[10px]">{selectedPath ? PATH_INFO[selectedPath].title : 'Choose path'}</p>
             </div>
           </div>
         </div>
@@ -1277,75 +1182,78 @@ export default function DashboardPage() {
 
       {/* Progress Panel */}
       {showProgressPanel && (
-        <aside className="w-72 border-r border-slate-800/50 flex flex-col bg-[#1e2227] flex-shrink-0 overflow-y-auto">
+        <aside className="w-64 border-r border-slate-800/40 flex flex-col bg-[#13151a] flex-shrink-0 overflow-y-auto">
           {/* Progress Header */}
-          <div className="p-4 border-b border-slate-800/50">
+          <div className="p-4 border-b border-slate-800/40">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-white font-semibold">Your Progress</h2>
+              <h2 className="text-slate-300 text-sm font-medium">Progress</h2>
               <button
                 onClick={() => setShowProgressPanel(false)}
-                className="text-slate-500 hover:text-white"
+                className="text-slate-600 hover:text-slate-400 transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
             {/* Progress Ring */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div className="relative">
                 <ProgressRing progress={progressPercent} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">{Math.round(progressPercent)}%</span>
+                  <span className="text-white font-medium text-sm">{Math.round(progressPercent)}%</span>
                 </div>
               </div>
               <div>
-                <p className="text-white font-medium">{completedAkus} AKUs</p>
-                <p className="text-slate-500 text-sm">of {targetAkus} completed</p>
+                <p className="text-white text-sm font-medium">{completedAkus} AKUs</p>
+                <p className="text-slate-600 text-xs">of {targetAkus} needed</p>
               </div>
             </div>
           </div>
 
           {/* Stats */}
-          <div className="p-4 border-b border-slate-800/50">
-            <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-3">Stats</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-slate-800/50 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                  </svg>
-                  <span className="text-xl font-bold text-white">{stats?.currentStreak || 0}</span>
-                </div>
-                <p className="text-slate-500 text-xs">Day Streak</p>
+          <div className="p-4 border-b border-slate-800/40">
+            <h3 className="text-slate-600 text-[10px] uppercase tracking-wider mb-2">Stats</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-slate-800/30 rounded-lg p-2.5">
+                <div className="text-lg font-semibold text-white">{stats?.currentStreak || 0}</div>
+                <p className="text-slate-600 text-[10px]">Day Streak</p>
               </div>
-              <div className="bg-slate-800/50 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="text-xl font-bold text-white">{Math.round((stats?.totalTimeSpent || 0) / 60)}h</span>
-                </div>
-                <p className="text-slate-500 text-xs">Time Invested</p>
+              <div className="bg-slate-800/30 rounded-lg p-2.5">
+                <div className="text-lg font-semibold text-white">{Math.round((stats?.totalTimeSpent || 0) / 60)}h</div>
+                <p className="text-slate-600 text-[10px]">Time</p>
               </div>
             </div>
           </div>
 
           {/* Current Path */}
           {selectedPath && (
-            <div className="p-4 border-b border-slate-800/50">
-              <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-3">Current Path</h3>
+            <div className="p-4 border-b border-slate-800/40">
+              <h3 className="text-slate-600 text-[10px] uppercase tracking-wider mb-2">Current Path</h3>
               <div className={`p-3 rounded-lg border ${PATH_INFO[selectedPath].styles.border} ${PATH_INFO[selectedPath].styles.bg}`}>
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg ${PATH_INFO[selectedPath].styles.bgIcon} flex items-center justify-center`}>
-                    {selectedPath === 'student' && <span className="text-lg">🎓</span>}
-                    {selectedPath === 'employee' && <span className="text-lg">⚡</span>}
-                    {selectedPath === 'owner' && <span className="text-lg">🚀</span>}
+                  <div className={`w-9 h-9 rounded-lg ${PATH_INFO[selectedPath].styles.bgIcon} flex items-center justify-center ${PATH_INFO[selectedPath].styles.text}`}>
+                    {selectedPath === 'student' && (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l9-5-9-5-9 5 9 5z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                      </svg>
+                    )}
+                    {selectedPath === 'employee' && (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                    {selectedPath === 'owner' && (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                    )}
                   </div>
                   <div>
                     <h4 className="text-white font-medium text-sm">{PATH_INFO[selectedPath].title}</h4>
-                    <p className="text-slate-500 text-xs">{PATH_INFO[selectedPath].subtitle}</p>
+                    <p className="text-slate-600 text-xs">{PATH_INFO[selectedPath].subtitle}</p>
                   </div>
                 </div>
               </div>
@@ -1354,15 +1262,15 @@ export default function DashboardPage() {
 
           {/* Certificates */}
           <div className="p-4 flex-1">
-            <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-3">Certificates</h3>
-            <div className="space-y-3">
+            <h3 className="text-slate-600 text-[10px] uppercase tracking-wider mb-2">Certificates</h3>
+            <div className="space-y-2">
               <CertificateCard
                 name="Certified AI Associate"
                 designation="Proof of Readiness"
                 earned={hasCertificate('student')}
                 progress={completedAkus}
                 required={10}
-                color="emerald"
+                color="purple"
               />
               <CertificateCard
                 name="Workflow Efficiency Lead"
@@ -1370,7 +1278,7 @@ export default function DashboardPage() {
                 earned={hasCertificate('employee')}
                 progress={completedAkus}
                 required={15}
-                color="blue"
+                color="cyan"
               />
               <CertificateCard
                 name="AI Operations Master"
@@ -1378,17 +1286,17 @@ export default function DashboardPage() {
                 earned={hasCertificate('owner')}
                 progress={completedAkus}
                 required={20}
-                color="purple"
+                color="emerald"
               />
             </div>
           </div>
 
           {/* Online indicator */}
           {presence.onlineUsers > 0 && (
-            <div className="p-4 border-t border-slate-800/50">
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                {presence.onlineUsers} learners online
+            <div className="p-4 border-t border-slate-800/40">
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <div className="w-1.5 h-1.5 bg-emerald-500/80 rounded-full" />
+                {presence.onlineUsers} online
               </div>
             </div>
           )}
@@ -1400,13 +1308,13 @@ export default function DashboardPage() {
         {activeView === 'home' ? (
           <>
             {/* Header */}
-            <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800/50">
-              <div className="flex items-center gap-3">
-                <CheckeredAvatar size="sm" />
+            <header className="flex items-center justify-between px-6 py-3 border-b border-slate-800/40">
+              <div className="flex items-center gap-2.5">
+                <AIAvatar size="sm" />
                 <div>
-                  <h1 className="text-white font-semibold">Phazur AI Coach</h1>
-                  <p className="text-slate-500 text-xs">
-                    {selectedPath ? `${PATH_INFO[selectedPath].title} Path` : 'Choose your path to begin'}
+                  <h1 className="text-slate-200 font-medium text-sm">Phazur</h1>
+                  <p className="text-slate-600 text-[10px]">
+                    {selectedPath ? PATH_INFO[selectedPath].title : 'Choose path'}
                   </p>
                 </div>
               </div>
@@ -1414,26 +1322,26 @@ export default function DashboardPage() {
               {!showProgressPanel && (
                 <button
                   onClick={() => setShowProgressPanel(true)}
-                  className="px-3 py-1.5 text-sm text-slate-400 hover:text-white bg-slate-800 rounded-lg transition"
+                  className="px-2.5 py-1 text-xs text-slate-600 hover:text-slate-400 bg-slate-800/50 rounded transition"
                 >
-                  Show Progress
+                  Progress
                 </button>
               )}
             </header>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-6 py-6">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
               <div className="max-w-2xl mx-auto">
                 {messages.map((msg) => (
-                  <div key={msg.id} className="mb-6">
+                  <div key={msg.id} className="mb-4">
                     {msg.role === 'assistant' ? (
-                      <div className="flex gap-3">
-                        <CheckeredAvatar size="sm" />
-                        <div className="flex-1 space-y-2">
+                      <div className="flex gap-2.5">
+                        <AIAvatar size="sm" />
+                        <div className="flex-1 space-y-1.5">
                           {msg.content.map((paragraph, i) => (
                             <div
                               key={i}
-                              className="bg-[#2a2d32] text-slate-200 px-4 py-3 rounded-2xl rounded-tl-md max-w-fit"
+                              className="bg-slate-800/40 text-slate-300 px-3.5 py-2.5 rounded-lg rounded-tl-sm max-w-fit"
                             >
                               <p className="whitespace-pre-wrap leading-relaxed text-sm">{paragraph}</p>
                             </div>
@@ -1442,7 +1350,7 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="flex justify-end">
-                        <div className="bg-emerald-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-md max-w-xs">
+                        <div className="bg-slate-700/60 text-slate-200 px-3.5 py-2 rounded-lg rounded-tr-sm max-w-xs">
                           <p className="text-sm">{msg.content[0]}</p>
                         </div>
                       </div>
@@ -1451,13 +1359,13 @@ export default function DashboardPage() {
                 ))}
 
                 {isTyping && (
-                  <div className="flex gap-3 mb-6">
-                    <CheckeredAvatar size="sm" />
-                    <div className="bg-[#2a2d32] px-4 py-3 rounded-2xl rounded-tl-md">
-                      <div className="flex gap-1.5">
-                        <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div className="flex gap-2.5 mb-4">
+                    <AIAvatar size="sm" />
+                    <div className="bg-slate-800/40 px-3.5 py-2.5 rounded-lg rounded-tl-sm">
+                      <div className="flex gap-1">
+                        <span className="w-1.5 h-1.5 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
                     </div>
                   </div>
@@ -1468,16 +1376,16 @@ export default function DashboardPage() {
             </div>
 
             {/* Input Area */}
-            <div className="px-6 pb-6">
+            <div className="px-6 pb-4">
               <div className="max-w-2xl mx-auto">
                 {/* Suggestion pills */}
                 {messages.length > 0 && (messages[messages.length - 1].suggestions || suggestions.length > 0) && !isTyping && (
-                  <div className="mb-3 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                  <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                     {(messages[messages.length - 1].suggestions || suggestions)?.map((suggestion, i) => (
                       <button
                         key={i}
                         onClick={() => handleSuggestionClick(suggestion)}
-                        className="flex-shrink-0 px-4 py-2 bg-[#2a2d32] hover:bg-[#3a3d42] text-slate-300 text-sm rounded-full border border-slate-700 hover:border-slate-600 transition whitespace-nowrap"
+                        className="flex-shrink-0 px-3 py-1.5 bg-slate-800/40 hover:bg-slate-800/60 text-slate-400 text-xs rounded-lg border border-slate-800/60 hover:border-slate-700 transition whitespace-nowrap"
                       >
                         {suggestion}
                       </button>
@@ -1492,17 +1400,17 @@ export default function DashboardPage() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Message Phazur..."
+                    placeholder="Message..."
                     rows={1}
-                    className="w-full px-4 py-3 pr-12 bg-[#2a2d32] border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 resize-none text-sm"
+                    className="w-full px-3.5 py-2.5 pr-10 bg-slate-800/40 border border-slate-800/60 rounded-lg text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-700 resize-none text-sm"
                   />
                   <button
                     onClick={() => handleUserResponse()}
                     disabled={!inputValue.trim() || isTyping}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-emerald-400 disabled:opacity-30 disabled:hover:text-slate-400 transition"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-600 hover:text-slate-400 disabled:opacity-30 disabled:hover:text-slate-600 transition"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </button>
                 </div>
