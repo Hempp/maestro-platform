@@ -2,9 +2,9 @@
 
 /**
  * PHAZUR DASHBOARD
- * Clean chat interface inspired by reference design
- * Multi-bubble messages, checkered avatar, suggestion pills
- * Connected to real backend via hooks
+ * 3-panel layout: Progress sidebar | Chat | Quick actions
+ * AI Coach with full OpenAI integration
+ * Progress tracking and certificates display
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -15,13 +15,16 @@ import { useProgress } from '@/hooks/useProgress';
 import { useRealtime } from '@/hooks/useRealtime';
 
 type PathType = 'student' | 'employee' | 'owner' | null;
-type ViewType = 'chat' | 'sandbox';
 
-interface Message {
+interface Certificate {
   id: string;
-  role: 'assistant' | 'user';
-  content: string[]; // Array of paragraphs for multi-bubble
-  suggestions?: string[];
+  certificate_type: string;
+  issued_at: string;
+  metadata: {
+    certificationName: string;
+    designation: string;
+    akusCompleted: number;
+  };
 }
 
 const PATH_INFO = {
@@ -30,25 +33,32 @@ const PATH_INFO = {
     subtitle: 'Build a Job-Ready Portfolio',
     cert: 'Certified AI Associate',
     price: '$49',
+    color: 'emerald',
+    requiredAkus: 10,
   },
   employee: {
     title: 'The Employee',
     subtitle: 'Efficiency Mastery',
     cert: 'Workflow Efficiency Lead',
     price: '$199',
+    color: 'blue',
+    requiredAkus: 15,
   },
   owner: {
     title: 'The Owner',
     subtitle: 'Operations Scaling',
     cert: 'AI Operations Master',
     price: '$499',
+    color: 'purple',
+    requiredAkus: 20,
   },
 };
 
 // Checkered avatar component
-function CheckeredAvatar() {
+function CheckeredAvatar({ size = 'md' }: { size?: 'sm' | 'md' }) {
+  const sizeClass = size === 'sm' ? 'w-8 h-8' : 'w-10 h-10';
   return (
-    <div className="w-10 h-10 rounded-lg bg-slate-800 p-1.5 flex-shrink-0">
+    <div className={`${sizeClass} rounded-lg bg-slate-800 p-1.5 flex-shrink-0`}>
       <div className="grid grid-cols-4 gap-0.5 w-full h-full">
         {[...Array(16)].map((_, i) => (
           <div
@@ -63,12 +73,51 @@ function CheckeredAvatar() {
   );
 }
 
-// Sidebar icons
-function SidebarIcon({ icon, active = false, label }: { icon: React.ReactNode; active?: boolean; label: string }) {
+// Progress ring component
+function ProgressRing({ progress, size = 60, strokeWidth = 6 }: { progress: number; size?: number; strokeWidth?: number }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (progress / 100) * circumference;
+
+  return (
+    <svg width={size} height={size} className="transform -rotate-90">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        className="text-slate-700"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        className="text-emerald-500 transition-all duration-500"
+      />
+    </svg>
+  );
+}
+
+// Sidebar icon button
+function SidebarIcon({ icon, active = false, label, onClick }: {
+  icon: React.ReactNode;
+  active?: boolean;
+  label: string;
+  onClick?: () => void;
+}) {
   return (
     <button
       aria-label={label}
       title={label}
+      onClick={onClick}
       className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
         active ? 'bg-slate-800 text-white' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
       }`}
@@ -78,10 +127,63 @@ function SidebarIcon({ icon, active = false, label }: { icon: React.ReactNode; a
   );
 }
 
+// Certificate card component
+function CertificateCard({
+  name,
+  designation,
+  earned,
+  progress,
+  required,
+  color = 'emerald'
+}: {
+  name: string;
+  designation: string;
+  earned: boolean;
+  progress: number;
+  required: number;
+  color?: string;
+}) {
+  const colorClasses: Record<string, { bg: string; border: string; text: string }> = {
+    emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
+    blue: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400' },
+    purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400' },
+  };
+  const colors = colorClasses[color] || colorClasses.emerald;
+
+  return (
+    <div className={`p-3 rounded-lg border ${earned ? colors.border : 'border-slate-700'} ${earned ? colors.bg : 'bg-slate-800/50'}`}>
+      <div className="flex items-start justify-between mb-2">
+        <div>
+          <h4 className={`text-sm font-medium ${earned ? colors.text : 'text-slate-300'}`}>{name}</h4>
+          <p className="text-xs text-slate-500">{designation}</p>
+        </div>
+        {earned ? (
+          <div className={`w-6 h-6 rounded-full ${colors.bg} flex items-center justify-center`}>
+            <svg className={`w-4 h-4 ${colors.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        ) : (
+          <span className="text-xs text-slate-500">{progress}/{required} AKUs</span>
+        )}
+      </div>
+      {!earned && (
+        <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+          <div
+            className={`h-full ${colors.bg.replace('/10', '')} rounded-full transition-all duration-500`}
+            style={{ width: `${Math.min((progress / required) * 100, 100)}%` }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
-  const [activeView, setActiveView] = useState<ViewType>('chat');
   const [selectedPath, setSelectedPath] = useState<PathType>(null);
   const [currentStep, setCurrentStep] = useState(0);
+  const [showProgressPanel, setShowProgressPanel] = useState(true);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -94,7 +196,7 @@ export default function DashboardPage() {
     sendMessage,
     addLocalMessage,
   } = useChat({ tier: selectedPath || undefined });
-  const { stats } = useProgress();
+  const { stats, progress: akuProgress } = useProgress();
   const { presence, updatePresence } = useRealtime(user?.id);
 
   // Local UI state
@@ -102,35 +204,37 @@ export default function DashboardPage() {
   const [localTyping, setLocalTyping] = useState(false);
   const isTyping = chatLoading || localTyping;
 
-  // Sandbox state
-  const [sandboxCode, setSandboxCode] = useState(`// Welcome to the Phazur Sandbox!
-// Write your code here and click "Run" to execute
-
-async function main() {
-  console.log("Hello from Phazur Sandbox!");
-
-  // Try an AI command
-  const result = await phazur.ai("Summarize this in one sentence: AI is transforming how we work.");
-  console.log("AI Response:", result);
-}
-
-main();`);
-  const [sandboxOutput, setSandboxOutput] = useState<string[]>([]);
-  const [isRunning, setIsRunning] = useState(false);
+  // Fetch certificates
+  useEffect(() => {
+    async function fetchCertificates() {
+      try {
+        const response = await fetch('/api/certificates');
+        if (response.ok) {
+          const data = await response.json();
+          setCertificates(data.certificates || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch certificates:', error);
+      }
+    }
+    if (user) {
+      fetchCertificates();
+    }
+  }, [user]);
 
   // Scroll chat to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Update presence when view changes
+  // Update presence
   useEffect(() => {
     if (user?.id) {
-      updatePresence(activeView === 'sandbox' ? 'sandbox' : 'chat');
+      updatePresence('chat');
     }
-  }, [activeView, user?.id, updatePresence]);
+  }, [user?.id, updatePresence]);
 
-  // Initial chat welcome message
+  // Initial welcome message
   useEffect(() => {
     if (messages.length === 0 && !authLoading) {
       addLocalMessage(
@@ -141,26 +245,25 @@ main();`);
           "First, tell me: What brings you here today?",
         ],
         [
-          "🎓 I want to build a portfolio",
-          "⚡ I want to save time at work",
-          "🚀 I want to scale my business",
+          "I want to build a portfolio",
+          "I want to save time at work",
+          "I want to scale my business",
         ]
       );
     }
   }, [authLoading, messages.length, addLocalMessage]);
 
-  // Helper to add assistant messages locally (for onboarding flow)
+  // Helper to add assistant messages
   const addAssistantMessage = useCallback((content: string[], suggestionList?: string[]) => {
     addLocalMessage('assistant', content, suggestionList);
   }, [addLocalMessage]);
 
-  // Helper to add user messages locally
+  // Helper to add user messages
   const addUserMessage = useCallback((content: string) => {
     addLocalMessage('user', [content]);
   }, [addLocalMessage]);
 
   const handleSuggestionClick = (suggestion: string) => {
-    // Detect path from suggestion
     if (suggestion.includes('portfolio')) {
       handlePathSelection('student', suggestion);
     } else if (suggestion.includes('save time') || suggestion.includes('work')) {
@@ -168,7 +271,6 @@ main();`);
     } else if (suggestion.includes('scale') || suggestion.includes('business')) {
       handlePathSelection('owner', suggestion);
     } else {
-      // Generic suggestion handling
       handleUserResponse(suggestion);
     }
   };
@@ -190,7 +292,7 @@ main();`);
           content: [
             `Great choice! You're on the path to becoming a ${pathInfo.cert}.`,
             "Here's what we'll build together:",
-            "✅ A live, AI-enhanced portfolio website\n✅ Real projects that prove you can ship code\n✅ A blockchain-verified credential for LinkedIn",
+            "A live, AI-enhanced portfolio website\nReal projects that prove you can ship code\nA blockchain-verified credential for LinkedIn",
             `The investment: ${pathInfo.price} — only paid after you complete your capstone.`,
             "Let me assess where you're starting from. Have you ever used a terminal or command line before?",
           ],
@@ -204,7 +306,7 @@ main();`);
           content: [
             `Smart move! You're on the path to becoming a ${pathInfo.cert}.`,
             "Here's what we'll build together:",
-            "✅ A custom Internal Knowledge GPT for your company\n✅ Automated email workflows that save 10+ hours/week\n✅ API integrations that work while you sleep",
+            "A custom Internal Knowledge GPT for your company\nAutomated email workflows that save 10+ hours/week\nAPI integrations that work while you sleep",
             `The investment: ${pathInfo.price} — only paid after you complete your capstone.`,
             "What's the most repetitive task you do every week?",
           ],
@@ -219,7 +321,7 @@ main();`);
           content: [
             `Visionary thinking! You're on the path to becoming an ${pathInfo.cert}.`,
             "Here's what we'll build together:",
-            "✅ End-to-end autonomous sales & research chains\n✅ Multi-agent systems that replace entire departments\n✅ AI strategy that scales without scaling headcount",
+            "End-to-end autonomous sales & research chains\nMulti-agent systems that replace entire departments\nAI strategy that scales without scaling headcount",
             `The investment: ${pathInfo.price} — only paid after you complete your capstone.`,
             "What's the biggest bottleneck in your operations right now?",
           ],
@@ -244,13 +346,14 @@ main();`);
     addUserMessage(content);
     setInputValue('');
 
-    // During onboarding flow (steps 1-4), use local responses
+    // During onboarding flow, use local responses
     if (currentStep < 5 && selectedPath) {
       const step = currentStep + 1;
       setCurrentStep(step);
+      setLocalTyping(true);
 
-      // Simulate typing delay
       await new Promise(resolve => setTimeout(resolve, 1500));
+      setLocalTyping(false);
 
       const response = getCoachingResponse(selectedPath, step, content);
       addAssistantMessage(response.content, response.suggestions);
@@ -262,8 +365,12 @@ main();`);
       } catch (error) {
         console.error('Chat error:', error);
         addAssistantMessage([
-          "I had trouble processing that. Let me try again.",
-          "Could you rephrase your question?",
+          "I had trouble connecting. Let me try a different approach.",
+          "What specific topic would you like to explore?",
+        ], [
+          "Terminal basics",
+          "AI-powered coding",
+          "Building automations",
         ]);
       }
     }
@@ -276,57 +383,26 @@ main();`);
     }
   };
 
-  // Sandbox runner - connected to real API
-  const runSandbox = async () => {
-    setIsRunning(true);
-    setSandboxOutput(['Running code...']);
+  // Calculate progress percentage
+  const completedAkus = stats?.completed || 0;
+  const targetAkus = selectedPath ? PATH_INFO[selectedPath].requiredAkus : 10;
+  const progressPercent = Math.min((completedAkus / targetAkus) * 100, 100);
 
-    try {
-      const response = await fetch('/api/sandbox/code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: sandboxCode,
-          userId: user?.id,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setSandboxOutput(result.output);
-      } else {
-        setSandboxOutput([
-          '✗ Error:',
-          result.error || 'Unknown error occurred',
-          '',
-          'Check your code and try again.',
-        ]);
-      }
-    } catch (error) {
-      setSandboxOutput([
-        '✗ Connection Error:',
-        error instanceof Error ? error.message : 'Failed to connect to sandbox',
-        '',
-        'Please check your connection.',
-      ]);
-    } finally {
-      setIsRunning(false);
-    }
-  };
+  // Check if certificate is earned
+  const hasCertificate = (type: string) => certificates.some(c => c.certificate_type === type);
 
   return (
-    <div className="h-screen bg-[#1a1d21] flex">
+    <div className="h-screen bg-[#1a1d21] flex overflow-hidden">
       {/* Left Sidebar - Minimal Icons */}
-      <aside className="w-16 border-r border-slate-800/50 flex flex-col items-center py-4 gap-2">
+      <aside className="w-16 border-r border-slate-800/50 flex flex-col items-center py-4 gap-2 flex-shrink-0">
         <Link href="/" className="mb-4">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center">
             <span className="text-white text-xs font-bold">P</span>
           </div>
         </Link>
 
         <SidebarIcon
-          active={activeView === 'chat'}
+          active
           label="Chat"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -336,31 +412,25 @@ main();`);
         />
 
         <SidebarIcon
-          label="Home"
-          icon={
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-          }
-        />
-
-        <SidebarIcon
-          label="Modules"
-          icon={
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-          }
-        />
-
-        <SidebarIcon
           label="Progress"
+          onClick={() => setShowProgressPanel(!showProgressPanel)}
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           }
         />
+
+        <Link href="/learn">
+          <SidebarIcon
+            label="Curriculum"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            }
+          />
+        </Link>
 
         <div className="flex-1" />
 
@@ -383,215 +453,243 @@ main();`);
           }
         />
 
-        {/* User avatar at bottom */}
+        {/* User avatar */}
         <div className="mt-2 w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-medium" title={user?.email || 'Guest'}>
           {user?.email?.charAt(0).toUpperCase() || 'G'}
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col">
-        {/* Status bar */}
-        {presence.onlineUsers > 0 && (
-          <div className="absolute top-4 left-20 flex items-center gap-2 text-xs text-slate-500 z-50">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            {presence.onlineUsers} online
-            {stats && stats.completed > 0 && (
-              <span className="ml-2 text-slate-600">• {stats.completed} AKUs completed</span>
-            )}
-          </div>
-        )}
+      {/* Progress Panel */}
+      {showProgressPanel && (
+        <aside className="w-72 border-r border-slate-800/50 flex flex-col bg-[#1e2227] flex-shrink-0 overflow-y-auto">
+          {/* Progress Header */}
+          <div className="p-4 border-b border-slate-800/50">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-white font-semibold">Your Progress</h2>
+              <button
+                onClick={() => setShowProgressPanel(false)}
+                className="text-slate-500 hover:text-white"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-        {/* View Tabs (top right area) */}
-        <div className="absolute top-4 right-4 flex items-center gap-1 z-50">
-          <button
-            onClick={() => setActiveView('chat')}
-            className={`p-2 rounded-lg transition ${
-              activeView === 'chat'
-                ? 'bg-slate-700 text-white'
-                : 'text-slate-500 hover:text-white hover:bg-slate-800'
-            }`}
-            title="Chat"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </button>
-          <button
-            onClick={() => setActiveView('sandbox')}
-            className={`p-2 rounded-lg transition ${
-              activeView === 'sandbox'
-                ? 'bg-slate-700 text-white'
-                : 'text-slate-500 hover:text-white hover:bg-slate-800'
-            }`}
-            title="Sandbox"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-            </svg>
-          </button>
+            {/* Progress Ring */}
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <ProgressRing progress={progressPercent} />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">{Math.round(progressPercent)}%</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-white font-medium">{completedAkus} AKUs</p>
+                <p className="text-slate-500 text-sm">of {targetAkus} completed</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="p-4 border-b border-slate-800/50">
+            <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-3">Stats</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-slate-800/50 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                  </svg>
+                  <span className="text-xl font-bold text-white">{stats?.currentStreak || 0}</span>
+                </div>
+                <p className="text-slate-500 text-xs">Day Streak</p>
+              </div>
+              <div className="bg-slate-800/50 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-xl font-bold text-white">{Math.round((stats?.totalTimeSpent || 0) / 60)}h</span>
+                </div>
+                <p className="text-slate-500 text-xs">Time Invested</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Current Path */}
+          {selectedPath && (
+            <div className="p-4 border-b border-slate-800/50">
+              <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-3">Current Path</h3>
+              <div className={`p-3 rounded-lg border border-${PATH_INFO[selectedPath].color}-500/30 bg-${PATH_INFO[selectedPath].color}-500/10`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg bg-${PATH_INFO[selectedPath].color}-500/20 flex items-center justify-center`}>
+                    {selectedPath === 'student' && <span className="text-lg">🎓</span>}
+                    {selectedPath === 'employee' && <span className="text-lg">⚡</span>}
+                    {selectedPath === 'owner' && <span className="text-lg">🚀</span>}
+                  </div>
+                  <div>
+                    <h4 className="text-white font-medium text-sm">{PATH_INFO[selectedPath].title}</h4>
+                    <p className="text-slate-500 text-xs">{PATH_INFO[selectedPath].subtitle}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Certificates */}
+          <div className="p-4 flex-1">
+            <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-3">Certificates</h3>
+            <div className="space-y-3">
+              <CertificateCard
+                name="Certified AI Associate"
+                designation="Proof of Readiness"
+                earned={hasCertificate('student')}
+                progress={completedAkus}
+                required={10}
+                color="emerald"
+              />
+              <CertificateCard
+                name="Workflow Efficiency Lead"
+                designation="Proof of ROI"
+                earned={hasCertificate('employee')}
+                progress={completedAkus}
+                required={15}
+                color="blue"
+              />
+              <CertificateCard
+                name="AI Operations Master"
+                designation="Proof of Scalability"
+                earned={hasCertificate('owner')}
+                progress={completedAkus}
+                required={20}
+                color="purple"
+              />
+            </div>
+          </div>
+
+          {/* Online indicator */}
+          {presence.onlineUsers > 0 && (
+            <div className="p-4 border-t border-slate-800/50">
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                {presence.onlineUsers} learners online
+              </div>
+            </div>
+          )}
+        </aside>
+      )}
+
+      {/* Main Chat Area */}
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800/50">
+          <div className="flex items-center gap-3">
+            <CheckeredAvatar size="sm" />
+            <div>
+              <h1 className="text-white font-semibold">Phazur AI Coach</h1>
+              <p className="text-slate-500 text-xs">
+                {selectedPath ? `${PATH_INFO[selectedPath].title} Path` : 'Choose your path to begin'}
+              </p>
+            </div>
+          </div>
+
+          {!showProgressPanel && (
+            <button
+              onClick={() => setShowProgressPanel(true)}
+              className="px-3 py-1.5 text-sm text-slate-400 hover:text-white bg-slate-800 rounded-lg transition"
+            >
+              Show Progress
+            </button>
+          )}
+        </header>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="max-w-2xl mx-auto">
+            {messages.map((msg) => (
+              <div key={msg.id} className="mb-6">
+                {msg.role === 'assistant' ? (
+                  <div className="flex gap-3">
+                    <CheckeredAvatar size="sm" />
+                    <div className="flex-1 space-y-2">
+                      {msg.content.map((paragraph, i) => (
+                        <div
+                          key={i}
+                          className="bg-[#2a2d32] text-slate-200 px-4 py-3 rounded-2xl rounded-tl-md max-w-fit"
+                        >
+                          <p className="whitespace-pre-wrap leading-relaxed text-sm">{paragraph}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex justify-end">
+                    <div className="bg-emerald-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-md max-w-xs">
+                      <p className="text-sm">{msg.content[0]}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {isTyping && (
+              <div className="flex gap-3 mb-6">
+                <CheckeredAvatar size="sm" />
+                <div className="bg-[#2a2d32] px-4 py-3 rounded-2xl rounded-tl-md">
+                  <div className="flex gap-1.5">
+                    <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
-        {/* Chat View */}
-        {activeView === 'chat' && (
-          <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-6 py-8">
-              {messages.map((msg) => (
-                <div key={msg.id} className="mb-8">
-                  {msg.role === 'assistant' ? (
-                    <div className="flex gap-4">
-                      <CheckeredAvatar />
-                      <div className="flex-1 space-y-3">
-                        {msg.content.map((paragraph, i) => (
-                          <div
-                            key={i}
-                            className="bg-[#2a2d32] text-slate-200 px-4 py-3 rounded-2xl rounded-tl-md max-w-fit"
-                          >
-                            <p className="whitespace-pre-wrap leading-relaxed">{paragraph}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex justify-end">
-                      <button className="bg-[#4a5c4a] hover:bg-[#5a6c5a] text-white px-5 py-2.5 rounded-full transition">
-                        {msg.content[0]}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {isTyping && (
-                <div className="flex gap-4 mb-8">
-                  <CheckeredAvatar />
-                  <div className="bg-[#2a2d32] px-4 py-3 rounded-2xl rounded-tl-md">
-                    <div className="flex gap-1.5">
-                      <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Suggestion Pills & Input */}
-            <div className="px-6 pb-6">
-              {/* Suggestion pills - horizontal scroll */}
-              {messages.length > 0 && (messages[messages.length - 1].suggestions || suggestions.length > 0) && !isTyping && (
-                <div className="mb-4 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-                  {(messages[messages.length - 1].suggestions || suggestions)?.map((suggestion, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="flex-shrink-0 px-4 py-2 bg-[#2a2d32] hover:bg-[#3a3d42] text-slate-300 text-sm rounded-full border border-slate-700 hover:border-slate-600 transition whitespace-nowrap"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Input area */}
-              <div className="relative">
-                <textarea
-                  ref={inputRef}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Message Phazur..."
-                  rows={1}
-                  className="w-full px-5 py-4 pr-14 bg-[#2a2d32] border border-slate-700 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-slate-600 resize-none"
-                />
-                <button
-                  onClick={() => handleUserResponse()}
-                  disabled={!inputValue.trim()}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Sandbox View */}
-        {activeView === 'sandbox' && (
-          <div className="flex-1 p-6">
-            <div className="grid lg:grid-cols-2 gap-6 h-full">
-              {/* Code Editor */}
-              <div className="flex flex-col bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 bg-slate-800 border-b border-slate-700">
-                  <div className="flex items-center gap-2">
-                    <span className="text-purple-400 font-mono text-sm">{'</>'}</span>
-                    <span className="text-slate-300 text-sm font-medium">Code Editor</span>
-                  </div>
+        {/* Input Area */}
+        <div className="px-6 pb-6">
+          <div className="max-w-2xl mx-auto">
+            {/* Suggestion pills */}
+            {messages.length > 0 && (messages[messages.length - 1].suggestions || suggestions.length > 0) && !isTyping && (
+              <div className="mb-3 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                {(messages[messages.length - 1].suggestions || suggestions)?.map((suggestion, i) => (
                   <button
-                    onClick={runSandbox}
-                    disabled={isRunning}
-                    className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg font-medium transition disabled:opacity-50 flex items-center gap-2"
+                    key={i}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="flex-shrink-0 px-4 py-2 bg-[#2a2d32] hover:bg-[#3a3d42] text-slate-300 text-sm rounded-full border border-slate-700 hover:border-slate-600 transition whitespace-nowrap"
                   >
-                    {isRunning ? (
-                      <>
-                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Running...
-                      </>
-                    ) : (
-                      <>
-                        <span>▶</span>
-                        Run Code
-                      </>
-                    )}
+                    {suggestion}
                   </button>
-                </div>
-                <textarea
-                  value={sandboxCode}
-                  onChange={(e) => setSandboxCode(e.target.value)}
-                  className="flex-1 p-4 bg-slate-950 text-slate-200 font-mono text-sm resize-none outline-none"
-                  spellCheck={false}
-                />
+                ))}
               </div>
+            )}
 
-              {/* Output Panel */}
-              <div className="flex flex-col bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-2 bg-slate-800 border-b border-slate-700">
-                  <span className="text-emerald-400">→</span>
-                  <span className="text-slate-300 text-sm font-medium">Output</span>
-                </div>
-                <div className="flex-1 p-4 bg-slate-950 font-mono text-sm overflow-y-auto">
-                  {sandboxOutput.length === 0 ? (
-                    <div className="text-slate-500">
-                      Click "Run Code" to see output here...
-                    </div>
-                  ) : (
-                    sandboxOutput.map((line, i) => (
-                      <div
-                        key={i}
-                        className={`leading-relaxed ${
-                          line.startsWith('>')
-                            ? 'text-emerald-400'
-                            : line.startsWith('✓')
-                            ? 'text-emerald-400'
-                            : line.startsWith('✗')
-                            ? 'text-red-400'
-                            : 'text-slate-300'
-                        }`}
-                      >
-                        {line || '\u00A0'}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+            {/* Input */}
+            <div className="relative">
+              <textarea
+                ref={inputRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Message Phazur..."
+                rows={1}
+                className="w-full px-4 py-3 pr-12 bg-[#2a2d32] border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 resize-none text-sm"
+              />
+              <button
+                onClick={() => handleUserResponse()}
+                disabled={!inputValue.trim() || isTyping}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-emerald-400 disabled:opacity-30 disabled:hover:text-slate-400 transition"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </button>
             </div>
           </div>
-        )}
+        </div>
       </main>
     </div>
   );
@@ -607,9 +705,9 @@ function getCoachingResponse(
     return {
       content: ["Let's get started! What's your primary goal?"],
       suggestions: [
-        "🎓 I want to build a portfolio",
-        "⚡ I want to save time at work",
-        "🚀 I want to scale my business",
+        "I want to build a portfolio",
+        "I want to save time at work",
+        "I want to scale my business",
       ],
     };
   }
@@ -618,45 +716,40 @@ function getCoachingResponse(
     student: {
       2: {
         content: [
-          "Perfect! That helps me understand where you're starting from.",
+          "That helps me understand where you're starting from.",
           "Here's your personalized roadmap:",
           "Week 1-2: Terminal Foundations\n→ Learn to navigate like a developer\n→ Execute your first AI commands",
-          "Week 3-4: AI-Powered Development\n→ Build components with Claude Code\n→ Deploy your first live project",
-          "Week 5-6: Portfolio Capstone\n→ Create your showcase site\n→ Mint your Certified AI Associate SBT",
+          "Week 3-4: AI-Powered Development\n→ Build components with AI assistance\n→ Deploy your first live project",
+          "Week 5-6: Portfolio Capstone\n→ Create your showcase site\n→ Earn your Certified AI Associate credential",
           "What would you like to start with?",
         ],
         suggestions: [
           "Set up my environment",
-          "Learn terminal basics",
-          "Jump to building",
+          "Learn the basics first",
+          "Jump straight to building",
         ],
       },
       3: {
         content: [
-          "Great choice!",
-          "Switch to the Terminal tab and type: ai-portfolio-starter",
-          "This will scaffold your portfolio project. I'll guide you through each step.",
-          "Your goal: Have a 'Hello World' page live within 30 minutes.",
-          "Ready to begin?",
+          "Great choice! Let's get you set up.",
+          "First, let me ask you a few quick questions to personalize your experience.",
+          "Do you have any prior coding experience?",
         ],
         suggestions: [
-          "Let's try FAFSA now",
-          "I want to wait for now",
-          "Can you send me the link?",
-          "How long does it take?",
+          "Yes, I've coded before",
+          "Some basic HTML/CSS",
+          "Completely new to coding",
         ],
       },
       4: {
         content: [
-          "Yes, you can start your FAFSA later if you want.",
-          "Just remember: you'll need to complete it to move forward and keep your scholarship chance.",
-          "Whenever you're ready, I can walk you through the FAFSA step and give you the link. Want to stop for now, or try the FAFSA today?",
+          "Perfect! I'll tailor the curriculum to your level.",
+          "Now, what type of portfolio project interests you most?",
         ],
         suggestions: [
-          "Let's try FAFSA now",
-          "I want to wait for now",
-          "Can you send me the link?",
-          "How long does it take?",
+          "Personal website",
+          "Project showcase",
+          "Blog/writing portfolio",
         ],
       },
     },
@@ -664,7 +757,7 @@ function getCoachingResponse(
       2: {
         content: [
           "That's a perfect pain point to automate!",
-          "Based on what you shared, here's your efficiency roadmap:",
+          "Here's your efficiency roadmap:",
           "Week 1-2: Workflow Analysis\n→ Map your repetitive tasks\n→ Identify automation opportunities",
           "Week 3-4: Custom GPT Development\n→ Build your Internal Knowledge Bot\n→ Connect to your company's data",
           "Week 5-6: API Automation\n→ Create email/calendar automations\n→ Deploy your Efficiency Capstone",
@@ -678,21 +771,20 @@ function getCoachingResponse(
       },
       3: {
         content: [
-          "Perfect! I can work with that.",
-          "Switch to the Terminal tab and run: ai-audit-workflow",
-          "This will analyze your workflow and suggest the highest-impact automations.",
-          "Your goal: Identify 3 tasks we can automate in the next 2 weeks.",
+          "I can work with that.",
+          "What would have the biggest impact on your daily workflow?",
         ],
         suggestions: [
-          "Start Workflow Audit",
-          "Show me examples first",
+          "Email automation",
+          "Meeting summaries",
+          "Report generation",
         ],
       },
     },
     owner: {
       2: {
         content: [
-          "That bottleneck is exactly what AI agents are built to solve.",
+          "That bottleneck is exactly what AI agents solve.",
           "Here's your operations scaling roadmap:",
           "Week 1-2: Operations Audit\n→ Map your entire business workflow\n→ Identify agent replacement opportunities",
           "Week 3-4: Agent Development\n→ Build your first autonomous agent\n→ Test with real business scenarios",
@@ -710,12 +802,12 @@ function getCoachingResponse(
           "Great context!",
           "Here's what successful owners at your scale typically automate first:",
           "1. Research Agent - Competitive analysis\n2. Outreach Agent - Lead qualification\n3. Operations Agent - Reporting, scheduling",
-          "Switch to Terminal and run: ai-competitor-scan",
-          "See what a Research Agent can do in 60 seconds — work that typically takes 4 hours.",
+          "Which area would have the biggest impact?",
         ],
         suggestions: [
-          "Run Competitor Scan Demo",
-          "Show me the curriculum",
+          "Research automation",
+          "Sales/outreach",
+          "Operations",
         ],
       },
     },
@@ -728,13 +820,13 @@ function getCoachingResponse(
 
   return {
     content: [
-      "Thanks for sharing!",
-      "Use the tabs above to explore:",
-      "• Terminal - Practice AI commands\n• Sandbox - Write and test code\n• Chat - Ask me anything",
+      "You're making great progress!",
+      "Keep chatting with me to continue your learning journey. I'm here to help you master AI workflows.",
     ],
     suggestions: [
-      "Open Terminal",
-      "Open Sandbox",
+      "What's my next step?",
+      "Show me a challenge",
+      "Explain a concept",
     ],
   };
 }
