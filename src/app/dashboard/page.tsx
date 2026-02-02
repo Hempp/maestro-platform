@@ -15,19 +15,13 @@ import { useProgress } from '@/hooks/useProgress';
 import { useRealtime } from '@/hooks/useRealtime';
 
 type PathType = 'student' | 'employee' | 'owner' | null;
-type ViewType = 'chat' | 'terminal' | 'sandbox';
+type ViewType = 'chat' | 'sandbox';
 
 interface Message {
   id: string;
   role: 'assistant' | 'user';
   content: string[]; // Array of paragraphs for multi-bubble
   suggestions?: string[];
-}
-
-interface TerminalLine {
-  id: string;
-  type: 'system' | 'prompt' | 'user' | 'output' | 'error' | 'success';
-  content: string;
 }
 
 const PATH_INFO = {
@@ -108,13 +102,6 @@ export default function DashboardPage() {
   const [localTyping, setLocalTyping] = useState(false);
   const isTyping = chatLoading || localTyping;
 
-  // Terminal state
-  const [terminalLines, setTerminalLines] = useState<TerminalLine[]>([]);
-  const [terminalInput, setTerminalInput] = useState('');
-  const [isExecuting, setIsExecuting] = useState(false);
-  const terminalRef = useRef<HTMLDivElement>(null);
-  const terminalInputRef = useRef<HTMLInputElement>(null);
-
   // Sandbox state
   const [sandboxCode, setSandboxCode] = useState(`// Welcome to the Phazur Sandbox!
 // Write your code here and click "Run" to execute
@@ -136,28 +123,10 @@ main();`);
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Scroll terminal to bottom
-  useEffect(() => {
-    if (terminalRef.current) {
-      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
-    }
-  }, [terminalLines]);
-
-  // Initialize terminal
-  useEffect(() => {
-    if (terminalLines.length === 0) {
-      setTerminalLines([
-        { id: '1', type: 'system', content: '[PHAZUR_OS v2.0] Terminal Ready' },
-        { id: '2', type: 'system', content: 'Type "help" for available commands' },
-        { id: '3', type: 'system', content: '' },
-      ]);
-    }
-  }, [terminalLines.length]);
-
   // Update presence when view changes
   useEffect(() => {
     if (user?.id) {
-      updatePresence(activeView === 'terminal' ? 'terminal' : activeView === 'sandbox' ? 'sandbox' : 'chat');
+      updatePresence(activeView === 'sandbox' ? 'sandbox' : 'chat');
     }
   }, [activeView, user?.id, updatePresence]);
 
@@ -189,10 +158,6 @@ main();`);
   const addUserMessage = useCallback((content: string) => {
     addLocalMessage('user', [content]);
   }, [addLocalMessage]);
-
-  const addTerminalLine = useCallback((type: TerminalLine['type'], content: string) => {
-    setTerminalLines(prev => [...prev, { id: Date.now().toString(), type, content }]);
-  }, []);
 
   const handleSuggestionClick = (suggestion: string) => {
     // Detect path from suggestion
@@ -308,98 +273,6 @@ main();`);
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleUserResponse();
-    }
-  };
-
-  // Save terminal command to history
-  const saveTerminalHistory = useCallback(async (command: string, output: string, status: 'success' | 'error') => {
-    try {
-      await fetch('/api/terminal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ command, output, status }),
-      });
-    } catch {
-      // Silent fail
-    }
-  }, []);
-
-  // Terminal command handler
-  const handleTerminalCommand = async (cmd: string) => {
-    const command = cmd.trim().toLowerCase();
-    addTerminalLine('user', `> ${cmd}`);
-
-    if (command === 'help') {
-      const helpText = `Available Commands:
-  ai-summarize-inbox    - Demo: AI email summarization
-  ai-meeting-notes      - Demo: Meeting transcription
-  ai-audit-workflow     - Demo: Workflow analysis
-  ai-portfolio-starter  - Demo: Portfolio scaffolding
-  ai-competitor-scan    - Demo: Market analysis
-  clear                 - Clear terminal
-  help                  - Show this help`;
-      addTerminalLine('system', '');
-      addTerminalLine('system', 'Available Commands:');
-      addTerminalLine('system', '  ai-summarize-inbox    - Demo: AI email summarization');
-      addTerminalLine('system', '  ai-meeting-notes      - Demo: Meeting transcription');
-      addTerminalLine('system', '  ai-audit-workflow     - Demo: Workflow analysis');
-      addTerminalLine('system', '  ai-portfolio-starter  - Demo: Portfolio scaffolding');
-      addTerminalLine('system', '  ai-competitor-scan    - Demo: Market analysis');
-      addTerminalLine('system', '  clear                 - Clear terminal');
-      addTerminalLine('system', '  help                  - Show this help');
-      addTerminalLine('system', '');
-      saveTerminalHistory(cmd, helpText, 'success');
-      return;
-    }
-
-    if (command === 'clear') {
-      setTerminalLines([
-        { id: Date.now().toString(), type: 'system', content: '[PHAZUR_OS v2.0] Terminal Cleared' },
-      ]);
-      return;
-    }
-
-    if (command.startsWith('ai-')) {
-      setIsExecuting(true);
-      addTerminalLine('system', 'Executing AI command...');
-
-      try {
-        const response = await fetch('/api/instant-ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ command }),
-        });
-        const result = await response.json();
-
-        if (result.success) {
-          addTerminalLine('success', '');
-          addTerminalLine('success', '─── AI Response ───');
-          result.result.split('\n').forEach((line: string) => {
-            addTerminalLine('output', line);
-          });
-          addTerminalLine('success', '───────────────────');
-          saveTerminalHistory(cmd, result.result, 'success');
-        } else {
-          addTerminalLine('error', `Error: ${result.error}`);
-          saveTerminalHistory(cmd, result.error || 'Error', 'error');
-        }
-      } catch {
-        addTerminalLine('error', 'Failed to execute command. Check your connection.');
-        saveTerminalHistory(cmd, 'Connection failed', 'error');
-      } finally {
-        setIsExecuting(false);
-      }
-      return;
-    }
-
-    addTerminalLine('error', `Command not found: ${cmd}. Type "help" for available commands.`);
-    saveTerminalHistory(cmd, 'Command not found', 'error');
-  };
-
-  const handleTerminalKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && terminalInput.trim() && !isExecuting) {
-      handleTerminalCommand(terminalInput);
-      setTerminalInput('');
     }
   };
 
@@ -545,19 +418,6 @@ main();`);
             </svg>
           </button>
           <button
-            onClick={() => setActiveView('terminal')}
-            className={`p-2 rounded-lg transition ${
-              activeView === 'terminal'
-                ? 'bg-slate-700 text-white'
-                : 'text-slate-500 hover:text-white hover:bg-slate-800'
-            }`}
-            title="Terminal"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </button>
-          <button
             onClick={() => setActiveView('sandbox')}
             className={`p-2 rounded-lg transition ${
               activeView === 'sandbox'
@@ -661,60 +521,6 @@ main();`);
           </div>
         )}
 
-        {/* Terminal View */}
-        {activeView === 'terminal' && (
-          <div className="flex-1 p-6">
-            <div className="h-full bg-slate-950 border border-slate-700 rounded-xl overflow-hidden flex flex-col font-mono text-sm">
-              {/* Terminal Title Bar */}
-              <div className="flex items-center gap-2 px-4 py-2 bg-slate-900 border-b border-slate-700">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
-                </div>
-                <div className="flex-1 text-center text-slate-500 text-xs">
-                  PHAZUR_OS v2.0 - Terminal
-                </div>
-                {isExecuting && (
-                  <div className="flex items-center gap-2 text-xs text-emerald-400">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                    Executing...
-                  </div>
-                )}
-              </div>
-
-              {/* Terminal Content */}
-              <div
-                ref={terminalRef}
-                className="flex-1 p-4 overflow-y-auto"
-                onClick={() => terminalInputRef.current?.focus()}
-              >
-                {terminalLines.map((line) => (
-                  <div key={line.id} className={`leading-relaxed ${getTerminalLineClass(line.type)}`}>
-                    {line.content || '\u00A0'}
-                  </div>
-                ))}
-
-                <div className="flex items-center mt-2">
-                  <span className="text-emerald-400 mr-2">phazur@ai:~$</span>
-                  <input
-                    ref={terminalInputRef}
-                    type="text"
-                    value={terminalInput}
-                    onChange={(e) => setTerminalInput(e.target.value)}
-                    onKeyDown={handleTerminalKeyDown}
-                    disabled={isExecuting}
-                    className="flex-1 bg-transparent outline-none text-white caret-emerald-400 disabled:opacity-50"
-                    autoFocus
-                    spellCheck={false}
-                  />
-                  <span className="w-2 h-5 bg-emerald-400 animate-pulse" />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Sandbox View */}
         {activeView === 'sandbox' && (
           <div className="flex-1 p-6">
@@ -789,25 +595,6 @@ main();`);
       </main>
     </div>
   );
-}
-
-function getTerminalLineClass(type: TerminalLine['type']): string {
-  switch (type) {
-    case 'system':
-      return 'text-slate-400';
-    case 'prompt':
-      return 'text-cyan-400 font-semibold';
-    case 'user':
-      return 'text-white';
-    case 'output':
-      return 'text-slate-300';
-    case 'error':
-      return 'text-red-400';
-    case 'success':
-      return 'text-emerald-400';
-    default:
-      return 'text-slate-400';
-  }
 }
 
 // Coaching flow logic
