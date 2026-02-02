@@ -9,6 +9,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { useChat } from '@/hooks/useChat';
 import { useProgress } from '@/hooks/useProgress';
@@ -1172,9 +1173,7 @@ export default function DashboardPage() {
         {/* Logo */}
         <div className="p-4 mb-2">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-              <span className="text-white text-sm font-bold">P</span>
-            </div>
+            <Image src="/logo.png" alt="Phazur" width={36} height={36} className="invert" />
             <span className="text-white font-semibold text-lg">Phazur</span>
           </Link>
         </div>

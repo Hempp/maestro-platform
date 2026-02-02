@@ -7,6 +7,7 @@
  */
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
 
@@ -266,7 +267,8 @@ export default function Home() {
         className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800/50 bg-[#0f1115]/90 backdrop-blur-xl"
       >
         <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-3">
+          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-2">
+            <Image src="/logo.png" alt="Phazur" width={36} height={36} className="invert" />
             <div className="text-2xl font-bold tracking-tight">PHAZUR</div>
             <motion.span
               animate={{ opacity: [0.5, 1, 0.5] }}
@@ -689,7 +691,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-              <div className="text-xl font-bold mb-4">PHAZUR</div>
+              <div className="flex items-center gap-2 mb-4">
+                <Image src="/logo.png" alt="Phazur" width={28} height={28} className="invert" />
+                <span className="text-xl font-bold">PHAZUR</span>
+              </div>
               <p className="text-slate-500 text-sm">AI-native learning lab with blockchain-verified credentials. Build first, pay later.</p>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>

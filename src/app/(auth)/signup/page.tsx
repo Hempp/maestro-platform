@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
@@ -77,9 +78,7 @@ export default function SignupPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
-            <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mb-4">
-              <span className="text-white text-xl font-bold">P</span>
-            </div>
+            <Image src="/logo.png" alt="Phazur" width={48} height={48} className="mx-auto mb-4 invert" />
           </Link>
           <h1 className="text-2xl font-semibold text-white">Create your account</h1>
           <p className="text-slate-400 mt-2">Start your AI mastery journey today</p>
