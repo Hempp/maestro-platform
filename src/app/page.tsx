@@ -1,43 +1,49 @@
 'use client';
 
 /**
- * PHAZUR ACADEMY LANDING PAGE
+ * PHAZUR LANDING PAGE
  * "Stop Chatting with AI. Start Commanding It."
  */
 
 import Link from 'next/link';
-import { useState } from 'react';
-import AuthButtons from '@/components/terminal/AuthButtons';
 
 export default function Home() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-[#0f1115] text-white">
       {/* Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-xl">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800/50 bg-[#0f1115]/90 backdrop-blur-xl">
         <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="text-2xl font-bold tracking-tight">PHAZUR</div>
             <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-full font-mono">
-              ACADEMY
+              v2.0
             </span>
           </div>
           <div className="hidden md:flex items-center gap-8">
             <a href="#paths" className="text-slate-400 hover:text-white transition text-sm">
               Paths
             </a>
-            <Link href="/guide/copilot" className="text-cyan-400 hover:text-cyan-300 transition text-sm font-medium">
-              Meet Phazur
+            <a href="#why" className="text-slate-400 hover:text-white transition text-sm">
+              Why Phazur
+            </a>
+            <a href="#pricing" className="text-slate-400 hover:text-white transition text-sm">
+              Pricing
+            </a>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className="px-4 py-2 text-slate-400 hover:text-white text-sm font-medium transition"
+            >
+              Sign In
             </Link>
-            <Link href="/verify" className="text-slate-400 hover:text-white transition text-sm">
-              Verify
-            </Link>
-            <Link href="/dashboard" className="text-slate-400 hover:text-white transition text-sm">
-              Dashboard
+            <Link
+              href="/dashboard"
+              className="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg text-sm font-medium transition"
+            >
+              Start Free
             </Link>
           </div>
-          <AuthButtons compact onAuthSuccess={() => setIsAuthenticated(true)} />
         </nav>
       </header>
 
@@ -48,42 +54,45 @@ export default function Home() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-sm mb-8">
               <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-              <span className="text-blue-400">AI-Native Laboratory</span>
-              <span className="text-slate-500">|</span>
-              <span className="text-slate-400">Blockchain Verified</span>
+              <span className="text-blue-400">AI-Native Learning Lab</span>
+              <span className="text-slate-600">|</span>
+              <span className="text-slate-400">Blockchain Verified Certificates</span>
             </div>
 
             {/* Headline */}
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
               Stop Chatting with AI.
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400">
                 Start Commanding It.
               </span>
             </h1>
 
             {/* Sub-headline */}
             <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed">
-              The only AI-native laboratory where you build real-world workflows,
-              earn elite skills, and mint your proof of mastery on the blockchain.
+              The only platform where you build real AI workflows,
+              earn elite credentials, and mint your proof of mastery on the blockchain.
+              <span className="text-white"> Pay nothing until you ship.</span>
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/guide/copilot"
-                className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl text-lg font-semibold transition-all hover:scale-105 shadow-lg shadow-cyan-500/25 flex items-center gap-2"
+                href="/dashboard"
+                className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl text-lg font-semibold transition-all hover:scale-105 shadow-lg shadow-cyan-500/25 flex items-center gap-3"
               >
-                <span className="text-xl font-bold">P</span>
+                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                  <span className="text-sm font-bold">P</span>
+                </div>
                 Talk to Phazur
               </Link>
-              <Link
-                href="/terminal"
-                className="px-8 py-4 border border-slate-700 hover:border-slate-500 rounded-xl text-lg font-medium transition group flex items-center gap-2"
+              <a
+                href="#paths"
+                className="px-8 py-4 border border-slate-700 hover:border-slate-500 rounded-xl text-lg font-medium transition flex items-center gap-2"
               >
-                <span className="text-emerald-400 font-mono">$</span>
-                Open Terminal
-              </Link>
+                Explore Paths
+                <span className="text-slate-500">→</span>
+              </a>
             </div>
 
             {/* Stats */}
@@ -105,7 +114,7 @@ export default function Home() {
         </section>
 
         {/* Paths Section */}
-        <section id="paths" className="py-24 px-6 border-t border-slate-800">
+        <section id="paths" className="py-24 px-6 border-t border-slate-800/50">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold mb-4">Choose Your Path</h2>
@@ -114,7 +123,7 @@ export default function Home() {
 
             <div className="grid lg:grid-cols-3 gap-8">
               {/* Path 1: Student */}
-              <div className="group relative bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-8 hover:border-purple-500/50 transition-all duration-300">
+              <div className="group relative bg-gradient-to-b from-[#1a1d21] to-[#13151a] border border-slate-800 rounded-2xl p-8 hover:border-purple-500/50 transition-all duration-300">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-t-2xl opacity-0 group-hover:opacity-100 transition" />
 
                 <div className="flex items-center gap-3 mb-6">
@@ -122,7 +131,7 @@ export default function Home() {
                     <span className="text-2xl">🎓</span>
                   </div>
                   <div>
-                    <div className="text-purple-400 text-sm font-medium">PATH 1</div>
+                    <div className="text-purple-400 text-sm font-medium">PATH A</div>
                     <h3 className="text-xl font-bold">The Student</h3>
                   </div>
                 </div>
@@ -130,44 +139,42 @@ export default function Home() {
                 <h4 className="text-2xl font-bold mb-4">Build a Job-Ready Portfolio</h4>
 
                 <p className="text-slate-400 mb-6 leading-relaxed">
-                  "Don't just say you know AI. <span className="text-white">Prove you can build with it.</span>"
-                  The job market doesn't care about your prompts; it cares about your products.
+                  Don't just say you know AI. <span className="text-white">Prove you can build with it.</span>
+                  The job market cares about products, not prompts.
                 </p>
 
                 <div className="space-y-4 mb-8">
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-purple-500/20 rounded flex items-center justify-center text-purple-400 text-sm mt-0.5">P</div>
-                    <div>
-                      <div className="text-sm text-slate-500">THE PROJECT</div>
-                      <div className="text-white">Build a live, AI-enhanced portfolio site from the terminal.</div>
-                    </div>
+                    <div className="w-6 h-6 bg-purple-500/20 rounded flex items-center justify-center text-purple-400 text-xs mt-0.5">✓</div>
+                    <div className="text-slate-300 text-sm">Build a live, AI-enhanced portfolio from the terminal</div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-purple-500/20 rounded flex items-center justify-center text-purple-400 text-sm mt-0.5">S</div>
-                    <div>
-                      <div className="text-sm text-slate-500">THE SKILL</div>
-                      <div className="text-white">Master Claude Code and Vibe Coding to scaffold apps in minutes.</div>
-                    </div>
+                    <div className="w-6 h-6 bg-purple-500/20 rounded flex items-center justify-center text-purple-400 text-xs mt-0.5">✓</div>
+                    <div className="text-slate-300 text-sm">Master Claude Code to scaffold apps in minutes</div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-purple-500/20 rounded flex items-center justify-center text-purple-400 text-sm mt-0.5">O</div>
-                    <div>
-                      <div className="text-sm text-slate-500">THE OUTCOME</div>
-                      <div className="text-white">A verifiable link to your work and a <span className="text-purple-400 font-semibold">Certified AI Associate</span> SBT for your LinkedIn.</div>
-                    </div>
+                    <div className="w-6 h-6 bg-purple-500/20 rounded flex items-center justify-center text-purple-400 text-xs mt-0.5">✓</div>
+                    <div className="text-slate-300 text-sm">Earn <span className="text-purple-400 font-semibold">Certified AI Associate</span> SBT</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <span className="text-2xl font-bold text-white">$49</span>
+                    <span className="text-slate-500 text-sm ml-2">after capstone</span>
                   </div>
                 </div>
 
                 <Link
-                  href="/learn?tier=student"
+                  href="/dashboard"
                   className="block w-full py-3 bg-purple-600 hover:bg-purple-500 rounded-xl text-center font-semibold transition"
                 >
-                  Start Building for Free
+                  Start Building Free
                 </Link>
               </div>
 
               {/* Path 2: Employee */}
-              <div className="group relative bg-gradient-to-b from-slate-900 to-slate-950 border border-blue-500/50 rounded-2xl p-8 hover:border-blue-400/70 transition-all duration-300 scale-[1.02] shadow-xl shadow-blue-500/10">
+              <div className="group relative bg-gradient-to-b from-[#1a1d21] to-[#13151a] border border-blue-500/50 rounded-2xl p-8 hover:border-blue-400/70 transition-all duration-300 scale-[1.02] shadow-xl shadow-blue-500/10">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-blue-600 text-sm font-medium rounded-full">
                   MOST POPULAR
                 </div>
@@ -178,7 +185,7 @@ export default function Home() {
                     <span className="text-2xl">⚡</span>
                   </div>
                   <div>
-                    <div className="text-blue-400 text-sm font-medium">PATH 2</div>
+                    <div className="text-blue-400 text-sm font-medium">PATH B</div>
                     <h3 className="text-xl font-bold">The Employee</h3>
                   </div>
                 </div>
@@ -186,36 +193,34 @@ export default function Home() {
                 <h4 className="text-2xl font-bold mb-4">Efficiency Mastery</h4>
 
                 <p className="text-slate-400 mb-6 leading-relaxed">
-                  "Work <span className="text-white">10 hours less per week.</span> Let AI handle the busywork."
-                  Learn to build "Digital Clones" of your routine tasks.
+                  Work <span className="text-white">10 hours less per week.</span>
+                  Build "Digital Clones" of your routine tasks.
                 </p>
 
                 <div className="space-y-4 mb-8">
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center text-blue-400 text-sm mt-0.5">P</div>
-                    <div>
-                      <div className="text-sm text-slate-500">THE PROJECT</div>
-                      <div className="text-white">Create a custom Internal Knowledge GPT and automated email architect.</div>
-                    </div>
+                    <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center text-blue-400 text-xs mt-0.5">✓</div>
+                    <div className="text-slate-300 text-sm">Create a custom Internal Knowledge GPT</div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center text-blue-400 text-sm mt-0.5">S</div>
-                    <div>
-                      <div className="text-sm text-slate-500">THE SKILL</div>
-                      <div className="text-white">Integrate Google Workspace APIs and Agentic Workflows into your stack.</div>
-                    </div>
+                    <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center text-blue-400 text-xs mt-0.5">✓</div>
+                    <div className="text-slate-300 text-sm">Build automated email & workflow systems</div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center text-blue-400 text-sm mt-0.5">O</div>
-                    <div>
-                      <div className="text-sm text-slate-500">THE OUTCOME</div>
-                      <div className="text-white">An automated 9-to-5 and the <span className="text-blue-400 font-semibold">Workflow Efficiency Lead</span> credential.</div>
-                    </div>
+                    <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center text-blue-400 text-xs mt-0.5">✓</div>
+                    <div className="text-slate-300 text-sm">Earn <span className="text-blue-400 font-semibold">Workflow Efficiency Lead</span> SBT</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <span className="text-2xl font-bold text-white">$199</span>
+                    <span className="text-slate-500 text-sm ml-2">after capstone</span>
                   </div>
                 </div>
 
                 <Link
-                  href="/learn?tier=employee"
+                  href="/dashboard"
                   className="block w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl text-center font-semibold transition"
                 >
                   Reclaim My Time
@@ -223,7 +228,7 @@ export default function Home() {
               </div>
 
               {/* Path 3: Owner */}
-              <div className="group relative bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-8 hover:border-emerald-500/50 transition-all duration-300">
+              <div className="group relative bg-gradient-to-b from-[#1a1d21] to-[#13151a] border border-slate-800 rounded-2xl p-8 hover:border-emerald-500/50 transition-all duration-300">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-t-2xl opacity-0 group-hover:opacity-100 transition" />
 
                 <div className="flex items-center gap-3 mb-6">
@@ -231,7 +236,7 @@ export default function Home() {
                     <span className="text-2xl">🚀</span>
                   </div>
                   <div>
-                    <div className="text-emerald-400 text-sm font-medium">PATH 3</div>
+                    <div className="text-emerald-400 text-sm font-medium">PATH C</div>
                     <h3 className="text-xl font-bold">The Owner</h3>
                   </div>
                 </div>
@@ -239,36 +244,34 @@ export default function Home() {
                 <h4 className="text-2xl font-bold mb-4">Operations Scaling</h4>
 
                 <p className="text-slate-400 mb-6 leading-relaxed">
-                  "<span className="text-white">Scale your business without scaling your headcount.</span>"
-                  Replace entire departments with autonomous AI chains.
+                  <span className="text-white">Scale without scaling headcount.</span>
+                  Replace entire departments with AI chains.
                 </p>
 
                 <div className="space-y-4 mb-8">
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-emerald-500/20 rounded flex items-center justify-center text-emerald-400 text-sm mt-0.5">P</div>
-                    <div>
-                      <div className="text-sm text-slate-500">THE PROJECT</div>
-                      <div className="text-white">Deploy an end-to-end Autonomous Sales & Research Chain.</div>
-                    </div>
+                    <div className="w-6 h-6 bg-emerald-500/20 rounded flex items-center justify-center text-emerald-400 text-xs mt-0.5">✓</div>
+                    <div className="text-slate-300 text-sm">Deploy Autonomous Sales & Research Chains</div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-emerald-500/20 rounded flex items-center justify-center text-emerald-400 text-sm mt-0.5">S</div>
-                    <div>
-                      <div className="text-sm text-slate-500">THE SKILL</div>
-                      <div className="text-white">Orchestrate multi-agent systems and API Plugins for full-scale ops.</div>
-                    </div>
+                    <div className="w-6 h-6 bg-emerald-500/20 rounded flex items-center justify-center text-emerald-400 text-xs mt-0.5">✓</div>
+                    <div className="text-slate-300 text-sm">Orchestrate multi-agent systems for full-scale ops</div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-emerald-500/20 rounded flex items-center justify-center text-emerald-400 text-sm mt-0.5">O</div>
-                    <div>
-                      <div className="text-sm text-slate-500">THE OUTCOME</div>
-                      <div className="text-white">A self-running business engine and the <span className="text-emerald-400 font-semibold">AI Operations Master</span> seal.</div>
-                    </div>
+                    <div className="w-6 h-6 bg-emerald-500/20 rounded flex items-center justify-center text-emerald-400 text-xs mt-0.5">✓</div>
+                    <div className="text-slate-300 text-sm">Earn <span className="text-emerald-400 font-semibold">AI Operations Master</span> SBT</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <span className="text-2xl font-bold text-white">$499</span>
+                    <span className="text-slate-500 text-sm ml-2">after capstone</span>
                   </div>
                 </div>
 
                 <Link
-                  href="/learn?tier=owner"
+                  href="/dashboard"
                   className="block w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-center font-semibold transition"
                 >
                   Automate My Business
@@ -279,66 +282,66 @@ export default function Home() {
         </section>
 
         {/* Why Phazur Section */}
-        <section id="why" className="py-24 px-6 bg-gradient-to-b from-slate-900 to-slate-950 border-t border-slate-800">
+        <section id="why" className="py-24 px-6 bg-gradient-to-b from-[#13151a] to-[#0f1115] border-t border-slate-800/50">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold mb-4">Why Phazur Academy?</h2>
+              <h2 className="text-4xl font-bold mb-4">Why Phazur?</h2>
               <p className="text-slate-400 text-lg">We do things differently</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
               {/* No Quizzes */}
-              <div className="text-center p-8">
+              <div className="text-center p-8 bg-[#1a1d21] rounded-2xl border border-slate-800">
                 <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <span className="text-3xl">🚫</span>
                 </div>
                 <h3 className="text-xl font-bold mb-3">No Quizzes</h3>
                 <p className="text-slate-400">
                   We verify your <span className="text-white">code</span>, not your memory.
-                  Your project either works or it doesn't. No multiple choice.
+                  Your project either works or it doesn't.
                 </p>
               </div>
 
               {/* Blockchain Verified */}
-              <div className="text-center p-8">
+              <div className="text-center p-8 bg-[#1a1d21] rounded-2xl border border-slate-800">
                 <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <span className="text-3xl">⛓️</span>
                 </div>
                 <h3 className="text-xl font-bold mb-3">Blockchain Verified</h3>
                 <p className="text-slate-400">
-                  Your certificates are tamper-proof <span className="text-white">Soulbound Tokens (SBTs)</span> on the Polygon ledger.
-                  Unfakeable proof.
+                  Your certificates are <span className="text-white">Soulbound Tokens (SBTs)</span> on Polygon.
+                  Unfakeable proof of skill.
                 </p>
               </div>
 
               {/* Socratic Learning */}
-              <div className="text-center p-8">
+              <div className="text-center p-8 bg-[#1a1d21] rounded-2xl border border-slate-800">
                 <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <span className="text-3xl">🧠</span>
                 </div>
                 <h3 className="text-xl font-bold mb-3">Socratic Learning</h3>
                 <p className="text-slate-400">
-                  Our AI doesn't give answers; it <span className="text-white">builds your brain</span>.
-                  Learn to think, not just copy.
+                  Phazur doesn't give answers; it <span className="text-white">guides your thinking</span>.
+                  Learn to solve, not just copy.
                 </p>
               </div>
             </div>
 
-            {/* Additional Trust Signals */}
+            {/* Trust Signals */}
             <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-              <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+              <div className="p-4 bg-[#1a1d21] rounded-xl border border-slate-800">
+                <div className="text-2xl font-bold text-white">3 Views</div>
+                <div className="text-sm text-slate-500">Chat • Terminal • Sandbox</div>
+              </div>
+              <div className="p-4 bg-[#1a1d21] rounded-xl border border-slate-800">
+                <div className="text-2xl font-bold text-white">Real AI</div>
+                <div className="text-sm text-slate-500">Powered by GPT-4</div>
+              </div>
+              <div className="p-4 bg-[#1a1d21] rounded-xl border border-slate-800">
                 <div className="text-2xl font-bold text-white">1:1</div>
                 <div className="text-sm text-slate-500">Human Mentors</div>
               </div>
-              <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
-                <div className="text-2xl font-bold text-white">2hr</div>
-                <div className="text-sm text-slate-500">Support Response</div>
-              </div>
-              <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
-                <div className="text-2xl font-bold text-white">WCAG</div>
-                <div className="text-sm text-slate-500">2.1 AA Compliant</div>
-              </div>
-              <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+              <div className="p-4 bg-[#1a1d21] rounded-xl border border-slate-800">
                 <div className="text-2xl font-bold text-white">$0</div>
                 <div className="text-sm text-slate-500">Until You Ship</div>
               </div>
@@ -346,168 +349,51 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Success Stories */}
-        <section className="py-24 px-6 border-t border-slate-800">
-          <div className="max-w-6xl mx-auto">
+        {/* Pricing Section */}
+        <section id="pricing" className="py-24 px-6 border-t border-slate-800/50">
+          <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-sm mb-4">
-                <span className="text-emerald-400">Real Results</span>
-              </div>
-              <h2 className="text-4xl font-bold mb-4">Success Stories</h2>
-              <p className="text-slate-400 text-lg">See how Phazur graduates are commanding AI in the real world</p>
+              <h2 className="text-4xl font-bold mb-4">Simple Pricing</h2>
+              <p className="text-slate-400 text-lg">Build first, pay later. No upfront costs.</p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
-              {/* Story 1: Student Path */}
-              <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-6 hover:border-purple-500/30 transition">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
-                    MR
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">Marcus Rodriguez</div>
-                    <div className="text-sm text-slate-500">Career Switcher → Junior Dev</div>
-                  </div>
+            <div className="bg-gradient-to-b from-[#1a1d21] to-[#13151a] border border-slate-800 rounded-2xl p-8 md:p-12">
+              <div className="grid md:grid-cols-3 gap-8 text-center">
+                <div>
+                  <div className="text-purple-400 font-medium mb-2">Student Path</div>
+                  <div className="text-4xl font-bold text-white mb-2">$49</div>
+                  <div className="text-slate-500 text-sm">Certified AI Associate</div>
                 </div>
-                <div className="mb-4">
-                  <span className="inline-block px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full">
-                    Certified AI Associate
-                  </span>
+                <div>
+                  <div className="text-blue-400 font-medium mb-2">Employee Path</div>
+                  <div className="text-4xl font-bold text-white mb-2">$199</div>
+                  <div className="text-slate-500 text-sm">Workflow Efficiency Lead</div>
                 </div>
-                <p className="text-slate-400 text-sm mb-4 leading-relaxed">
-                  "I was a barista with zero coding experience. Phazur taught me to build with Claude Code,
-                  not just chat with it. <span className="text-white">3 months later, I landed a $75k junior dev role.</span>
-                  The SBT on my LinkedIn was the conversation starter in every interview."
-                </p>
-                <div className="flex items-center gap-4 text-xs text-slate-500">
-                  <div className="flex items-center gap-1">
-                    <span className="text-emerald-400">↑</span>
-                    <span>$75k starting salary</span>
-                  </div>
-                  <div className="flex items-center gap-1">
+                <div>
+                  <div className="text-emerald-400 font-medium mb-2">Owner Path</div>
+                  <div className="text-4xl font-bold text-white mb-2">$499</div>
+                  <div className="text-slate-500 text-sm">AI Operations Master</div>
+                </div>
+              </div>
+
+              <div className="mt-10 pt-8 border-t border-slate-800">
+                <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-400">
+                  <div className="flex items-center gap-2">
                     <span className="text-emerald-400">✓</span>
-                    <span>3 months to hire</span>
+                    Pay only after capstone
                   </div>
-                </div>
-              </div>
-
-              {/* Story 2: Employee Path */}
-              <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-blue-500/30 rounded-2xl p-6 hover:border-blue-500/50 transition">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
-                    SK
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">Sarah Kim</div>
-                    <div className="text-sm text-slate-500">Marketing Manager → AI Lead</div>
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <span className="inline-block px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
-                    Workflow Efficiency Lead
-                  </span>
-                </div>
-                <p className="text-slate-400 text-sm mb-4 leading-relaxed">
-                  "I was drowning in reports and emails. Now I have AI agents that
-                  <span className="text-white"> save me 12 hours every week.</span> My boss noticed.
-                  I got promoted to lead our company's AI initiatives—with a 40% raise."
-                </p>
-                <div className="flex items-center gap-4 text-xs text-slate-500">
-                  <div className="flex items-center gap-1">
-                    <span className="text-emerald-400">↑</span>
-                    <span>12 hrs/week saved</span>
-                  </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <span className="text-emerald-400">✓</span>
-                    <span>40% salary increase</span>
+                    Lifetime access to materials
                   </div>
-                </div>
-              </div>
-
-              {/* Story 3: Owner Path */}
-              <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-6 hover:border-emerald-500/30 transition">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold">
-                    JP
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400">✓</span>
+                    On-chain certificate
                   </div>
-                  <div>
-                    <div className="font-semibold text-white">James Park</div>
-                    <div className="text-sm text-slate-500">Agency Owner → AI-First CEO</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400">✓</span>
+                    1:1 mentor support
                   </div>
-                </div>
-                <div className="mb-4">
-                  <span className="inline-block px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full">
-                    AI Operations Master
-                  </span>
-                </div>
-                <p className="text-slate-400 text-sm mb-4 leading-relaxed">
-                  "I had 8 employees doing research and outreach. Now I have 2 employees and
-                  <span className="text-white"> 6 AI agents that work 24/7.</span> Revenue is up 3x,
-                  payroll is down 60%. The Operations Master credential proved I knew what I was doing."
-                </p>
-                <div className="flex items-center gap-4 text-xs text-slate-500">
-                  <div className="flex items-center gap-1">
-                    <span className="text-emerald-400">↑</span>
-                    <span>3x revenue</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-emerald-400">↓</span>
-                    <span>60% payroll reduction</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Stats Bar */}
-            <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 p-6 bg-slate-900/50 rounded-2xl border border-slate-800">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white mb-1">2,847</div>
-                <div className="text-sm text-slate-500">Certificates Minted</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-emerald-400 mb-1">94%</div>
-                <div className="text-sm text-slate-500">Completion Rate</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-400 mb-1">$52k</div>
-                <div className="text-sm text-slate-500">Avg. Salary Increase</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-purple-400 mb-1">14 hrs</div>
-                <div className="text-sm text-slate-500">Avg. Weekly Time Saved</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Micro-Credentials */}
-        <section className="py-24 px-6 border-t border-slate-800">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Earn Skill Badges</h2>
-              <p className="text-slate-400">Stack micro-credentials as you master specialized tools</p>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-4">
-              <div className="flex items-center gap-3 px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl">
-                <span className="text-2xl">⌨️</span>
-                <div>
-                  <div className="font-semibold text-white">Claude Code Commander</div>
-                  <div className="text-sm text-slate-500">Terminal mastery</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl">
-                <span className="text-2xl">🔌</span>
-                <div>
-                  <div className="font-semibold text-white">API Integrator Pro</div>
-                  <div className="text-sm text-slate-500">Plugin development</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl">
-                <span className="text-2xl">🤖</span>
-                <div>
-                  <div className="font-semibold text-white">Agentic Orchestrator</div>
-                  <div className="text-sm text-slate-500">Multi-agent systems</div>
                 </div>
               </div>
             </div>
@@ -515,69 +401,60 @@ export default function Home() {
         </section>
 
         {/* Final CTA */}
-        <section className="py-24 px-6 bg-gradient-to-b from-slate-950 to-slate-900 border-t border-slate-800">
+        <section className="py-24 px-6 bg-gradient-to-b from-[#0f1115] to-[#13151a] border-t border-slate-800/50">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Ready to Command AI?
             </h2>
             <p className="text-xl text-slate-400 mb-10">
-              Build first. Pay later. Your certificate is minted only after you ship real work.
+              Start building today. Pay only after you ship real work.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/learn"
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl text-lg font-semibold transition-all hover:scale-105 shadow-lg shadow-blue-500/25"
-              >
-                Start Your Path
-              </Link>
-              <Link
-                href="/verify"
-                className="px-8 py-4 border border-slate-700 hover:border-slate-500 rounded-xl text-lg font-medium transition"
-              >
-                Verify a Certificate
-              </Link>
-            </div>
+            <Link
+              href="/dashboard"
+              className="inline-block px-10 py-5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl text-xl font-semibold transition-all hover:scale-105 shadow-lg shadow-cyan-500/25"
+            >
+              Start Your Path Free
+            </Link>
           </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 py-12">
+      <footer className="border-t border-slate-800/50 py-12 bg-[#0a0c0f]">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="text-xl font-bold mb-4">PHAZUR</div>
               <p className="text-slate-500 text-sm">
-                AI-native laboratory with blockchain-verified credentials.
+                AI-native learning lab with blockchain-verified credentials.
+                Build first, pay later.
               </p>
             </div>
             <div>
-              <div className="text-sm font-semibold text-slate-300 mb-4">Paths</div>
+              <div className="text-sm font-semibold text-slate-300 mb-4">Certifications</div>
               <div className="space-y-2 text-sm text-slate-500">
-                <Link href="/learn?tier=student" className="block hover:text-white transition">Certified AI Associate</Link>
-                <Link href="/learn?tier=employee" className="block hover:text-white transition">Workflow Efficiency Lead</Link>
-                <Link href="/learn?tier=owner" className="block hover:text-white transition">AI Operations Master</Link>
+                <div className="hover:text-purple-400 transition cursor-pointer">Certified AI Associate — $49</div>
+                <div className="hover:text-blue-400 transition cursor-pointer">Workflow Efficiency Lead — $199</div>
+                <div className="hover:text-emerald-400 transition cursor-pointer">AI Operations Master — $499</div>
               </div>
             </div>
             <div>
               <div className="text-sm font-semibold text-slate-300 mb-4">Platform</div>
               <div className="space-y-2 text-sm text-slate-500">
-                <Link href="/guide/copilot" className="block hover:text-cyan-400 transition text-cyan-400/70">Meet Phazur</Link>
-                <Link href="/terminal" className="block hover:text-white transition">Terminal</Link>
-                <Link href="/dashboard" className="block hover:text-white transition">Dashboard</Link>
-                <Link href="/verify" className="block hover:text-white transition">Verify Certificate</Link>
-              </div>
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-slate-300 mb-4">Compliance</div>
-              <div className="space-y-2 text-sm text-slate-500">
-                <Link href="/accessibility" className="block hover:text-white transition">Accessibility (WCAG 2.1)</Link>
-                <Link href="/privacy" className="block hover:text-white transition">Privacy Policy</Link>
+                <Link href="/dashboard" className="block hover:text-cyan-400 transition">Dashboard</Link>
+                <Link href="#" className="block hover:text-white transition group relative">
+                  Documentation
+                  <span className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-xs text-slate-400 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">Coming soon</span>
+                </Link>
+                <Link href="#" className="block hover:text-white transition group relative">
+                  API Reference
+                  <span className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-xs text-slate-400 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">Coming soon</span>
+                </Link>
               </div>
             </div>
           </div>
-          <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <div>© 2025 Phazur Academy. Build first, pay later.</div>
+          <div className="pt-8 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+            <div>© 2025 Phazur. Build first, pay later.</div>
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1">
                 <span className="text-emerald-500">●</span>
@@ -585,7 +462,7 @@ export default function Home() {
               </span>
               <span className="flex items-center gap-1">
                 <span className="text-blue-500">●</span>
-                WCAG 2.1 AA
+                GPT-4 Powered
               </span>
             </div>
           </div>
