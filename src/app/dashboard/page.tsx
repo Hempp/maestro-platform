@@ -869,6 +869,9 @@ export default function DashboardPage() {
 
   // Backend hooks
   const { user, loading: authLoading } = useAuth();
+
+  // Free message limit before requiring auth
+  const FREE_MESSAGE_LIMIT = 3;
   const {
     messages,
     isLoading: chatLoading,
@@ -1067,6 +1070,10 @@ export default function DashboardPage() {
   const completedAkus = stats?.completed || 0;
   const targetAkus = selectedPath ? PATH_INFO[selectedPath].requiredAkus : 10;
   const progressPercent = Math.min((completedAkus / targetAkus) * 100, 100);
+
+  // Count user messages for auth gate
+  const userMessageCount = messages.filter(msg => msg.role === 'user').length;
+  const requiresAuth = !user && userMessageCount >= FREE_MESSAGE_LIMIT;
 
   // Check if certificate is earned
   const hasCertificate = (type: string) => certificates.some(c => c.certificate_type === type);
@@ -1378,42 +1385,77 @@ export default function DashboardPage() {
             {/* Input Area */}
             <div className="px-6 pb-4">
               <div className="max-w-2xl mx-auto">
-                {/* Suggestion pills */}
-                {messages.length > 0 && (messages[messages.length - 1].suggestions || suggestions.length > 0) && !isTyping && (
-                  <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                    {(messages[messages.length - 1].suggestions || suggestions)?.map((suggestion, i) => (
-                      <button
-                        key={i}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="flex-shrink-0 px-3 py-1.5 bg-slate-800/40 hover:bg-slate-800/60 text-slate-400 text-xs rounded-lg border border-slate-800/60 hover:border-slate-700 transition whitespace-nowrap"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
+                {requiresAuth ? (
+                  /* Auth Gate - Show after 3 messages for unauthenticated users */
+                  <div className="p-4 bg-slate-800/30 border border-slate-800/60 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-medium text-slate-200 mb-1">Sign in to continue</h3>
+                        <p className="text-xs text-slate-500 mb-4">
+                          Create a free account to unlock unlimited conversations with Phazur and track your learning progress.
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href="/login"
+                            className="px-4 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-lg text-xs font-medium transition-colors"
+                          >
+                            Sign In
+                          </Link>
+                          <Link
+                            href="/login?signup=true"
+                            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition-colors"
+                          >
+                            Create Account
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
+                ) : (
+                  <>
+                    {/* Suggestion pills */}
+                    {messages.length > 0 && (messages[messages.length - 1].suggestions || suggestions.length > 0) && !isTyping && (
+                      <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                        {(messages[messages.length - 1].suggestions || suggestions)?.map((suggestion, i) => (
+                          <button
+                            key={i}
+                            onClick={() => handleSuggestionClick(suggestion)}
+                            className="flex-shrink-0 px-3 py-1.5 bg-slate-800/40 hover:bg-slate-800/60 text-slate-400 text-xs rounded-lg border border-slate-800/60 hover:border-slate-700 transition whitespace-nowrap"
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
-                {/* Input */}
-                <div className="relative">
-                  <textarea
-                    ref={inputRef}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Message..."
-                    rows={1}
-                    className="w-full px-3.5 py-2.5 pr-10 bg-slate-800/40 border border-slate-800/60 rounded-lg text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-700 resize-none text-sm"
-                  />
-                  <button
-                    onClick={() => handleUserResponse()}
-                    disabled={!inputValue.trim() || isTyping}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-600 hover:text-slate-400 disabled:opacity-30 disabled:hover:text-slate-600 transition"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                  </button>
-                </div>
+                    {/* Input */}
+                    <div className="relative">
+                      <textarea
+                        ref={inputRef}
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Message..."
+                        rows={1}
+                        className="w-full px-3.5 py-2.5 pr-10 bg-slate-800/40 border border-slate-800/60 rounded-lg text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-700 resize-none text-sm"
+                      />
+                      <button
+                        onClick={() => handleUserResponse()}
+                        disabled={!inputValue.trim() || isTyping}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-600 hover:text-slate-400 disabled:opacity-30 disabled:hover:text-slate-600 transition"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </>
