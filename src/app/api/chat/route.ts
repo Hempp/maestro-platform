@@ -79,6 +79,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if OpenAI API key is configured
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey || apiKey === 'sk-YOUR_OPENAI_API_KEY' || apiKey.includes('YOUR')) {
+      // Return a helpful fallback response when API key is not configured
+      const fallbackResponses = [
+        "I'm currently in demo mode. To enable full AI coaching, configure your OpenAI API key.",
+        "What would you like to learn about today?",
+      ];
+      return NextResponse.json({
+        content: fallbackResponses,
+        suggestions: [
+          "Tell me about the Student path",
+          "What skills will I learn?",
+          "How does the certification work?",
+        ],
+        sessionId,
+        demo: true,
+      });
+    }
+
     // Build context based on tier
     let tierContext = '';
     if (tier === 'student') {

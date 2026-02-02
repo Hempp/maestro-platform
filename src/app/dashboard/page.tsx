@@ -33,24 +33,36 @@ const PATH_INFO = {
     subtitle: 'Build a Job-Ready Portfolio',
     cert: 'Certified AI Associate',
     price: '$49',
-    color: 'emerald',
     requiredAkus: 10,
+    styles: {
+      border: 'border-emerald-500/30',
+      bg: 'bg-emerald-500/10',
+      bgIcon: 'bg-emerald-500/20',
+    },
   },
   employee: {
     title: 'The Employee',
     subtitle: 'Efficiency Mastery',
     cert: 'Workflow Efficiency Lead',
     price: '$199',
-    color: 'blue',
     requiredAkus: 15,
+    styles: {
+      border: 'border-blue-500/30',
+      bg: 'bg-blue-500/10',
+      bgIcon: 'bg-blue-500/20',
+    },
   },
   owner: {
     title: 'The Owner',
     subtitle: 'Operations Scaling',
     cert: 'AI Operations Master',
     price: '$499',
-    color: 'purple',
     requiredAkus: 20,
+    styles: {
+      border: 'border-purple-500/30',
+      bg: 'bg-purple-500/10',
+      bgIcon: 'bg-purple-500/20',
+    },
   },
 };
 
@@ -599,9 +611,9 @@ export default function DashboardPage() {
           {selectedPath && (
             <div className="p-4 border-b border-slate-800/50">
               <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-3">Current Path</h3>
-              <div className={`p-3 rounded-lg border border-${PATH_INFO[selectedPath].color}-500/30 bg-${PATH_INFO[selectedPath].color}-500/10`}>
+              <div className={`p-3 rounded-lg border ${PATH_INFO[selectedPath].styles.border} ${PATH_INFO[selectedPath].styles.bg}`}>
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg bg-${PATH_INFO[selectedPath].color}-500/20 flex items-center justify-center`}>
+                  <div className={`w-10 h-10 rounded-lg ${PATH_INFO[selectedPath].styles.bgIcon} flex items-center justify-center`}>
                     {selectedPath === 'student' && <span className="text-lg">🎓</span>}
                     {selectedPath === 'employee' && <span className="text-lg">⚡</span>}
                     {selectedPath === 'owner' && <span className="text-lg">🚀</span>}
