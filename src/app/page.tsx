@@ -219,8 +219,8 @@ export default function Home() {
 
           <div className="hidden md:flex items-center gap-8">
             {[
+              { label: 'About', href: '#about' },
               { label: 'Paths', href: '#paths' },
-              { label: 'Why Phazur', href: '#why-phazur' },
               { label: 'Pricing', href: '#pricing' },
             ].map((item) => (
               <a
@@ -333,6 +333,131 @@ export default function Home() {
               <StatItem value="SBT" label="On-chain" />
             </motion.div>
           </motion.div>
+        </section>
+
+        {/* About Section - Innovative Learning */}
+        <section id="about" className="py-20 px-6 border-t border-slate-800/40">
+          <div className="max-w-5xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              {/* Left: Text Content */}
+              <motion.div
+                initial={{ opacity: 0, x: -24 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <span className="text-xs font-medium uppercase tracking-wider text-cyan-400 mb-3 block">
+                  A New Way to Learn
+                </span>
+                <h2 className="text-3xl md:text-4xl font-semibold mb-6 leading-tight">
+                  Learning by Building,
+                  <br />
+                  <span className="text-slate-500">Not by Watching</span>
+                </h2>
+                <div className="space-y-4 text-slate-400 text-sm leading-relaxed">
+                  <p>
+                    Traditional courses teach you <em>about</em> AI. Phazur teaches you to{' '}
+                    <span className="text-white">command</span> it. From day one, you&apos;re in the terminal,
+                    building real projects with an AI coach guiding your every move.
+                  </p>
+                  <p>
+                    Our Socratic approach means Phazur never just gives you the answer. It asks the right
+                    questions, nudges you toward solutions, and helps you develop the{' '}
+                    <span className="text-white">intuition</span> that separates prompt engineers from AI operators.
+                  </p>
+                  <p>
+                    When you complete a path, you don&apos;t get a PDF certificate that anyone can fake.
+                    You get an <span className="text-white">on-chain Soulbound Token</span> — permanent,
+                    verifiable proof that you shipped real work.
+                  </p>
+                </div>
+
+                <div className="mt-8 flex items-center gap-6">
+                  <Link
+                    href="/dashboard"
+                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Try it Free
+                  </Link>
+                  <a href="#paths" className="text-slate-500 hover:text-slate-300 text-sm flex items-center gap-1.5 transition-colors">
+                    View paths
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </a>
+                </div>
+              </motion.div>
+
+              {/* Right: Visual/Features */}
+              <motion.div
+                initial={{ opacity: 0, x: 24 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="space-y-4"
+              >
+                {[
+                  {
+                    icon: (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
+                      </svg>
+                    ),
+                    title: 'Terminal-First Learning',
+                    desc: 'Skip the GUI. Learn to build from the command line like real developers and AI engineers do.',
+                    color: 'text-violet-400',
+                  },
+                  {
+                    icon: (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                      </svg>
+                    ),
+                    title: 'AI Coach, Not AI Crutch',
+                    desc: 'Phazur uses the Socratic method — guiding you to answers through questions, building real problem-solving skills.',
+                    color: 'text-cyan-400',
+                  },
+                  {
+                    icon: (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                      </svg>
+                    ),
+                    title: 'Proof That Can\'t Be Faked',
+                    desc: 'Soulbound Tokens on Polygon blockchain. Your credentials are permanent, public, and verifiable by anyone.',
+                    color: 'text-emerald-400',
+                  },
+                  {
+                    icon: (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                      </svg>
+                    ),
+                    title: 'Pay After You Ship',
+                    desc: 'No upfront cost. Complete your capstone project, then pay. We only win when you do.',
+                    color: 'text-amber-400',
+                  },
+                ].map((item, i) => (
+                  <motion.div
+                    key={item.title}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.15 + i * 0.08 }}
+                    className="flex gap-4 p-4 bg-[#16181d] rounded-lg border border-slate-800/60 hover:border-slate-700/80 transition-colors"
+                  >
+                    <div className={`w-10 h-10 rounded-lg bg-slate-800/60 ${item.color} flex items-center justify-center flex-shrink-0`}>
+                      {item.icon}
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-200 mb-1">{item.title}</h3>
+                      <p className="text-slate-500 text-xs leading-relaxed">{item.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+          </div>
         </section>
 
         {/* Paths Section */}
