@@ -755,35 +755,73 @@ function LiveCoursesView() {
 
 // Community Feed View
 function CommunityFeedView() {
-  const posts = [
-    {
-      id: '1',
-      author: { name: 'Alex Chen', handle: '@alexchen', avatar: 'A', verified: true },
-      content: 'Just deployed my first AI agent! It handles customer support tickets and has already saved 20+ hours this week.',
-      timestamp: '2h',
-      likes: 45,
-      comments: 12,
-      badges: ['AI Operations Master'],
-    },
-    {
-      id: '2',
-      author: { name: 'Sarah Park', handle: '@sarahpark', avatar: 'S', verified: true },
-      content: 'Completed the Terminal Foundations module! Here\'s my portfolio site I built with Claude Code assistance.',
-      timestamp: '4h',
-      likes: 89,
-      comments: 23,
-      badges: ['Certified AI Associate'],
-    },
-    {
-      id: '3',
-      author: { name: 'Marcus Johnson', handle: '@marcusj', avatar: 'M', verified: false },
-      content: 'Question for the community: What API integrations have been most valuable for your workflow automations?',
-      timestamp: '6h',
-      likes: 32,
-      comments: 47,
-      badges: [],
-    },
-  ];
+  const [posts, setPosts] = useState<Array<{
+    id: string;
+    authorName: string;
+    authorHandle: string;
+    authorAvatar: string | null;
+    authorVerified: boolean;
+    content: string;
+    badges: string[];
+    likes: number;
+    comments: number;
+    likedByCurrentUser: boolean;
+    createdAt: string;
+  }>>([]);
+  const [newPostContent, setNewPostContent] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPosting, setIsPosting] = useState(false);
+  const { user } = useAuth();
+
+  // Fetch posts
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        const response = await fetch('/api/community?limit=20');
+        if (response.ok) {
+          const data = await response.json();
+          setPosts(data.posts || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch posts:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchPosts();
+  }, []);
+
+  // Create new post
+  const handlePost = async () => {
+    if (!newPostContent.trim() || isPosting) return;
+    setIsPosting(true);
+    try {
+      const response = await fetch('/api/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: newPostContent }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPosts((prev) => [data.post, ...prev]);
+        setNewPostContent('');
+      }
+    } catch (error) {
+      console.error('Failed to create post:', error);
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
+  // Format relative time
+  const formatTime = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const hours = Math.floor(diff / 3600000);
+    if (hours < 1) return 'just now';
+    if (hours < 24) return `${hours}h`;
+    const days = Math.floor(hours / 24);
+    return `${days}d`;
+  };
 
   return (
     <div className="flex h-full">
@@ -794,85 +832,93 @@ function CommunityFeedView() {
         </div>
 
         {/* Compose */}
-        <div className="px-6 py-4 border-b border-slate-800/40">
-          <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-sm font-medium flex-shrink-0">
-              G
-            </div>
-            <div className="flex-1">
-              <textarea
-                placeholder="Share your progress..."
-                className="w-full bg-transparent text-white placeholder-slate-600 resize-none focus:outline-none text-sm"
-                rows={2}
-              />
-              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/40">
-                <div className="flex gap-1">
-                  <button className="p-1.5 text-slate-600 hover:text-slate-400 rounded transition">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </button>
-                  <button className="p-1.5 text-slate-600 hover:text-slate-400 rounded transition">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                    </svg>
-                  </button>
-                </div>
-                <button className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition">
-                  Post
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Posts */}
-        {posts.map((post) => (
-          <div key={post.id} className="px-6 py-4 border-b border-slate-800/40 hover:bg-slate-800/10 transition">
+        {user && (
+          <div className="px-6 py-4 border-b border-slate-800/40">
             <div className="flex gap-3">
               <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-sm font-medium flex-shrink-0">
-                {post.author.avatar}
+                {user.email?.charAt(0).toUpperCase() || 'U'}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap text-xs">
-                  <span className="font-medium text-slate-300">{post.author.name}</span>
-                  {post.author.verified && (
-                    <svg className="w-3 h-3 text-cyan-500/70" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                    </svg>
-                  )}
-                  <span className="text-slate-600">{post.author.handle}</span>
-                  <span className="text-slate-700">·</span>
-                  <span className="text-slate-600">{post.timestamp}</span>
-                </div>
-                {post.badges.length > 0 && (
-                  <div className="flex gap-1 mt-1 flex-wrap">
-                    {post.badges.map((badge, i) => (
-                      <span key={i} className="text-[10px] px-1.5 py-0.5 bg-slate-800/60 text-slate-500 rounded">
-                        {badge}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <p className="text-slate-300 mt-2 text-sm leading-relaxed">{post.content}</p>
-                <div className="flex items-center gap-4 mt-2">
-                  <button className="flex items-center gap-1.5 text-slate-600 hover:text-slate-400 transition text-xs">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    {post.comments}
-                  </button>
-                  <button className="flex items-center gap-1.5 text-slate-600 hover:text-slate-400 transition text-xs">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    {post.likes}
+              <div className="flex-1">
+                <textarea
+                  placeholder="Share your progress..."
+                  value={newPostContent}
+                  onChange={(e) => setNewPostContent(e.target.value)}
+                  className="w-full bg-transparent text-white placeholder-slate-600 resize-none focus:outline-none text-sm"
+                  rows={2}
+                  maxLength={500}
+                />
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/40">
+                  <span className="text-[10px] text-slate-600">{newPostContent.length}/500</span>
+                  <button
+                    onClick={handlePost}
+                    disabled={!newPostContent.trim() || isPosting}
+                    className="px-3 py-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 rounded-lg text-xs font-medium transition"
+                  >
+                    {isPosting ? 'Posting...' : 'Post'}
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        ))}
+        )}
+
+        {/* Posts */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-6 h-6 border-2 border-slate-700 border-t-cyan-500 rounded-full animate-spin" />
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-slate-500 text-sm">No posts yet. Be the first to share!</p>
+          </div>
+        ) : (
+          posts.map((post) => (
+            <div key={post.id} className="px-6 py-4 border-b border-slate-800/40 hover:bg-slate-800/10 transition">
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-sm font-medium flex-shrink-0">
+                  {post.authorAvatar || post.authorName[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap text-xs">
+                    <span className="font-medium text-slate-300">{post.authorName}</span>
+                    {post.authorVerified && (
+                      <svg className="w-3 h-3 text-cyan-500/70" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                      </svg>
+                    )}
+                    <span className="text-slate-600">{post.authorHandle}</span>
+                    <span className="text-slate-700">·</span>
+                    <span className="text-slate-600">{formatTime(post.createdAt)}</span>
+                  </div>
+                  {post.badges.length > 0 && (
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {post.badges.map((badge, i) => (
+                        <span key={i} className="text-[10px] px-1.5 py-0.5 bg-slate-800/60 text-slate-500 rounded">
+                          {badge}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-slate-300 mt-2 text-sm leading-relaxed">{post.content}</p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <button className="flex items-center gap-1.5 text-slate-600 hover:text-slate-400 transition text-xs">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      {post.comments}
+                    </button>
+                    <button className={`flex items-center gap-1.5 transition text-xs ${post.likedByCurrentUser ? 'text-red-400' : 'text-slate-600 hover:text-slate-400'}`}>
+                      <svg className="w-4 h-4" fill={post.likedByCurrentUser ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                      {post.likes}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Trending Sidebar */}
@@ -889,21 +935,8 @@ function CommunityFeedView() {
         </div>
         <div className="bg-slate-800/20 border border-slate-800/40 rounded-lg p-3">
           <h3 className="text-slate-400 font-medium text-xs mb-2">Top Earners</h3>
-          <div className="space-y-2">
-            {[
-              { name: 'Alex Chen', akus: 12 },
-              { name: 'Sarah Park', akus: 10 },
-              { name: 'Emily Rodriguez', akus: 8 },
-            ].map((user, i) => (
-              <div key={user.name} className="flex items-center gap-2 text-xs">
-                <span className="text-slate-700 w-3">{i + 1}.</span>
-                <div className="w-5 h-5 rounded bg-slate-800 flex items-center justify-center text-slate-500 text-[10px]">
-                  {user.name[0]}
-                </div>
-                <span className="text-slate-500 flex-1">{user.name}</span>
-                <span className="text-slate-600">{user.akus}</span>
-              </div>
-            ))}
+          <div className="space-y-2 text-xs text-slate-600">
+            <p>Complete AKUs to appear here!</p>
           </div>
         </div>
       </div>
@@ -913,42 +946,83 @@ function CommunityFeedView() {
 
 // Projects View
 function ProjectsView() {
-  const projects = [
-    {
-      id: '1',
-      title: 'AI-Powered Portfolio',
-      description: 'Personal portfolio website built with Next.js',
-      status: 'completed',
-      progress: 100,
-      tech: ['Next.js', 'Tailwind', 'Vercel'],
-      lastUpdated: '2 days ago',
-    },
-    {
-      id: '2',
-      title: 'Email Automation Bot',
-      description: 'Automated email responses using GPT-4',
-      status: 'in-progress',
-      progress: 65,
-      tech: ['Python', 'OpenAI', 'Gmail API'],
-      lastUpdated: '5 hours ago',
-    },
-    {
-      id: '3',
-      title: 'Customer Support Agent',
-      description: 'Multi-agent system for support tickets',
-      status: 'in-progress',
-      progress: 30,
-      tech: ['Claude', 'Supabase', 'Next.js'],
-      lastUpdated: '1 day ago',
-    },
-  ];
+  const [projects, setProjects] = useState<Array<{
+    id: string;
+    title: string;
+    description: string;
+    status: 'planning' | 'in-progress' | 'completed';
+    progress: number;
+    tech: string[];
+    repoUrl: string | null;
+    liveUrl: string | null;
+    updatedAt: string;
+  }>>([]);
+  const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [newTech, setNewTech] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+
+  // Fetch projects
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const response = await fetch('/api/projects');
+        if (response.ok) {
+          const data = await response.json();
+          setProjects(data.projects || []);
+          setStats(data.stats || { total: 0, completed: 0, inProgress: 0 });
+        }
+      } catch (error) {
+        console.error('Failed to fetch projects:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchProjects();
+  }, []);
+
+  // Create new project
+  const handleCreate = async () => {
+    if (!newTitle.trim() || isCreating) return;
+    setIsCreating(true);
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newTitle,
+          description: newDescription,
+          tech: newTech.split(',').map(t => t.trim()).filter(Boolean),
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setProjects((prev) => [data.project, ...prev]);
+        setStats((prev) => ({ ...prev, total: prev.total + 1 }));
+        setNewTitle('');
+        setNewDescription('');
+        setNewTech('');
+        setShowNewForm(false);
+      }
+    } catch (error) {
+      console.error('Failed to create project:', error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   return (
     <div className="p-6 overflow-y-auto h-full">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-semibold text-white">Projects</h1>
-          <button className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition flex items-center gap-1.5">
+          <button
+            onClick={() => setShowNewForm(!showNewForm)}
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition flex items-center gap-1.5"
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
             </svg>
@@ -956,60 +1030,117 @@ function ProjectsView() {
           </button>
         </div>
 
+        {/* New Project Form */}
+        {showNewForm && (
+          <div className="mb-6 p-4 bg-slate-800/30 border border-slate-800/40 rounded-lg">
+            <input
+              type="text"
+              placeholder="Project title..."
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              className="w-full bg-transparent text-white placeholder-slate-600 focus:outline-none text-sm mb-2"
+            />
+            <textarea
+              placeholder="Description..."
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              className="w-full bg-transparent text-white placeholder-slate-600 focus:outline-none text-xs resize-none mb-2"
+              rows={2}
+            />
+            <input
+              type="text"
+              placeholder="Tech stack (comma separated)..."
+              value={newTech}
+              onChange={(e) => setNewTech(e.target.value)}
+              className="w-full bg-transparent text-white placeholder-slate-600 focus:outline-none text-xs mb-3"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleCreate}
+                disabled={!newTitle.trim() || isCreating}
+                className="px-3 py-1 bg-cyan-500/80 hover:bg-cyan-500 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition"
+              >
+                {isCreating ? 'Creating...' : 'Create'}
+              </button>
+              <button
+                onClick={() => setShowNewForm(false)}
+                className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-xs font-medium transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-3">
-            <div className="text-lg font-semibold text-white">3</div>
+            <div className="text-lg font-semibold text-white">{stats.total}</div>
             <div className="text-slate-600 text-xs">Total</div>
           </div>
           <div className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-3">
-            <div className="text-lg font-semibold text-slate-400">1</div>
+            <div className="text-lg font-semibold text-slate-400">{stats.completed}</div>
             <div className="text-slate-600 text-xs">Completed</div>
           </div>
           <div className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-3">
-            <div className="text-lg font-semibold text-slate-400">2</div>
+            <div className="text-lg font-semibold text-slate-400">{stats.inProgress}</div>
             <div className="text-slate-600 text-xs">In Progress</div>
           </div>
         </div>
 
         {/* Project Cards */}
-        <div className="space-y-2">
-          {projects.map((project) => (
-            <div key={project.id} className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-4 hover:bg-slate-800/50 transition">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h3 className="text-white font-medium text-sm">{project.title}</h3>
-                  <p className="text-slate-500 text-xs mt-0.5">{project.description}</p>
-                </div>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
-                  project.status === 'completed'
-                    ? 'bg-slate-700/50 text-slate-400'
-                    : 'bg-slate-700/50 text-slate-500'
-                }`}>
-                  {project.status === 'completed' ? 'Done' : 'Active'}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1 mb-3">
-                {project.tech.map((t) => (
-                  <span key={t} className="px-1.5 py-0.5 bg-slate-800/60 text-slate-500 rounded text-[10px]">
-                    {t}
-                  </span>
-                ))}
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-cyan-500/60 rounded-full transition-all"
-                      style={{ width: `${project.progress}%` }}
-                    />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-6 h-6 border-2 border-slate-700 border-t-cyan-500 rounded-full animate-spin" />
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-12 bg-slate-800/20 border border-slate-800/40 rounded-lg">
+            <p className="text-slate-500 text-sm mb-2">No projects yet</p>
+            <p className="text-slate-600 text-xs">Start tracking your AI projects!</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {projects.map((project) => (
+              <div key={project.id} className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-4 hover:bg-slate-800/50 transition">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h3 className="text-white font-medium text-sm">{project.title}</h3>
+                    <p className="text-slate-500 text-xs mt-0.5">{project.description}</p>
                   </div>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                    project.status === 'completed'
+                      ? 'bg-green-500/20 text-green-400'
+                      : project.status === 'in-progress'
+                      ? 'bg-cyan-500/20 text-cyan-400'
+                      : 'bg-slate-700/50 text-slate-400'
+                  }`}>
+                    {project.status === 'completed' ? 'Done' : project.status === 'in-progress' ? 'Active' : 'Planning'}
+                  </span>
                 </div>
-                <span className="text-slate-600 text-[10px]">{project.progress}%</span>
+                {project.tech.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {project.tech.map((t) => (
+                      <span key={t} className="px-1.5 py-0.5 bg-slate-800/60 text-slate-500 rounded text-[10px]">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-cyan-500/60 rounded-full transition-all"
+                        style={{ width: `${project.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-slate-600 text-[10px]">{project.progress}%</span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1017,45 +1148,99 @@ function ProjectsView() {
 
 // Discussions View
 function DiscussionsView() {
-  const discussions = [
-    {
-      id: '1',
-      title: 'Best practices for prompt engineering?',
-      author: 'Alex Chen',
-      replies: 23,
-      views: 156,
-      lastReply: '10 min ago',
-      tags: ['AI', 'Tips'],
-      pinned: true,
-    },
-    {
-      id: '2',
-      title: 'How to handle API rate limits',
-      author: 'Sarah Park',
-      replies: 15,
-      views: 89,
-      lastReply: '1 hour ago',
-      tags: ['API'],
-      pinned: false,
-    },
-    {
-      id: '3',
-      title: 'Showcase: My first automation',
-      author: 'Marcus Johnson',
-      replies: 8,
-      views: 45,
-      lastReply: '3 hours ago',
-      tags: ['Showcase'],
-      pinned: false,
-    },
-  ];
+  const [discussions, setDiscussions] = useState<Array<{
+    id: string;
+    authorName: string;
+    authorAvatar: string | null;
+    title: string;
+    content: string;
+    category: string;
+    tags: string[];
+    pinned: boolean;
+    replies: number;
+    views: number;
+    lastReplyAt: string | null;
+    createdAt: string;
+  }>>([]);
+  const [categories, setCategories] = useState<Record<string, number>>({});
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newContent, setNewContent] = useState('');
+  const [newCategory, setNewCategory] = useState<'general' | 'help' | 'showcase' | 'resources'>('general');
+  const [isCreating, setIsCreating] = useState(false);
 
-  const categories = [
-    { name: 'General', count: 45 },
-    { name: 'Help', count: 23 },
-    { name: 'Showcase', count: 12 },
-    { name: 'Resources', count: 8 },
-  ];
+  // Fetch discussions
+  useEffect(() => {
+    async function fetchDiscussions() {
+      setIsLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (selectedCategory !== 'all') params.append('category', selectedCategory);
+        if (searchQuery) params.append('search', searchQuery);
+        const response = await fetch(`/api/discussions?${params}`);
+        if (response.ok) {
+          const data = await response.json();
+          setDiscussions(data.discussions || []);
+          setCategories(data.categories || {});
+        }
+      } catch (error) {
+        console.error('Failed to fetch discussions:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchDiscussions();
+  }, [selectedCategory, searchQuery]);
+
+  // Create new discussion
+  const handleCreate = async () => {
+    if (!newTitle.trim() || !newContent.trim() || isCreating) return;
+    setIsCreating(true);
+    try {
+      const response = await fetch('/api/discussions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newTitle,
+          content: newContent,
+          category: newCategory,
+          tags: [],
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setDiscussions((prev) => [data.discussion, ...prev]);
+        setNewTitle('');
+        setNewContent('');
+        setShowNewForm(false);
+      }
+    } catch (error) {
+      console.error('Failed to create discussion:', error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  // Format relative time
+  const formatTime = (dateStr: string | null) => {
+    if (!dateStr) return 'no replies';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins} min ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    return `${Math.floor(hours / 24)} day${Math.floor(hours / 24) > 1 ? 's' : ''} ago`;
+  };
+
+  const categoryLabels: Record<string, string> = {
+    general: 'General',
+    help: 'Help',
+    showcase: 'Showcase',
+    resources: 'Resources',
+  };
 
   return (
     <div className="flex h-full">
@@ -1065,10 +1250,58 @@ function DiscussionsView() {
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-xl font-semibold text-white">Discussions</h1>
-              <button className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition">
+              <button
+                onClick={() => setShowNewForm(!showNewForm)}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition"
+              >
                 New
               </button>
             </div>
+
+            {/* New Discussion Form */}
+            {showNewForm && (
+              <div className="mb-6 p-4 bg-slate-800/30 border border-slate-800/40 rounded-lg">
+                <input
+                  type="text"
+                  placeholder="Discussion title..."
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="w-full bg-transparent text-white placeholder-slate-600 focus:outline-none text-sm mb-2"
+                />
+                <textarea
+                  placeholder="What would you like to discuss?"
+                  value={newContent}
+                  onChange={(e) => setNewContent(e.target.value)}
+                  className="w-full bg-transparent text-white placeholder-slate-600 focus:outline-none text-xs resize-none mb-2"
+                  rows={3}
+                />
+                <select
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value as typeof newCategory)}
+                  className="bg-slate-800 text-slate-300 text-xs rounded px-2 py-1 mb-3"
+                >
+                  <option value="general">General</option>
+                  <option value="help">Help</option>
+                  <option value="showcase">Showcase</option>
+                  <option value="resources">Resources</option>
+                </select>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCreate}
+                    disabled={!newTitle.trim() || !newContent.trim() || isCreating}
+                    className="px-3 py-1 bg-cyan-500/80 hover:bg-cyan-500 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition"
+                  >
+                    {isCreating ? 'Posting...' : 'Post'}
+                  </button>
+                  <button
+                    onClick={() => setShowNewForm(false)}
+                    className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-xs font-medium transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Search */}
             <div className="relative mb-4">
@@ -1078,44 +1311,61 @@ function DiscussionsView() {
               <input
                 type="text"
                 placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 bg-slate-800/30 border border-slate-800/40 rounded-lg text-white placeholder-slate-600 focus:outline-none focus:border-slate-700 text-sm"
               />
             </div>
 
             {/* Discussion List */}
-            <div className="space-y-2">
-              {discussions.map((discussion) => (
-                <div key={discussion.id} className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-3 hover:bg-slate-800/50 transition cursor-pointer">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-500 text-sm font-medium flex-shrink-0">
-                      {discussion.author[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {discussion.pinned && (
-                          <svg className="w-3 h-3 text-cyan-500/70" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M16 4v8l2 2v2h-6v6l-1 1-1-1v-6H4v-2l2-2V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2z" />
-                          </svg>
-                        )}
-                        <h3 className="text-slate-300 font-medium text-sm">{discussion.title}</h3>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-6 h-6 border-2 border-slate-700 border-t-cyan-500 rounded-full animate-spin" />
+              </div>
+            ) : discussions.length === 0 ? (
+              <div className="text-center py-12 bg-slate-800/20 border border-slate-800/40 rounded-lg">
+                <p className="text-slate-500 text-sm mb-2">No discussions yet</p>
+                <p className="text-slate-600 text-xs">Start a conversation!</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {discussions.map((discussion) => (
+                  <div key={discussion.id} className="bg-slate-800/30 border border-slate-800/40 rounded-lg p-3 hover:bg-slate-800/50 transition cursor-pointer">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-500 text-sm font-medium flex-shrink-0">
+                        {discussion.authorAvatar || discussion.authorName[0]}
                       </div>
-                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        {discussion.tags.map((tag) => (
-                          <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-slate-800/60 text-slate-600 rounded">
-                            {tag}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {discussion.pinned && (
+                            <svg className="w-3 h-3 text-cyan-500/70" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M16 4v8l2 2v2h-6v6l-1 1-1-1v-6H4v-2l2-2V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2z" />
+                            </svg>
+                          )}
+                          <h3 className="text-slate-300 font-medium text-sm">{discussion.title}</h3>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          <span className="text-[10px] px-1.5 py-0.5 bg-slate-800/60 text-slate-500 rounded">
+                            {categoryLabels[discussion.category] || discussion.category}
                           </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-600">
-                        <span>{discussion.author}</span>
-                        <span>{discussion.replies} replies</span>
-                        <span>{discussion.views} views</span>
+                          {discussion.tags.map((tag) => (
+                            <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-slate-800/60 text-slate-600 rounded">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-600">
+                          <span>{discussion.authorName}</span>
+                          <span>{discussion.replies} replies</span>
+                          <span>{discussion.views} views</span>
+                          <span>{formatTime(discussion.lastReplyAt)}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1124,10 +1374,25 @@ function DiscussionsView() {
       <div className="w-52 border-l border-slate-800/40 p-4 overflow-y-auto hidden lg:block">
         <h3 className="text-slate-500 font-medium text-xs mb-2">Categories</h3>
         <div className="space-y-0.5">
-          {categories.map((cat) => (
-            <button key={cat.name} className="w-full flex items-center justify-between px-2 py-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 rounded transition text-xs">
-              <span>{cat.name}</span>
-              <span className="text-slate-700">{cat.count}</span>
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className={`w-full flex items-center justify-between px-2 py-1.5 rounded transition text-xs ${
+              selectedCategory === 'all' ? 'bg-slate-800/50 text-slate-300' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
+            }`}
+          >
+            <span>All</span>
+            <span className="text-slate-700">{Object.values(categories).reduce((a, b) => a + b, 0)}</span>
+          </button>
+          {Object.entries(categoryLabels).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedCategory(key)}
+              className={`w-full flex items-center justify-between px-2 py-1.5 rounded transition text-xs ${
+                selectedCategory === key ? 'bg-slate-800/50 text-slate-300' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
+              }`}
+            >
+              <span>{label}</span>
+              <span className="text-slate-700">{categories[key] || 0}</span>
             </button>
           ))}
         </div>
@@ -1138,15 +1403,47 @@ function DiscussionsView() {
 
 // Leaderboards View
 function LeaderboardsView() {
-  const leaderboard = [
-    { rank: 1, name: 'Alex Chen', akus: 47, streak: 21, change: 0 },
-    { rank: 2, name: 'Sarah Park', akus: 42, streak: 18, change: 1 },
-    { rank: 3, name: 'Emily Rodriguez', akus: 38, streak: 15, change: -1 },
-    { rank: 4, name: 'Marcus Johnson', akus: 35, streak: 12, change: 2 },
-    { rank: 5, name: 'Jordan Lee', akus: 32, streak: 10, change: 0 },
-    { rank: 6, name: 'Taylor Kim', akus: 28, streak: 8, change: -2 },
-    { rank: 7, name: 'Morgan Davis', akus: 25, streak: 7, change: 1 },
-    { rank: 8, name: 'Casey Wilson', akus: 22, streak: 5, change: 0 },
+  const [leaderboard, setLeaderboard] = useState<Array<{
+    rank: number;
+    userId: string;
+    name: string;
+    avatar: string | null;
+    akusCompleted: number;
+    streak: number;
+    certificates: number;
+    tier: string | null;
+    change: number;
+  }>>([]);
+  const [period, setPeriod] = useState<'all' | 'month' | 'week'>('all');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/leaderboard?period=${period}&limit=20`);
+        if (response.ok) {
+          const data = await response.json();
+          setLeaderboard(data.leaderboard || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch leaderboard:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchLeaderboard();
+  }, [period]);
+
+  // Fallback data when no real data
+  const displayData = leaderboard.length > 0 ? leaderboard.map(u => ({
+    rank: u.rank,
+    name: u.name,
+    akus: u.akusCompleted,
+    streak: u.streak,
+    change: u.change,
+  })) : [
+    { rank: 1, name: 'Be the first!', akus: 0, streak: 0, change: 0 },
   ];
 
   return (
@@ -1156,56 +1453,71 @@ function LeaderboardsView() {
 
         {/* Filters */}
         <div className="flex gap-1 mb-6">
-          {['All Time', 'Month', 'Week'].map((filter, i) => (
+          {[
+            { label: 'All Time', value: 'all' as const },
+            { label: 'Month', value: 'month' as const },
+            { label: 'Week', value: 'week' as const },
+          ].map((filter) => (
             <button
-              key={filter}
+              key={filter.value}
+              onClick={() => setPeriod(filter.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                i === 0
+                period === filter.value
                   ? 'bg-slate-800 text-slate-300'
                   : 'text-slate-600 hover:text-slate-400'
               }`}
             >
-              {filter}
+              {filter.label}
             </button>
           ))}
         </div>
 
         {/* Top 3 */}
-        <div className="flex items-end justify-center gap-6 mb-8">
-          {/* 2nd Place */}
-          <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-sm font-medium mb-1.5">
-              S
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12 mb-8">
+            <div className="w-6 h-6 border-2 border-slate-700 border-t-cyan-500 rounded-full animate-spin" />
+          </div>
+        ) : displayData.length >= 3 ? (
+          <div className="flex items-end justify-center gap-6 mb-8">
+            {/* 2nd Place */}
+            <div className="flex flex-col items-center">
+              <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-sm font-medium mb-1.5">
+                {displayData[1].name[0]}
+              </div>
+              <span className="text-slate-400 text-xs">{displayData[1].name}</span>
+              <span className="text-slate-600 text-[10px]">{displayData[1].akus} AKUs</span>
+              <div className="w-16 h-12 bg-slate-800/40 rounded-t mt-2 flex items-center justify-center">
+                <span className="text-lg font-semibold text-slate-600">2</span>
+              </div>
             </div>
-            <span className="text-slate-400 text-xs">{leaderboard[1].name}</span>
-            <span className="text-slate-600 text-[10px]">{leaderboard[1].akus} AKUs</span>
-            <div className="w-16 h-12 bg-slate-800/40 rounded-t mt-2 flex items-center justify-center">
-              <span className="text-lg font-semibold text-slate-600">2</span>
+            {/* 1st Place */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center text-slate-300 font-medium mb-1.5">
+                {displayData[0].name[0]}
+              </div>
+              <span className="text-slate-300 text-xs font-medium">{displayData[0].name}</span>
+              <span className="text-slate-500 text-[10px]">{displayData[0].akus} AKUs</span>
+              <div className="w-20 h-16 bg-slate-800/50 rounded-t mt-2 flex items-center justify-center">
+                <span className="text-xl font-semibold text-slate-500">1</span>
+              </div>
+            </div>
+            {/* 3rd Place */}
+            <div className="flex flex-col items-center">
+              <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-slate-500 text-sm font-medium mb-1.5">
+                {displayData[2].name[0]}
+              </div>
+              <span className="text-slate-500 text-xs">{displayData[2].name}</span>
+              <span className="text-slate-600 text-[10px]">{displayData[2].akus} AKUs</span>
+              <div className="w-14 h-8 bg-slate-800/30 rounded-t mt-2 flex items-center justify-center">
+                <span className="text-base font-semibold text-slate-600">3</span>
+              </div>
             </div>
           </div>
-          {/* 1st Place */}
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center text-slate-300 font-medium mb-1.5">
-              A
-            </div>
-            <span className="text-slate-300 text-xs font-medium">{leaderboard[0].name}</span>
-            <span className="text-slate-500 text-[10px]">{leaderboard[0].akus} AKUs</span>
-            <div className="w-20 h-16 bg-slate-800/50 rounded-t mt-2 flex items-center justify-center">
-              <span className="text-xl font-semibold text-slate-500">1</span>
-            </div>
+        ) : (
+          <div className="text-center py-8 mb-8">
+            <p className="text-slate-500 text-sm">Complete AKUs to appear on the leaderboard!</p>
           </div>
-          {/* 3rd Place */}
-          <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-slate-500 text-sm font-medium mb-1.5">
-              E
-            </div>
-            <span className="text-slate-500 text-xs">{leaderboard[2].name}</span>
-            <span className="text-slate-600 text-[10px]">{leaderboard[2].akus} AKUs</span>
-            <div className="w-14 h-8 bg-slate-800/30 rounded-t mt-2 flex items-center justify-center">
-              <span className="text-base font-semibold text-slate-600">3</span>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Full Leaderboard */}
         <div className="bg-slate-800/20 border border-slate-800/40 rounded-lg overflow-hidden">
@@ -1219,7 +1531,7 @@ function LeaderboardsView() {
               </tr>
             </thead>
             <tbody>
-              {leaderboard.map((user) => (
+              {displayData.map((user) => (
                 <tr key={user.rank} className="border-b border-slate-800/30 last:border-0 hover:bg-slate-800/20 transition">
                   <td className="py-2.5 px-4">
                     <span className="text-slate-500 text-xs">#{user.rank}</span>
@@ -1231,8 +1543,8 @@ function LeaderboardsView() {
                       </div>
                       <span className="text-slate-400 text-xs">{user.name}</span>
                       {user.change !== 0 && (
-                        <span className={`text-[10px] ${user.change > 0 ? 'text-slate-600' : 'text-slate-600'}`}>
-                          {user.change > 0 ? '+' : ''}{user.change}
+                        <span className={`text-[10px] ${user.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {user.change > 0 ? '↑' : '↓'}{Math.abs(user.change)}
                         </span>
                       )}
                     </div>
