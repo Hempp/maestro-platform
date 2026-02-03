@@ -66,7 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [user, loading]);
 
   // PREVIEW MODE - set to false for production
-  const PREVIEW_MODE = true;
+  const PREVIEW_MODE = false;
 
   // Redirect if not admin/teacher
   useEffect(() => {

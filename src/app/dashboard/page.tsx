@@ -1253,6 +1253,7 @@ export default function DashboardPage() {
   const [selectedPath, setSelectedPath] = useState<PathType>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [showProgressPanel, setShowProgressPanel] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [activeView, setActiveView] = useState<ViewType>('home');
   const [chatViewMode, setChatViewMode] = useState<'chat' | 'terminal'>('chat');
