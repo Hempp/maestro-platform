@@ -3,13 +3,32 @@
 /**
  * LEARNING PATH VIEW
  * Displays curriculum, modules, and progress
+ * Fetches real curriculum from API and integrates with user progress
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { useProgress } from '@/hooks/useProgress';
+
+interface AKU {
+  id: string;
+  category: string;
+  title: string;
+  duration: number;
+  prerequisiteAKUs: string[];
+  businessKPI: string;
+  concept: string;
+  foundation?: {
+    whyItMatters: string;
+    conceptOrigin: string;
+    commonMisconceptions: string[];
+    realWorldExample: string;
+    prerequisiteKnowledge: string[];
+    businessImpact: string;
+  };
+}
 
 interface Module {
   id: string;
@@ -19,6 +38,8 @@ interface Module {
   duration: string;
   tier: 'student' | 'employee' | 'owner';
   status: 'locked' | 'available' | 'in_progress' | 'completed';
+  category?: string;
+  foundation?: AKU['foundation'];
 }
 
 interface Certificate {
@@ -32,149 +53,10 @@ interface Certificate {
   };
 }
 
-const CURRICULUM: Record<string, Module[]> = {
-  student: [
-    {
-      id: 'foundation-1',
-      title: 'Terminal Foundations',
-      description: 'Master the command line and developer tools',
-      lessons: 8,
-      duration: '2 hours',
-      tier: 'student',
-      status: 'available',
-    },
-    {
-      id: 'foundation-2',
-      title: 'Git & Version Control',
-      description: 'Collaborate like a professional developer',
-      lessons: 6,
-      duration: '1.5 hours',
-      tier: 'student',
-      status: 'locked',
-    },
-    {
-      id: 'ai-dev-1',
-      title: 'AI-Powered Development',
-      description: 'Build with Claude Code and AI assistants',
-      lessons: 10,
-      duration: '3 hours',
-      tier: 'student',
-      status: 'locked',
-    },
-    {
-      id: 'portfolio-1',
-      title: 'Portfolio Project',
-      description: 'Create your showcase website',
-      lessons: 12,
-      duration: '4 hours',
-      tier: 'student',
-      status: 'locked',
-    },
-    {
-      id: 'capstone-student',
-      title: 'Capstone: Deploy & Certify',
-      description: 'Ship your project and earn your credential',
-      lessons: 4,
-      duration: '1 hour',
-      tier: 'student',
-      status: 'locked',
-    },
-  ],
-  employee: [
-    {
-      id: 'workflow-1',
-      title: 'Workflow Analysis',
-      description: 'Identify automation opportunities',
-      lessons: 6,
-      duration: '1.5 hours',
-      tier: 'employee',
-      status: 'available',
-    },
-    {
-      id: 'gpt-builder-1',
-      title: 'Custom GPT Development',
-      description: 'Build internal knowledge assistants',
-      lessons: 8,
-      duration: '2.5 hours',
-      tier: 'employee',
-      status: 'locked',
-    },
-    {
-      id: 'automation-1',
-      title: 'Email & Calendar Automation',
-      description: 'Automate repetitive communication',
-      lessons: 10,
-      duration: '3 hours',
-      tier: 'employee',
-      status: 'locked',
-    },
-    {
-      id: 'api-1',
-      title: 'API Integrations',
-      description: 'Connect your tools with code',
-      lessons: 8,
-      duration: '2.5 hours',
-      tier: 'employee',
-      status: 'locked',
-    },
-    {
-      id: 'capstone-employee',
-      title: 'Capstone: Efficiency Report',
-      description: 'Document your time savings',
-      lessons: 4,
-      duration: '1 hour',
-      tier: 'employee',
-      status: 'locked',
-    },
-  ],
-  owner: [
-    {
-      id: 'ops-audit-1',
-      title: 'Operations Audit',
-      description: 'Map your business workflows',
-      lessons: 6,
-      duration: '2 hours',
-      tier: 'owner',
-      status: 'available',
-    },
-    {
-      id: 'agent-basics-1',
-      title: 'Agent Fundamentals',
-      description: 'Understand autonomous AI agents',
-      lessons: 8,
-      duration: '2.5 hours',
-      tier: 'owner',
-      status: 'locked',
-    },
-    {
-      id: 'agent-build-1',
-      title: 'Building Your First Agent',
-      description: 'Create an autonomous research agent',
-      lessons: 12,
-      duration: '4 hours',
-      tier: 'owner',
-      status: 'locked',
-    },
-    {
-      id: 'multi-agent-1',
-      title: 'Multi-Agent Orchestration',
-      description: 'Chain agents for complex workflows',
-      lessons: 10,
-      duration: '3.5 hours',
-      tier: 'owner',
-      status: 'locked',
-    },
-    {
-      id: 'capstone-owner',
-      title: 'Capstone: Operations System',
-      description: 'Deploy your agent infrastructure',
-      lessons: 6,
-      duration: '2 hours',
-      tier: 'owner',
-      status: 'locked',
-    },
-  ],
-};
+interface ProgressRecord {
+  aku_id: string;
+  status: 'not_started' | 'in_progress' | 'completed' | 'verified';
+}
 
 const TIER_INFO = {
   student: {
@@ -277,14 +159,93 @@ function ModuleCard({ module, index }: { module: Module; index: number }) {
 
 export default function LearnPage() {
   const { user } = useAuth();
-  const { stats } = useProgress();
+  const { stats, progress: akuProgress } = useProgress();
   const [selectedTier, setSelectedTier] = useState<'student' | 'employee' | 'owner'>('student');
-  const [modules, setModules] = useState<Module[]>(CURRICULUM.student);
+  const [modules, setModules] = useState<Module[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setModules(CURRICULUM[selectedTier]);
+  // Transform AKUs from API into Module format with progress integration
+  const transformAKUsToModules = useCallback((akus: AKU[], progressRecords: ProgressRecord[]): Module[] => {
+    const progressMap = new Map(progressRecords.map(p => [p.aku_id, p.status]));
+
+    return akus.map((aku, index) => {
+      const progressStatus = progressMap.get(aku.id);
+
+      // Determine module status based on progress and prerequisites
+      let status: Module['status'] = 'locked';
+      if (progressStatus === 'completed' || progressStatus === 'verified') {
+        status = 'completed';
+      } else if (progressStatus === 'in_progress') {
+        status = 'in_progress';
+      } else if (index === 0) {
+        // First module is always available
+        status = 'available';
+      } else {
+        // Check if prerequisites are met
+        const prereqsMet = aku.prerequisiteAKUs.every(prereq => {
+          const prereqStatus = progressMap.get(prereq);
+          return prereqStatus === 'completed' || prereqStatus === 'verified';
+        });
+        // Also check if previous module is completed (linear progression)
+        const prevAku = akus[index - 1];
+        const prevStatus = progressMap.get(prevAku?.id);
+        const prevCompleted = prevStatus === 'completed' || prevStatus === 'verified';
+
+        if (prereqsMet && prevCompleted) {
+          status = 'available';
+        }
+      }
+
+      // Convert duration from seconds to readable format
+      const durationMinutes = Math.round(aku.duration / 60);
+      const durationStr = durationMinutes >= 60
+        ? `${Math.round(durationMinutes / 60 * 10) / 10} hours`
+        : `${durationMinutes} min`;
+
+      return {
+        id: aku.id,
+        title: aku.title,
+        description: aku.concept.split('\n')[0].substring(0, 80) + '...',
+        lessons: 1, // Each AKU is a single lesson
+        duration: durationStr,
+        tier: selectedTier,
+        status,
+        category: aku.category,
+        foundation: aku.foundation,
+      };
+    });
   }, [selectedTier]);
+
+  // Fetch curriculum from API
+  useEffect(() => {
+    async function fetchCurriculum() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(`/api/curriculum?tier=${selectedTier}&mode=foundation`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch curriculum');
+        }
+        const data = await response.json();
+
+        // Get progress records (default to empty array if not logged in)
+        const progressRecords: ProgressRecord[] = akuProgress || [];
+
+        const transformedModules = transformAKUsToModules(data.akus || [], progressRecords);
+        setModules(transformedModules);
+      } catch (err) {
+        console.error('Failed to fetch curriculum:', err);
+        setError('Unable to load curriculum. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchCurriculum();
+  }, [selectedTier, akuProgress, transformAKUsToModules]);
 
   // Fetch certificates
   useEffect(() => {
@@ -431,11 +392,34 @@ export default function LearnPage() {
         )}
 
         {/* Module Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {modules.map((module, index) => (
-            <ModuleCard key={module.id} module={module} index={index} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-slate-700 border-t-cyan-500 rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-slate-500 text-sm">Loading curriculum...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="p-6 bg-red-500/10 border border-red-500/20 rounded-lg text-center">
+            <p className="text-red-400 text-sm mb-2">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-xs text-slate-400 hover:text-slate-300 transition"
+            >
+              Try again
+            </button>
+          </div>
+        ) : modules.length === 0 ? (
+          <div className="p-6 bg-slate-800/30 border border-slate-800/40 rounded-lg text-center">
+            <p className="text-slate-500 text-sm">No modules available for this path yet.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {modules.map((module, index) => (
+              <ModuleCard key={module.id} module={module} index={index} />
+            ))}
+          </div>
+        )}
 
         {/* Certificate Preview */}
         <div className="mt-10 p-6 bg-slate-800/20 rounded-lg border border-slate-800/40 text-center">
