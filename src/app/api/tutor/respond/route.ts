@@ -1,6 +1,6 @@
 /**
- * SOCRATIC TUTOR API
- * Generates Socratic responses that guide without giving answers
+ * TUTOR API
+ * Generates helpful responses for both sandbox work and project guidance
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -40,9 +40,37 @@ When they make errors, don't say "that's wrong." Instead ask:
 
 You are teaching them to THINK like an AI engineer, not just complete tasks.`;
 
+const PROJECT_MENTOR_PROMPT = `You are a helpful AI project mentor for Phazur, an AI skills learning platform.
+
+Your role is to help learners complete their portfolio projects. You should:
+
+1. **Guide, don't dictate** - Help them think through problems rather than giving complete solutions
+2. **Be practical** - Focus on actionable steps they can take right now
+3. **Personalize** - Adapt guidance to their specific situation, goals, and industry
+4. **Build confidence** - Celebrate progress and help them see their work as portfolio-worthy
+5. **Be concise** - Keep responses focused and digestible (3-5 paragraphs max)
+6. **Provide examples** - When helpful, give concrete examples they can adapt
+7. **Check understanding** - End with a question or next step
+
+You are helping them build REAL portfolio pieces, not just complete exercises. Their work should be something they're proud to show employers or use in their actual work.
+
+Remember: These are meaningful projects that will demonstrate their AI skills. Help them create something genuinely useful.`;
+
+interface ProjectChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    // Check if this is a project-based request (new format)
+    if (body.context && body.moduleTitle) {
+      return handleProjectChat(body);
+    }
+
+    // Original sandbox-based tutor logic
     const {
       message,
       sandboxState,
@@ -96,6 +124,59 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to generate response', details: errorMessage },
       { status: 500 }
     );
+  }
+}
+
+// Handle project-based chat requests
+async function handleProjectChat(body: {
+  message: string;
+  context: string;
+  moduleTitle: string;
+  projectTitle: string;
+  history?: ProjectChatMessage[];
+}) {
+  const { message, context, moduleTitle, projectTitle, history = [] } = body;
+
+  if (!message) {
+    return NextResponse.json(
+      { error: 'Message is required' },
+      { status: 400 }
+    );
+  }
+
+  // Build conversation for OpenAI
+  const messages: OpenAI.ChatCompletionMessageParam[] = [
+    { role: 'system', content: PROJECT_MENTOR_PROMPT },
+    {
+      role: 'system',
+      content: `Current module: ${moduleTitle}\nProject: ${projectTitle}\n\nProject guidance context:\n${context}`
+    },
+    ...history.map(msg => ({
+      role: msg.role as 'user' | 'assistant',
+      content: msg.content,
+    })),
+    { role: 'user', content: message },
+  ];
+
+  try {
+    const response = await getOpenAI().chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages,
+      max_tokens: 500,
+      temperature: 0.7,
+    });
+
+    const tutorResponse = response.choices[0].message.content ||
+      "Let's continue working on your project. What would you like to focus on?";
+
+    return NextResponse.json({ response: tutorResponse });
+  } catch (error) {
+    console.error('Project chat error:', error);
+
+    // Return a helpful fallback response
+    return NextResponse.json({
+      response: `I understand you're working on **${projectTitle}**. Let me help you break this down into steps. What specific part of the project would you like to tackle first?`
+    });
   }
 }
 
