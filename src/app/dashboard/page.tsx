@@ -7,9 +7,10 @@
  * Progress tracking and certificates display
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useChat } from '@/hooks/useChat';
 import { useProgress } from '@/hooks/useProgress';
@@ -1561,7 +1562,10 @@ function LeaderboardsView() {
   );
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const searchParams = useSearchParams();
+  const moduleParam = searchParams.get('module');
+
   const [selectedPath, setSelectedPath] = useState<PathType>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [showProgressPanel, setShowProgressPanel] = useState(true);
@@ -1569,6 +1573,7 @@ export default function DashboardPage() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [activeView, setActiveView] = useState<ViewType>('home');
   const [chatViewMode, setChatViewMode] = useState<'chat' | 'terminal'>('chat');
+  const [moduleInitialized, setModuleInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const terminalInputRef = useRef<HTMLInputElement>(null);
@@ -1623,9 +1628,61 @@ export default function DashboardPage() {
     }
   }, [user?.id, updatePresence]);
 
-  // Initial welcome message
+  // Initialize chat with module context if module param is present
   useEffect(() => {
-    if (messages.length === 0 && !authLoading) {
+    async function initModuleChat() {
+      if (!moduleParam || moduleInitialized || authLoading) return;
+
+      // Determine tier from module ID
+      let tier: 'student' | 'employee' | 'owner' = 'student';
+      if (moduleParam.startsWith('employee-')) tier = 'employee';
+      else if (moduleParam.startsWith('owner-')) tier = 'owner';
+
+      try {
+        const response = await fetch(`/api/curriculum?tier=${tier}&moduleId=${moduleParam}`);
+        if (response.ok) {
+          const data = await response.json();
+          const module = data.module;
+
+          if (module) {
+            // Set the path based on module tier
+            setSelectedPath(tier);
+            setModuleInitialized(true);
+
+            // Initialize chat with module project context
+            addLocalMessage(
+              'assistant',
+              [
+                `Let's work on: **${module.title}**`,
+                module.whyItMatters,
+                `**Your Project:** ${module.project.title}`,
+                module.project.description,
+                `**What you'll create:** ${module.project.deliverable}`,
+                `Ready to begin? Tell me about yourself and what you'd like to focus on.`,
+              ],
+              [
+                "Let's start from the beginning",
+                "I have some experience with this",
+                "Help me understand the concepts first",
+              ]
+            );
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load module:', error);
+      }
+
+      // Fallback to normal welcome if module load fails
+      setModuleInitialized(true);
+    }
+
+    initModuleChat();
+  }, [moduleParam, moduleInitialized, authLoading, addLocalMessage]);
+
+  // Initial welcome message (only if no module param)
+  useEffect(() => {
+    if (messages.length === 0 && !authLoading && !moduleParam) {
       addLocalMessage(
         'assistant',
         [
@@ -1640,7 +1697,7 @@ export default function DashboardPage() {
         ]
       );
     }
-  }, [authLoading, messages.length, addLocalMessage]);
+  }, [authLoading, messages.length, addLocalMessage, moduleParam]);
 
   // Helper to add assistant messages
   const addAssistantMessage = useCallback((content: string[], suggestionList?: string[]) => {
@@ -2201,6 +2258,19 @@ export default function DashboardPage() {
         />
       )}
     </div>
+  );
+}
+
+// Wrapper with Suspense for useSearchParams
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-slate-400">Loading...</div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
 

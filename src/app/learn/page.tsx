@@ -160,7 +160,7 @@ function ModuleCard({
 
       {!isLocked && (
         <Link
-          href={`/learn/${module.id}`}
+          href={`/dashboard?module=${module.id}`}
           className={`block w-full py-2.5 text-center rounded-lg text-xs font-medium transition ${
             isCompleted
               ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20'
