@@ -10,6 +10,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { AdminTier, AdminPermission, ADMIN_TIER_INFO, TIER_PERMISSIONS } from '@/types';
 
 interface NavItemProps {
   href: string;
@@ -39,6 +40,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { user, loading } = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [adminTier, setAdminTier] = useState<AdminTier | null>(null);
+  const [permissions, setPermissions] = useState<AdminPermission[]>([]);
   const [checkingRole, setCheckingRole] = useState(true);
 
   useEffect(() => {
@@ -53,6 +56,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (response.ok) {
           const data = await response.json();
           setUserRole(data.user?.role || 'learner');
+
+          // Fetch admin_tier and set permissions
+          const tier = data.user?.admin_tier as AdminTier | null;
+          setAdminTier(tier);
+          if (tier && TIER_PERMISSIONS[tier]) {
+            setPermissions(TIER_PERMISSIONS[tier]);
+          }
         }
       } catch (error) {
         console.error('Failed to check role:', error);
@@ -138,6 +148,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </svg>
       ),
     },
+    {
+      href: '/admin/team',
+      label: 'Team',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+    },
   ];
 
   return (
@@ -179,6 +198,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex-1 min-w-0">
               <div className="text-sm text-white truncate">{user?.email}</div>
               <div className="text-xs text-slate-500 capitalize">{userRole}</div>
+              {adminTier && ADMIN_TIER_INFO[adminTier] && (
+                <span
+                  className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${
+                    ADMIN_TIER_INFO[adminTier].color === 'red' ? 'bg-red-500/20 text-red-400' :
+                    ADMIN_TIER_INFO[adminTier].color === 'purple' ? 'bg-purple-500/20 text-purple-400' :
+                    ADMIN_TIER_INFO[adminTier].color === 'blue' ? 'bg-blue-500/20 text-blue-400' :
+                    ADMIN_TIER_INFO[adminTier].color === 'green' ? 'bg-green-500/20 text-green-400' :
+                    ADMIN_TIER_INFO[adminTier].color === 'cyan' ? 'bg-cyan-500/20 text-cyan-400' :
+                    'bg-slate-500/20 text-slate-400'
+                  }`}
+                >
+                  {ADMIN_TIER_INFO[adminTier].label}
+                </span>
+              )}
             </div>
           </div>
           <Link

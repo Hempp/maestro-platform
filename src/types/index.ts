@@ -582,3 +582,80 @@ export interface ProgressDashboard {
   estimatedCertificationDate?: Date;
   predictedFinalStruggleScore?: number;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADMIN TIER SYSTEM
+// Role-based access control for platform administrators
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Admin tier system
+export type AdminTier = 'super_admin' | 'content_admin' | 'analytics_admin' | 'support_admin' | 'teacher';
+
+export const ADMIN_TIER_INFO: Record<AdminTier, {
+  label: string;
+  description: string;
+  color: string;
+}> = {
+  super_admin: {
+    label: 'Super Admin',
+    description: 'Full platform access - can manage everything including other admins',
+    color: 'red',
+  },
+  content_admin: {
+    label: 'Content Admin',
+    description: 'Manage courses, sessions, and curriculum',
+    color: 'purple',
+  },
+  analytics_admin: {
+    label: 'Analytics Admin',
+    description: 'View-only access to analytics and reports',
+    color: 'blue',
+  },
+  support_admin: {
+    label: 'Support Admin',
+    description: 'Manage students and support tickets',
+    color: 'green',
+  },
+  teacher: {
+    label: 'Teacher',
+    description: 'Manage own courses and sessions',
+    color: 'cyan',
+  },
+};
+
+export type AdminPermission =
+  | 'manage_users'
+  | 'view_users'
+  | 'manage_courses'
+  | 'view_courses'
+  | 'manage_sessions'
+  | 'view_sessions'
+  | 'view_analytics'
+  | 'manage_curriculum'
+  | 'manage_support'
+  | 'manage_admins';
+
+export const TIER_PERMISSIONS: Record<AdminTier, AdminPermission[]> = {
+  super_admin: ['manage_users', 'view_users', 'manage_courses', 'view_courses', 'manage_sessions', 'view_sessions', 'view_analytics', 'manage_curriculum', 'manage_support', 'manage_admins'],
+  content_admin: ['manage_courses', 'view_courses', 'manage_sessions', 'view_sessions', 'manage_curriculum', 'view_analytics'],
+  analytics_admin: ['view_analytics', 'view_users', 'view_courses'],
+  support_admin: ['view_users', 'manage_support', 'view_analytics'],
+  teacher: ['view_courses', 'manage_sessions'],
+};
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: 'admin' | 'teacher' | 'learner';
+  admin_tier: AdminTier | null;
+  created_at: string;
+  last_active_at?: string;
+}
+
+// Helper to check if a tier has a permission
+export function tierHasPermission(tier: AdminTier | null, permission: AdminPermission): boolean {
+  if (!tier) return false;
+  return TIER_PERMISSIONS[tier]?.includes(permission) ?? false;
+}
