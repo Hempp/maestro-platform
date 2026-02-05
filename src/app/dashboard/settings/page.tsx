@@ -128,7 +128,7 @@ export default function SettingsPage() {
   useEffect(() => {
     async function loadSettings() {
       try {
-        const response = await fetch('/api/user/settings');
+        const response = await fetch('/api/user/settings', { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           if (data.settings) {
@@ -160,12 +160,17 @@ export default function SettingsPage() {
       const response = await fetch('/api/user/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(settings),
       });
-      if (!response.ok) throw new Error('Failed to save');
+      if (!response.ok) {
+        console.error('Save failed:', response.status, await response.text());
+        throw new Error('Failed to save');
+      }
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), STATUS_RESET_MS);
-    } catch {
+    } catch (e) {
+      console.error('Save error:', e);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), STATUS_RESET_MS);
     }
