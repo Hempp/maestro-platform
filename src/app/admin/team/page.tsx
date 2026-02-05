@@ -557,6 +557,7 @@ export default function TeamPage() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [adminTierSystemActive, setAdminTierSystemActive] = useState<boolean>(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null);
   const [removingAdmin, setRemovingAdmin] = useState<AdminUser | null>(null);
@@ -570,8 +571,19 @@ export default function TeamPage() {
         const response = await fetch('/api/user/profile');
         if (response.ok) {
           const data = await response.json();
-          const userTier = data.user?.admin_tier as AdminTier | null;
-          setHasPermission(tierHasPermission(userTier, 'manage_admins'));
+          // Handle case where admin_tier might not exist
+          const userTier = data.user?.admin_tier as AdminTier | null | undefined;
+          const userRole = data.user?.role as string | null | undefined;
+
+          // If user has 'admin' role but no admin_tier, they might be pre-migration super admin
+          // Grant manage_admins permission to admins even without the tier column
+          if (userRole === 'admin' && userTier === undefined) {
+            // Pre-migration state: admin role without tier column
+            setHasPermission(true);
+            setAdminTierSystemActive(false);
+          } else {
+            setHasPermission(tierHasPermission(userTier ?? null, 'manage_admins'));
+          }
         } else {
           setHasPermission(false);
         }
@@ -591,6 +603,10 @@ export default function TeamPage() {
       if (response.ok) {
         const data = await response.json();
         setAdmins(data.users || []);
+        // Track whether admin tier system is active based on API response
+        if (data.adminTierSystemActive !== undefined) {
+          setAdminTierSystemActive(data.adminTierSystemActive);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch admins:', error);
@@ -630,6 +646,24 @@ export default function TeamPage() {
 
   return (
     <div className="p-8">
+      {/* Admin Tier System Warning Banner */}
+      {!adminTierSystemActive && (
+        <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+              <h3 className="text-amber-400 font-medium">Admin Tier System Not Active</h3>
+              <p className="text-amber-400/80 text-sm mt-1">
+                The admin tier system has not been set up yet. Admin tier management features will be limited until the database migration is run.
+                You can still manage team members by role (admin/teacher), but tier-based permissions are not available.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -639,6 +673,8 @@ export default function TeamPage() {
         <button
           onClick={() => setShowInviteModal(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-white font-medium transition"
+          disabled={!adminTierSystemActive}
+          title={!adminTierSystemActive ? 'Admin tier system not active - cannot invite new admins with tiers' : undefined}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -661,10 +697,12 @@ export default function TeamPage() {
         <select
           value={tierFilter}
           onChange={(e) => setTierFilter(e.target.value)}
-          className="px-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-cyan-500/50"
+          disabled={!adminTierSystemActive}
+          className="px-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          title={!adminTierSystemActive ? 'Tier filtering not available - admin tier system not active' : undefined}
         >
-          <option value="">All Tiers</option>
-          {(Object.keys(ADMIN_TIER_INFO) as AdminTier[]).map((tier) => (
+          <option value="">{adminTierSystemActive ? 'All Tiers' : 'Tiers unavailable'}</option>
+          {adminTierSystemActive && (Object.keys(ADMIN_TIER_INFO) as AdminTier[]).map((tier) => (
             <option key={tier} value={tier}>
               {ADMIN_TIER_INFO[tier].label}
             </option>

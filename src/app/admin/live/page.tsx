@@ -333,12 +333,313 @@ function CreateSessionModal({
   );
 }
 
+function EditSessionModal({
+  session,
+  onClose,
+  onUpdated,
+}: {
+  session: Session;
+  onClose: () => void;
+  onUpdated: () => void;
+}) {
+  const [title, setTitle] = useState(session.title);
+  const [description, setDescription] = useState(session.description || '');
+  const [scheduledAt, setScheduledAt] = useState(
+    new Date(session.scheduled_at).toISOString().slice(0, 16)
+  );
+  const [duration, setDuration] = useState(session.duration_minutes);
+  const [platform, setPlatform] = useState<'google_meet' | 'zoom'>(session.platform);
+  const [meetLink, setMeetLink] = useState(session.google_meet_link || '');
+  const [zoomLink, setZoomLink] = useState(session.zoom_link || '');
+  const [targetTier, setTargetTier] = useState<'student' | 'employee' | 'owner'>(session.target_tier);
+  const [seatPrice, setSeatPrice] = useState(session.seat_price);
+  const [maxSeats, setMaxSeats] = useState(session.max_seats);
+  const [recordingUrl, setRecordingUrl] = useState(session.recording_url || '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title) {
+      setError('Title is required');
+      return;
+    }
+
+    // Validate platform link
+    if (platform === 'google_meet' && !meetLink) {
+      setError('Google Meet link is required');
+      return;
+    }
+    if (platform === 'zoom' && !zoomLink) {
+      setError('Zoom link is required');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/admin/sessions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: session.id,
+          updates: {
+            title,
+            description: description || null,
+            scheduledAt: new Date(scheduledAt).toISOString(),
+            durationMinutes: duration,
+            platform,
+            googleMeetLink: platform === 'google_meet' ? meetLink : null,
+            zoomLink: platform === 'zoom' ? zoomLink : null,
+            targetTier,
+            seatPrice: seatPrice || 0,
+            maxSeats: maxSeats || 100,
+            recordingUrl: recordingUrl || null,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update session');
+      }
+
+      onUpdated();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update session');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-[#1a1d21] rounded-xl border border-slate-700/50 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="p-4 border-b border-slate-700/50 flex items-center justify-between sticky top-0 bg-[#1a1d21]">
+          <h2 className="text-lg font-semibold text-white">Edit Session</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-white">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">Course</label>
+            <div className="px-3 py-2 bg-slate-800/30 border border-slate-700/50 rounded-lg text-slate-400 text-sm">
+              {session.course?.title || 'Unknown Course'}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">Session Title</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+              placeholder="e.g., Week 1: Getting Started"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">Description (optional)</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 resize-none"
+              placeholder="What will be covered?"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Date & Time</label>
+              <input
+                type="datetime-local"
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-cyan-500/50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Duration (min)</label>
+              <select
+                value={duration}
+                onChange={(e) => setDuration(parseInt(e.target.value))}
+                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-cyan-500/50"
+              >
+                <option value={30}>30 minutes</option>
+                <option value={45}>45 minutes</option>
+                <option value={60}>1 hour</option>
+                <option value={90}>1.5 hours</option>
+                <option value={120}>2 hours</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Platform Selection */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">Platform</label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setPlatform('google_meet')}
+                className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium transition ${
+                  platform === 'google_meet'
+                    ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                    : 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:border-slate-600'
+                }`}
+              >
+                Google Meet
+              </button>
+              <button
+                type="button"
+                onClick={() => setPlatform('zoom')}
+                className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium transition ${
+                  platform === 'zoom'
+                    ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                    : 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:border-slate-600'
+                }`}
+              >
+                Zoom
+              </button>
+            </div>
+          </div>
+
+          {/* Platform Link */}
+          {platform === 'google_meet' ? (
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Google Meet Link</label>
+              <input
+                type="url"
+                value={meetLink}
+                onChange={(e) => setMeetLink(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+                placeholder="https://meet.google.com/xxx-xxxx-xxx"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Zoom Link</label>
+              <input
+                type="url"
+                value={zoomLink}
+                onChange={(e) => setZoomLink(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+                placeholder="https://zoom.us/j/xxxxxxxxx"
+              />
+            </div>
+          )}
+
+          {/* Target Tier */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">Target Audience</label>
+            <div className="flex gap-2">
+              {(['student', 'employee', 'owner'] as const).map((tier) => (
+                <button
+                  key={tier}
+                  type="button"
+                  onClick={() => setTargetTier(tier)}
+                  className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium capitalize transition ${
+                    targetTier === tier
+                      ? tier === 'student'
+                        ? 'bg-purple-500/20 border-purple-500/50 text-purple-400'
+                        : tier === 'employee'
+                        ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                        : 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
+                      : 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:border-slate-600'
+                  }`}
+                >
+                  {tier}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Pricing (only for employee/owner tiers) */}
+          {targetTier !== 'student' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Seat Price ($)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={seatPrice}
+                  onChange={(e) => setSeatPrice(parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-cyan-500/50"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Max Seats</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={maxSeats}
+                  onChange={(e) => setMaxSeats(parseInt(e.target.value) || 100)}
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-cyan-500/50"
+                  placeholder="100"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Recording URL (for completed sessions) */}
+          {session.status === 'completed' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Recording URL</label>
+              <input
+                type="url"
+                value={recordingUrl}
+                onChange={(e) => setRecordingUrl(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+                placeholder="https://..."
+              />
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 border border-slate-700/50 rounded-lg text-slate-400 hover:text-white hover:border-slate-600 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-white font-medium transition disabled:opacity-50"
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function SessionCard({
   session,
   onStatusChange,
+  onEdit,
 }: {
   session: Session;
   onStatusChange: (id: string, status: string) => void;
+  onEdit: () => void;
 }) {
   const isUpcoming = new Date(session.scheduled_at) > new Date();
   const isPast = new Date(session.scheduled_at) < new Date() && session.status !== 'live';
@@ -478,6 +779,13 @@ function SessionCard({
             Recording
           </a>
         )}
+
+        <button
+          onClick={onEdit}
+          className="px-3 py-1.5 text-slate-400 hover:text-white text-sm transition"
+        >
+          Edit
+        </button>
       </div>
     </div>
   );
@@ -491,6 +799,7 @@ function LiveSessionsPageContent() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [statusFilter, setStatusFilter] = useState('');
 
   async function fetchData() {
@@ -610,7 +919,7 @@ function LiveSessionsPageContent() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {liveSessions.map((session) => (
-                  <SessionCard key={session.id} session={session} onStatusChange={handleStatusChange} />
+                  <SessionCard key={session.id} session={session} onStatusChange={handleStatusChange} onEdit={() => setEditingSession(session)} />
                 ))}
               </div>
             </div>
@@ -622,7 +931,7 @@ function LiveSessionsPageContent() {
               <h2 className="text-white font-semibold mb-4">Upcoming</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {upcomingSessions.map((session) => (
-                  <SessionCard key={session.id} session={session} onStatusChange={handleStatusChange} />
+                  <SessionCard key={session.id} session={session} onStatusChange={handleStatusChange} onEdit={() => setEditingSession(session)} />
                 ))}
               </div>
             </div>
@@ -634,7 +943,7 @@ function LiveSessionsPageContent() {
               <h2 className="text-white font-semibold mb-4">Past Sessions</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {pastSessions.map((session) => (
-                  <SessionCard key={session.id} session={session} onStatusChange={handleStatusChange} />
+                  <SessionCard key={session.id} session={session} onStatusChange={handleStatusChange} onEdit={() => setEditingSession(session)} />
                 ))}
               </div>
             </div>
@@ -649,6 +958,15 @@ function LiveSessionsPageContent() {
           defaultCourseId={courseIdParam}
           onClose={() => setShowCreateModal(false)}
           onCreated={fetchData}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {editingSession && (
+        <EditSessionModal
+          session={editingSession}
+          onClose={() => setEditingSession(null)}
+          onUpdated={fetchData}
         />
       )}
     </div>

@@ -12,9 +12,10 @@ interface Student {
   email: string;
   full_name: string;
   avatar_url: string | null;
-  tier: string | null;
+  tier: string | null; // Extracted from learner_profiles by API
   created_at: string;
   learner_profiles: Array<{
+    tier: string;
     current_path: string | null;
     total_learning_time: number;
     current_streak: number;
@@ -60,11 +61,17 @@ function ProgressRing({ progress, size = 40, strokeWidth = 3 }: { progress: numb
   );
 }
 
+// Helper to check if a date is within the last 7 days
+function isRecentlyActive(lastActivityAt: string | null): boolean {
+  if (!lastActivityAt) return false;
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  return new Date(lastActivityAt) > sevenDaysAgo;
+}
+
 function StudentCard({ student }: { student: Student }) {
   const profile = student.learner_profiles?.[0];
-  const isActive = profile?.last_activity_at
-    ? new Date(profile.last_activity_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    : false;
+  const isActive = isRecentlyActive(profile?.last_activity_at ?? null);
 
   const tierColors: Record<string, string> = {
     student: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
