@@ -1720,6 +1720,230 @@ export type Database = {
           },
         ]
       }
+      user_settings: {
+        Row: {
+          id: string
+          user_id: string
+          display_name: string | null
+          bio: string | null
+          email_notifications: boolean
+          learning_reminders: boolean
+          community_activity: boolean
+          marketing_emails: boolean
+          learning_pace: "relaxed" | "standard" | "intensive"
+          daily_goal_minutes: number
+          show_progress_on_profile: boolean
+          theme: "dark" | "light" | "system"
+          two_factor_enabled: boolean
+          profile_visibility: "public" | "private" | "connections"
+          show_activity_status: boolean
+          allow_data_collection: boolean
+          reduced_motion: boolean
+          high_contrast: boolean
+          font_size: "small" | "medium" | "large"
+          screen_reader_optimized: boolean
+          wallet_connected: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          display_name?: string | null
+          bio?: string | null
+          email_notifications?: boolean
+          learning_reminders?: boolean
+          community_activity?: boolean
+          marketing_emails?: boolean
+          learning_pace?: "relaxed" | "standard" | "intensive"
+          daily_goal_minutes?: number
+          show_progress_on_profile?: boolean
+          theme?: "dark" | "light" | "system"
+          two_factor_enabled?: boolean
+          profile_visibility?: "public" | "private" | "connections"
+          show_activity_status?: boolean
+          allow_data_collection?: boolean
+          reduced_motion?: boolean
+          high_contrast?: boolean
+          font_size?: "small" | "medium" | "large"
+          screen_reader_optimized?: boolean
+          wallet_connected?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          display_name?: string | null
+          bio?: string | null
+          email_notifications?: boolean
+          learning_reminders?: boolean
+          community_activity?: boolean
+          marketing_emails?: boolean
+          learning_pace?: "relaxed" | "standard" | "intensive"
+          daily_goal_minutes?: number
+          show_progress_on_profile?: boolean
+          theme?: "dark" | "light" | "system"
+          two_factor_enabled?: boolean
+          profile_visibility?: "public" | "private" | "connections"
+          show_activity_status?: boolean
+          allow_data_collection?: boolean
+          reduced_motion?: boolean
+          high_contrast?: boolean
+          font_size?: "small" | "medium" | "large"
+          screen_reader_optimized?: boolean
+          wallet_connected?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_settings: {
+        Row: {
+          id: string
+          setting_key: string
+          setting_value: Json
+          setting_type: string
+          description: string | null
+          is_secret: boolean
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          setting_key: string
+          setting_value: Json
+          setting_type: string
+          description?: string | null
+          is_secret?: boolean
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          setting_type?: string
+          description?: string | null
+          is_secret?: boolean
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_sessions: {
+        Row: {
+          id: string
+          user_id: string
+          device_info: string | null
+          ip_address: string | null
+          location: string | null
+          user_agent: string | null
+          is_current: boolean
+          last_active_at: string
+          created_at: string
+          expires_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          device_info?: string | null
+          ip_address?: string | null
+          location?: string | null
+          user_agent?: string | null
+          is_current?: boolean
+          last_active_at?: string
+          created_at?: string
+          expires_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          device_info?: string | null
+          ip_address?: string | null
+          location?: string | null
+          user_agent?: string | null
+          is_current?: boolean
+          last_active_at?: string
+          created_at?: string
+          expires_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          id: string
+          event_type: string
+          url: string
+          secret: string | null
+          is_active: boolean
+          last_triggered_at: string | null
+          failure_count: number
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          event_type: string
+          url: string
+          secret?: string | null
+          is_active?: boolean
+          last_triggered_at?: string | null
+          failure_count?: number
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          event_type?: string
+          url?: string
+          secret?: string | null
+          is_active?: boolean
+          last_triggered_at?: string | null
+          failure_count?: number
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhooks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

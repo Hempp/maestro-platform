@@ -92,7 +92,13 @@ export async function GET(request: NextRequest) {
 
     const { data: sessions, error } = await query;
 
-    if (error) throw error;
+    if (error) {
+      // Handle missing table gracefully
+      if (error.code === 'PGRST205' || error.message?.includes('Could not find')) {
+        return NextResponse.json({ sessions: [] });
+      }
+      throw error;
+    }
 
     // Add attendance count
     const sessionsWithCounts = (sessions || []).map((session: any) => ({
