@@ -115,14 +115,15 @@ function ProgressRing({ progress, size = 56, strokeWidth = 5 }: { progress: numb
   );
 }
 
-// Navigation item component - clean minimal
+// Navigation item component - clean minimal with collapse support
 function NavItem({
   icon,
   label,
   active = false,
   locked = false,
   href,
-  onClick
+  onClick,
+  collapsed = false
 }: {
   icon: React.ReactNode;
   label: string;
@@ -130,21 +131,31 @@ function NavItem({
   locked?: boolean;
   href?: string;
   onClick?: () => void;
+  collapsed?: boolean;
 }) {
   const content = (
-    <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-      active
-        ? 'bg-slate-800/80 text-white'
-        : locked
-          ? 'text-slate-700 cursor-not-allowed'
-          : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/40'
-    }`}>
-      <span className="w-5 h-5 flex items-center justify-center">{icon}</span>
-      <span className="text-sm flex-1">{label}</span>
-      {locked && (
+    <div
+      className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+        active
+          ? 'bg-slate-800/80 text-white'
+          : locked
+            ? 'text-slate-700 cursor-not-allowed'
+            : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/40'
+      } ${collapsed ? 'justify-center' : ''}`}
+      title={collapsed ? label : undefined}
+    >
+      <span className="w-5 h-5 flex items-center justify-center flex-shrink-0">{icon}</span>
+      {!collapsed && <span className="text-sm flex-1">{label}</span>}
+      {!collapsed && locked && (
         <svg className="w-3.5 h-3.5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
+      )}
+      {/* Tooltip on hover when collapsed */}
+      {collapsed && (
+        <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 pointer-events-none">
+          {label}
+        </div>
       )}
     </div>
   );
@@ -1574,6 +1585,7 @@ function DashboardContent() {
   const [activeView, setActiveView] = useState<ViewType>('home');
   const [chatViewMode, setChatViewMode] = useState<'chat' | 'terminal'>('chat');
   const [moduleInitialized, setModuleInitialized] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const terminalInputRef = useRef<HTMLInputElement>(null);
@@ -1597,6 +1609,21 @@ function DashboardContent() {
   const [inputValue, setInputValue] = useState('');
   const [localTyping, setLocalTyping] = useState(false);
   const isTyping = chatLoading || localTyping;
+
+  // Load sidebar collapsed state from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('dashboardSidebarCollapsed');
+    if (saved !== null) {
+      setSidebarCollapsed(saved === 'true');
+    }
+  }, []);
+
+  // Toggle sidebar collapsed state
+  const toggleSidebar = () => {
+    const newState = !sidebarCollapsed;
+    setSidebarCollapsed(newState);
+    localStorage.setItem('dashboardSidebarCollapsed', String(newState));
+  };
 
   // Fetch certificates
   useEffect(() => {
@@ -1843,22 +1870,25 @@ function DashboardContent() {
 
   return (
     <div className="h-screen bg-[#0f1115] flex overflow-hidden">
-      {/* Left Sidebar - Clean Navigation */}
-      <aside className="w-52 border-r border-slate-800/40 flex flex-col bg-[#0f1115] flex-shrink-0">
+      {/* Left Sidebar - Collapsible Navigation */}
+      <aside className={`border-r border-slate-800/40 flex flex-col bg-[#0f1115] flex-shrink-0 transition-all duration-300 ease-in-out ${
+        sidebarCollapsed ? 'w-16' : 'w-52'
+      }`}>
         {/* Logo */}
-        <div className="px-4 py-5">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="Phazur" width={28} height={28} className="invert opacity-80" />
-            <span className="text-white font-medium">Phazur</span>
+        <div className={`py-5 ${sidebarCollapsed ? 'px-2 flex justify-center' : 'px-4'}`}>
+          <Link href="/" className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-2.5'}`}>
+            <Image src="/logo.png" alt="Phazur" width={28} height={28} className="invert opacity-80 flex-shrink-0" />
+            {!sidebarCollapsed && <span className="text-white font-medium">Phazur</span>}
           </Link>
         </div>
 
         {/* Main Navigation */}
-        <nav className="px-3 space-y-0.5">
+        <nav className={`space-y-0.5 ${sidebarCollapsed ? 'px-2' : 'px-3'}`}>
           <NavItem
             active={activeView === 'home'}
             label="Home"
             onClick={() => setActiveView('home')}
+            collapsed={sidebarCollapsed}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -1868,6 +1898,7 @@ function DashboardContent() {
           <NavItem
             label="Learn"
             href="/learn"
+            collapsed={sidebarCollapsed}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -1877,14 +1908,15 @@ function DashboardContent() {
         </nav>
 
         {/* Divider */}
-        <div className="mx-4 my-3 border-t border-slate-800/40" />
+        <div className={`my-3 border-t border-slate-800/40 ${sidebarCollapsed ? 'mx-2' : 'mx-4'}`} />
 
         {/* Course & Community Features */}
-        <nav className="px-3 space-y-0.5">
+        <nav className={`space-y-0.5 ${sidebarCollapsed ? 'px-2' : 'px-3'}`}>
           <NavItem
             active={activeView === 'live-courses'}
             label="Live Courses"
             onClick={() => setActiveView('live-courses')}
+            collapsed={sidebarCollapsed}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -1893,8 +1925,9 @@ function DashboardContent() {
           />
           <NavItem
             active={activeView === 'community'}
-            label="Community Feed"
+            label="Community"
             onClick={() => setActiveView('community')}
+            collapsed={sidebarCollapsed}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
@@ -1905,6 +1938,7 @@ function DashboardContent() {
             active={activeView === 'projects'}
             label="Projects"
             onClick={() => setActiveView('projects')}
+            collapsed={sidebarCollapsed}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -1915,6 +1949,7 @@ function DashboardContent() {
             active={activeView === 'discussions'}
             label="Discussions"
             onClick={() => setActiveView('discussions')}
+            collapsed={sidebarCollapsed}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
@@ -1925,6 +1960,7 @@ function DashboardContent() {
             active={activeView === 'leaderboards'}
             label="Leaderboards"
             onClick={() => setActiveView('leaderboards')}
+            collapsed={sidebarCollapsed}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
@@ -1936,17 +1972,46 @@ function DashboardContent() {
         {/* Spacer */}
         <div className="flex-1" />
 
+        {/* Collapse Toggle */}
+        <div className={`pb-2 ${sidebarCollapsed ? 'px-2 flex justify-center' : 'px-3'}`}>
+          <button
+            onClick={toggleSidebar}
+            className={`flex items-center gap-2 px-3 py-2 text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 rounded-lg transition-all w-full ${
+              sidebarCollapsed ? 'justify-center' : ''
+            }`}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <svg
+              className={`w-5 h-5 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+            {!sidebarCollapsed && <span className="text-xs">Collapse</span>}
+          </button>
+        </div>
+
         {/* User Profile */}
-        <div className="p-4 border-t border-slate-800/40">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-sm font-medium">
-              {user?.email?.charAt(0).toUpperCase() || 'G'}
+        <div className={`p-4 border-t border-slate-800/40 ${sidebarCollapsed ? 'px-2' : ''}`}>
+          {sidebarCollapsed ? (
+            <div className="flex justify-center">
+              <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-sm font-medium">
+                {user?.email?.charAt(0).toUpperCase() || 'G'}
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-slate-300 text-xs font-medium truncate">{user?.email || 'Guest'}</p>
-              <p className="text-slate-600 text-[10px]">{selectedPath ? PATH_INFO[selectedPath].title : 'Choose path'}</p>
+          ) : (
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-sm font-medium flex-shrink-0">
+                {user?.email?.charAt(0).toUpperCase() || 'G'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-slate-300 text-xs font-medium truncate">{user?.email || 'Guest'}</p>
+                <p className="text-slate-600 text-[10px]">{selectedPath ? PATH_INFO[selectedPath].title : 'Choose path'}</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </aside>
 
