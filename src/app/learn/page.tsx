@@ -290,35 +290,66 @@ export default function LearnPage() {
 
   return (
     <div className="min-h-screen bg-[#0f1115]">
-      {/* Header */}
-      <header className="border-b border-slate-800/40">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      {/* Navigation - Matches Homepage */}
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800/40 bg-[#0f1115]/80 backdrop-blur-xl">
+        <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="Phazur" width={24} height={24} className="invert opacity-80" />
-            <span className="text-slate-200 font-medium text-sm">Phazur</span>
+            <Image src="/logo.png" alt="Phazur" width={32} height={32} className="invert opacity-90" />
+            <span className="text-lg font-semibold tracking-tight">PHAZUR</span>
+            <span className="px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] rounded font-mono">
+              v2.0
+            </span>
           </Link>
 
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-slate-500 hover:text-slate-300 transition text-xs">
-              Dashboard
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="/#about" className="text-slate-500 hover:text-white transition-colors text-sm">
+              About
             </Link>
+            <Link href="/#paths" className="text-slate-500 hover:text-white transition-colors text-sm">
+              Paths
+            </Link>
+            <Link href="/learn" className="text-cyan-400 text-sm">
+              Learn
+            </Link>
+            <Link href="/#teams" className="text-slate-500 hover:text-white transition-colors text-sm">
+              Teams
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2">
             {user ? (
-              <div className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-xs font-medium">
-                {user.email?.charAt(0).toUpperCase()}
-              </div>
+              <>
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-2 text-slate-400 hover:text-white text-sm transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-sm font-medium">
+                  {user.email?.charAt(0).toUpperCase()}
+                </div>
+              </>
             ) : (
-              <Link
-                href="/login"
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition"
-              >
-                Sign In
-              </Link>
+              <>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-slate-400 hover:text-white text-sm transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Get Started
+                </Link>
+              </>
             )}
           </div>
-        </div>
+        </nav>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-10">
+      <main className="max-w-5xl mx-auto px-6 py-10 pt-24">
         {/* Path Selector */}
         <div className="mb-10">
           <h1 className="text-lg font-semibold text-slate-200 mb-4">Choose Your Path</h1>
