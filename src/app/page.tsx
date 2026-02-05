@@ -178,9 +178,16 @@ function PathCard({
       </motion.div>
 
       <div className="pt-6 border-t border-slate-800/60">
-        <div className="flex items-baseline gap-2 mb-4">
-          <span className="text-2xl font-semibold text-white">{price}</span>
-          <span className="text-slate-600 text-sm">after capstone</span>
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-emerald-400 text-sm font-medium">Free to Learn</span>
+            <span className="text-slate-700">•</span>
+            <span className="text-slate-500 text-sm">Pay when certified</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-semibold text-white">{price}</span>
+            <span className="text-slate-600 text-sm">certification</span>
+          </div>
         </div>
 
         <Link
@@ -221,7 +228,7 @@ export default function Home() {
             {[
               { label: 'About', href: '#about' },
               { label: 'Paths', href: '#paths' },
-              { label: 'Pricing', href: '#pricing' },
+              { label: 'Teams', href: '#teams' },
             ].map((item) => (
               <a
                 key={item.label}
@@ -490,9 +497,9 @@ export default function Home() {
                   'Master Claude Code to scaffold apps in minutes',
                   <>Earn <span className="text-purple-400 font-semibold">Certified AI Associate</span> SBT</>,
                 ]}
-                price="$49"
+                price="$299"
                 color="purple"
-                cta="Start Building Free"
+                cta="Start Learning Free"
                 delay={0}
               />
 
@@ -511,9 +518,9 @@ export default function Home() {
                   'Build automated email & workflow systems',
                   <>Earn <span className="text-blue-400 font-semibold">Workflow Efficiency Lead</span> SBT</>,
                 ]}
-                price="$199"
+                price="$599"
                 color="blue"
-                cta="Reclaim My Time"
+                cta="Start Learning Free"
                 popular
                 delay={0.1}
               />
@@ -533,9 +540,9 @@ export default function Home() {
                   'Orchestrate multi-agent systems for full-scale ops',
                   <>Earn <span className="text-emerald-400 font-semibold">AI Operations Master</span> SBT</>,
                 ]}
-                price="$499"
+                price="$999"
                 color="emerald"
-                cta="Automate My Business"
+                cta="Start Learning Free"
                 delay={0.2}
               />
             </div>
@@ -623,8 +630,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Pricing Section */}
-        <section id="pricing" className="py-20 px-6 border-t border-slate-800/40">
+        {/* Email Capture / Teams Section */}
+        <section id="teams" className="py-20 px-6 border-t border-slate-800/40">
           <div className="max-w-3xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
@@ -633,8 +640,12 @@ export default function Home() {
               transition={{ duration: 0.5 }}
               className="text-center mb-12"
             >
-              <h2 className="text-3xl md:text-4xl font-semibold mb-3">Simple Pricing</h2>
-              <p className="text-slate-500">Build first, pay later. No upfront costs.</p>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-xs mb-4">
+                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+                Team Plans Coming Soon
+              </div>
+              <h2 className="text-3xl md:text-4xl font-semibold mb-3">Train Your Team on AI</h2>
+              <p className="text-slate-500">Get early access to team pricing and bulk discounts.</p>
             </motion.div>
 
             <motion.div
@@ -644,31 +655,105 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="bg-[#16181d] border border-slate-800/60 rounded-xl p-8"
             >
-              <div className="grid md:grid-cols-3 gap-6 text-center">
-                {[
-                  { path: 'Student', price: '$49', cert: 'AI Associate', color: 'text-purple-400' },
-                  { path: 'Employee', price: '$199', cert: 'Efficiency Lead', color: 'text-cyan-400' },
-                  { path: 'Owner', price: '$499', cert: 'Ops Master', color: 'text-emerald-400' },
-                ].map((item) => (
-                  <div key={item.path} className="py-4">
-                    <div className={`text-xs uppercase tracking-wider ${item.color} mb-2`}>{item.path}</div>
-                    <div className="text-3xl font-semibold text-white">{item.price}</div>
-                    <div className="text-slate-600 text-xs mt-1">{item.cert}</div>
+              {/* Email Capture Form */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.target as HTMLFormElement;
+                  const email = (form.elements.namedItem('email') as HTMLInputElement).value;
+                  const teamSize = (form.elements.namedItem('teamSize') as HTMLSelectElement).value;
+                  // TODO: Send to API
+                  console.log('Team interest:', { email, teamSize });
+                  alert('Thanks! We\'ll be in touch soon.');
+                  form.reset();
+                }}
+                className="max-w-md mx-auto"
+              >
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="email" className="block text-xs text-slate-500 mb-2">Work Email</label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      required
+                      placeholder="you@company.com"
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition"
+                    />
                   </div>
-                ))}
-              </div>
+                  <div>
+                    <label htmlFor="teamSize" className="block text-xs text-slate-500 mb-2">Team Size</label>
+                    <select
+                      id="teamSize"
+                      name="teamSize"
+                      required
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-cyan-500/50 transition appearance-none cursor-pointer"
+                    >
+                      <option value="">Select team size</option>
+                      <option value="2-5">2-5 employees</option>
+                      <option value="6-15">6-15 employees</option>
+                      <option value="16-50">16-50 employees</option>
+                      <option value="50+">50+ employees</option>
+                    </select>
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition"
+                  >
+                    Get Early Access
+                  </button>
+                </div>
+              </form>
 
+              {/* Team Certification Bundles */}
               <div className="mt-8 pt-6 border-t border-slate-800/60">
-                <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
-                  {['Pay after capstone', 'Lifetime access', 'On-chain cert', '1:1 mentors'].map((item) => (
-                    <div key={item} className="flex items-center gap-1.5">
-                      <span className="text-emerald-500">✓</span>
-                      {item}
+                <p className="text-center text-slate-500 text-sm mb-6">Popular certification bundles</p>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {[
+                    {
+                      name: 'Starter Team',
+                      seats: '5 certifications',
+                      price: '$1,199',
+                      savings: 'Save 20%',
+                      color: 'text-purple-400'
+                    },
+                    {
+                      name: 'Growth Team',
+                      seats: '15 certifications',
+                      price: '$2,999',
+                      savings: 'Save 33%',
+                      color: 'text-cyan-400'
+                    },
+                    {
+                      name: 'Enterprise',
+                      seats: 'Unlimited',
+                      price: 'Custom',
+                      savings: 'Best value',
+                      color: 'text-emerald-400'
+                    },
+                  ].map((item) => (
+                    <div key={item.name} className="p-4 bg-slate-800/30 rounded-lg border border-slate-700/40 text-center">
+                      <div className={`text-xs font-medium uppercase tracking-wider ${item.color} mb-2`}>{item.name}</div>
+                      <div className="text-lg font-semibold text-white">{item.price}</div>
+                      <div className="text-xs text-slate-500 mt-1">{item.seats}</div>
+                      <div className="text-xs text-emerald-400 mt-2">{item.savings}</div>
                     </div>
                   ))}
                 </div>
               </div>
             </motion.div>
+
+            {/* Individual Note */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-center text-slate-600 text-sm mt-6"
+            >
+              Free to learn individually. Certifications from <span className="text-white">$299</span>.
+              <Link href="#paths" className="text-cyan-500 hover:text-cyan-400 ml-1">See all paths →</Link>
+            </motion.p>
           </div>
         </section>
 
@@ -708,7 +793,7 @@ export default function Home() {
             <div className="flex flex-wrap gap-6 text-xs text-slate-600">
               <Link href="/dashboard" className="hover:text-slate-400 transition-colors">Dashboard</Link>
               <a href="#paths" className="hover:text-slate-400 transition-colors">Paths</a>
-              <a href="#pricing" className="hover:text-slate-400 transition-colors">Pricing</a>
+              <a href="#teams" className="hover:text-slate-400 transition-colors">Teams</a>
               <span className="text-slate-700">Docs (soon)</span>
             </div>
           </div>
