@@ -85,7 +85,14 @@ export type AKUCategory =
   | 'rag_pipeline'
   | 'agent_orchestration'
   | 'api_integration'
-  | 'fine_tuning';
+  | 'fine_tuning'
+  | 'automation'
+  | 'workflow'
+  | 'communication'
+  | 'ai_strategy'
+  | 'customer_operations'
+  | 'ai_operations'
+  | 'documentation';
 
 export interface AtomicKnowledgeUnit {
   id: string;
