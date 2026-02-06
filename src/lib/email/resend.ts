@@ -45,7 +45,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
       subject: options.subject,
       html: options.html,
       text: options.text,
-      reply_to: options.replyTo || SUPPORT_EMAIL,
+      replyTo: options.replyTo || SUPPORT_EMAIL,
       tags: options.tags,
     });
 
