@@ -5,8 +5,15 @@
 
 import { Resend } from 'resend';
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialize Resend client
+let resendClient: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY || '');
+  }
+  return resendClient;
+}
 
 // Default sender
 const FROM_EMAIL = process.env.FROM_EMAIL || 'Phazur <hello@phazur.com>';
@@ -39,7 +46,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
   }
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResendClient().emails.send({
       from: FROM_EMAIL,
       to: Array.isArray(options.to) ? options.to : [options.to],
       subject: options.subject,
