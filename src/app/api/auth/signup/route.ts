@@ -4,6 +4,7 @@
  */
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { sendWelcomeEmail } from '@/lib/email/resend';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
@@ -42,6 +43,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         message: 'Check your email for the confirmation link',
         user: data.user,
+      });
+    }
+
+    // Send welcome email (async, don't block response)
+    if (data.user?.email) {
+      sendWelcomeEmail(data.user.email, fullName).catch((err) => {
+        console.error('Failed to send welcome email:', err);
       });
     }
 

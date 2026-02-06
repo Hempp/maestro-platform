@@ -4,6 +4,7 @@
  */
 
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase/server';
+import { sendCertificateEmail } from '@/lib/email/resend';
 import { NextRequest, NextResponse } from 'next/server';
 import type { Insertable } from '@/lib/supabase/types';
 
@@ -158,6 +159,18 @@ export async function POST(request: NextRequest) {
 
     // TODO: Mint SBT on blockchain if wallet address provided
     // This would integrate with the blockchain/sbt-minter.ts
+
+    // Send certificate email (async, don't block response)
+    if (user.email) {
+      sendCertificateEmail(
+        user.email,
+        user.user_metadata?.full_name,
+        certificateType,
+        certificate.id
+      ).catch((err) => {
+        console.error('Failed to send certificate email:', err);
+      });
+    }
 
     return NextResponse.json({
       message: 'Certificate issued',
