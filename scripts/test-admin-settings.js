@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'https://pla-ten-eosin.vercel.app';
 const TEST_EMAIL = 'testadmin@phazurlabs.com';
 const TEST_PASSWORD = 'TestAdmin123!';
 
