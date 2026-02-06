@@ -1,0 +1,189 @@
+{
+  "moduleId": "employee-m1",
+  "moduleTitle": "Workflow Automation Mastery",
+  "tier": "employee",
+  "akus": [
+    {
+      "id": "aku-e1-01",
+      "category": "workflow_design",
+      "title": "The 40% Problem",
+      "duration": 4,
+      "prerequisiteAKUs": [],
+      "businessKPI": "efficiency_gain",
+      "concept": "The average employee spends 40% of their time on repetitive tasks.\n\n**The reality:**\n- Data entry between systems\n- Copy-paste from emails to spreadsheets\n- Writing similar emails over and over\n- Formatting reports\n- Scheduling and follow-ups\n\n**The opportunity:**\nAutomate 2-3 key workflows = 10+ hours saved per week.\n\n**What that means:**\n- 10 hours/week × 50 weeks = 500 hours/year\n- At $50/hour = $25,000 value\n- That's a promotion-worthy contribution\n\n**This module:** Learn to identify, prioritize, and automate the tasks eating your productivity.",
+      "sandboxChallenge": {
+        "prompt": "Track your work for 24 hours (or recall yesterday). List every task you did and estimate time spent. Identify which ones:\n1. You do repeatedly (daily/weekly)\n2. Follow a pattern\n3. Don't require creative thinking",
+        "expectedOutputSchema": {
+          "taskList": "array",
+          "repetitiveTasks": "array",
+          "potentialSavings": "number"
+        },
+        "hints": [
+          "Include small tasks that add up",
+          "Think about email, calendar, documents, data entry",
+          "Mark which tasks follow a consistent pattern"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Time tracking pie chart",
+        "textual": "Task audit template",
+        "handsOn": "Time tracking exercise"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "taskList", "type": "exists", "expected": true },
+          { "field": "repetitiveTasks", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e1-02",
+      "category": "workflow_design",
+      "title": "The Automation Audit",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-e1-01"],
+      "businessKPI": "efficiency_gain",
+      "concept": "Not all tasks should be automated. The Automation Audit helps you prioritize.\n\n**The Scoring Matrix:**\n\nFor each task, score 1-5 on:\n\n**Time Spent (T):** How long does it take?\n- 1 = <5 min, 5 = 1+ hours\n\n**Frequency (F):** How often?\n- 1 = Monthly, 5 = Multiple times daily\n\n**Automation Potential (A):** How easy to automate?\n- 1 = Highly variable, 5 = Identical each time\n\n**Priority Score = T × F × A**\n\n**Example:**\nWeekly report: Time=4, Frequency=2, Automation=5\nScore = 4 × 2 × 5 = 40 → HIGH PRIORITY\n\n**Decision guide:**\n- Score 50+: Automate immediately\n- Score 25-49: Plan to automate\n- Score <25: Maybe not worth it",
+      "sandboxChallenge": {
+        "prompt": "Take 5 repetitive tasks from your audit. Score each on Time (1-5), Frequency (1-5), and Automation Potential (1-5). Calculate the priority score and rank them.",
+        "expectedOutputSchema": {
+          "scoredTasks": "array",
+          "topPriority": "string",
+          "totalPotentialHours": "number"
+        },
+        "hints": [
+          "Be honest about actual time spent",
+          "Consider how identical the task is each time",
+          "The highest score should be your first automation project"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Scoring matrix template",
+        "textual": "Detailed scoring guide",
+        "handsOn": "Interactive scorer"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "scoredTasks", "type": "exists", "expected": true },
+          { "field": "topPriority", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e1-03",
+      "category": "workflow_design",
+      "title": "Anatomy of an Automatable Task",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-e1-02"],
+      "businessKPI": "efficiency_gain",
+      "concept": "Every automatable task has three parts: Trigger, Process, Output.\n\n**TRIGGER:** What starts it?\n- Time-based: 'Every Monday at 9am'\n- Event-based: 'When email received'\n- Data-based: 'When new row added to sheet'\n\n**PROCESS:** What happens?\n- Get data from somewhere\n- Transform or analyze it\n- AI processes it (summarize, write, decide)\n\n**OUTPUT:** Where does it go?\n- Send email\n- Update document\n- Add to database\n- Post to channel\n\n**Example: Weekly Report**\n- Trigger: Every Friday at 4pm\n- Process: Pull data from 3 systems, summarize with AI\n- Output: Email to team with report attached",
+      "sandboxChallenge": {
+        "prompt": "Take your top priority task from the audit. Break it down into:\n1. TRIGGER: What starts this task?\n2. PROCESS: What steps happen? (be detailed)\n3. OUTPUT: What's the end result and where does it go?",
+        "expectedOutputSchema": {
+          "taskBreakdown": "object",
+          "trigger": "string",
+          "processSteps": "array",
+          "output": "string"
+        },
+        "hints": [
+          "Be specific about what triggers the task",
+          "List every step in the process, even small ones",
+          "Define exactly where the output needs to go"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Trigger-Process-Output diagram",
+        "textual": "Task decomposition guide",
+        "handsOn": "Task breakdown tool"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "trigger", "type": "exists", "expected": true },
+          { "field": "processSteps", "type": "exists", "expected": true },
+          { "field": "output", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e1-04",
+      "category": "workflow_design",
+      "title": "The AI Step: Where Magic Happens",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-e1-03"],
+      "businessKPI": "efficiency_gain",
+      "concept": "The AI step is where automation becomes intelligent.\n\n**Without AI:**\nAutomation can move data, but can't understand it.\n\n**With AI:**\nAutomation can:\n- Summarize long content\n- Write responses\n- Classify and route\n- Extract key information\n- Make decisions based on content\n\n**Common AI steps:**\n\n1. **Summarize** - Condense emails, documents, meetings\n2. **Generate** - Write emails, reports, responses\n3. **Extract** - Pull specific data from unstructured text\n4. **Classify** - Sort items into categories\n5. **Decide** - Choose next action based on content\n\n**Key insight:** The AI step needs a good prompt. Use everything you learned about CTFC, CoT, and templates.",
+      "sandboxChallenge": {
+        "prompt": "For your task breakdown, identify where AI can help. Write the AI prompt you'll use, including:\n1. Context (what is this task?)\n2. Task (what should AI do?)\n3. Format (how should output look?)\n4. Constraints (any limits?)",
+        "expectedOutputSchema": {
+          "aiPrompt": "string",
+          "aiStepType": "string",
+          "usesCtfc": "boolean"
+        },
+        "hints": [
+          "Identify which AI step type applies (summarize, generate, extract, classify, decide)",
+          "Use the CTFC framework",
+          "Make the output format match what the next step needs"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "AI step type gallery",
+        "textual": "Prompt templates by step type",
+        "handsOn": "AI step builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "aiPrompt", "type": "exists", "expected": true },
+          { "field": "aiStepType", "type": "exists", "expected": true },
+          { "field": "usesCtfc", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e1-05",
+      "category": "workflow_design",
+      "title": "Build Your Automation Roadmap",
+      "duration": 8,
+      "prerequisiteAKUs": ["aku-e1-04"],
+      "businessKPI": "productivity_plan",
+      "concept": "Capstone: Create your complete automation roadmap.\n\n**Your roadmap includes:**\n\n1. **5 Prioritized Tasks**\n- Scored and ranked from your audit\n- Trigger-Process-Output for each\n\n2. **Implementation Plan**\n- Which to tackle first\n- Tools you'll need\n- Time estimate to build\n\n3. **Success Metrics**\n- How much time each saves\n- How you'll measure success\n\n4. **First Project Detail**\n- Complete breakdown of your #1 priority\n- AI prompt ready to use\n- Output destination defined\n\n**This roadmap is your action plan for the rest of this tier.**",
+      "sandboxChallenge": {
+        "prompt": "Create your complete Automation Roadmap:\n\n1. List your top 5 automation opportunities with scores\n2. For each: Trigger → Process → Output summary\n3. Rank by priority with reasoning\n4. Estimate time saved for each (hours/week)\n5. Detail your #1 project completely (ready to build)\n\nThis is your deliverable for this module!",
+        "expectedOutputSchema": {
+          "roadmap": "object",
+          "taskCount": "number",
+          "totalHoursSaved": "number",
+          "firstProjectReady": "boolean"
+        },
+        "hints": [
+          "Include all 5 opportunities with scores",
+          "Be realistic about time savings",
+          "Make your #1 project detailed enough to start building tomorrow",
+          "Consider dependencies between automations"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Roadmap template",
+        "textual": "Planning guide",
+        "handsOn": "Roadmap builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "taskCount", "type": "type_check", "expected": "number" },
+          { "field": "totalHoursSaved", "type": "type_check", "expected": "number" },
+          { "field": "firstProjectReady", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": [],
+        "kpiThreshold": 80
+      }
+    }
+  ]
+}

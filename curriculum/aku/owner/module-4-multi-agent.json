@@ -1,0 +1,197 @@
+{
+  "moduleId": "owner-m4",
+  "moduleTitle": "Multi-Agent Operations Chains",
+  "tier": "owner",
+  "akus": [
+    {
+      "id": "aku-o4-01",
+      "category": "ai_operations",
+      "title": "From Single Agents to Operations Chains",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-o2-05", "aku-o3-05"],
+      "businessKPI": "system_complexity",
+      "concept": "One agent is powerful. Multiple agents working together are transformational.\n\n**Single agent:** Does one job well\n- Research agent finds information\n- Writer agent creates content\n- Support agent answers questions\n\n**Operations chain:** Complete business process\n- Lead comes in → Research agent qualifies → Writer agent crafts email → CRM agent logs activity → Sales agent follows up\n\n**The shift:**\n- Single agent = Task automation\n- Operations chain = Process automation\n\n**Business impact:**\nComplete workflows run without human intervention.",
+      "sandboxChallenge": {
+        "prompt": "Identify a complete business process that could be an operations chain:\n1. What triggers it?\n2. What agents would be in the chain?\n3. What does each agent do?\n4. What's the final output?",
+        "expectedOutputSchema": {
+          "process": "string",
+          "trigger": "string",
+          "agents": "array",
+          "finalOutput": "string"
+        },
+        "hints": [
+          "Pick a process with multiple clear steps",
+          "Think about what each 'agent' specializes in",
+          "Define the handoffs between agents"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Chain comparison diagram",
+        "textual": "Use case examples",
+        "handsOn": "Process selector"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "process", "type": "exists", "expected": true },
+          { "field": "agents", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o4-02",
+      "category": "ai_operations",
+      "title": "Operations Chain Architecture",
+      "duration": 6,
+      "prerequisiteAKUs": ["aku-o4-01"],
+      "businessKPI": "chain_design",
+      "concept": "Every operations chain has five agent types:\n\n**1. TRIGGER AGENT**\nDetects when process should start.\n- Monitors for new leads\n- Watches for form submissions\n- Checks for new orders\n\n**2. DATA AGENT**\nGathers needed information.\n- Enriches lead data\n- Fetches customer history\n- Pulls relevant documents\n\n**3. ANALYSIS AGENT**\nProcesses and decides.\n- Scores and qualifies\n- Identifies patterns\n- Makes recommendations\n\n**4. ACTION AGENT**\nExecutes the outcome.\n- Sends communications\n- Updates systems\n- Creates deliverables\n\n**5. QUALITY AGENT**\nVerifies and logs.\n- Checks outputs\n- Logs all actions\n- Triggers alerts if needed",
+      "sandboxChallenge": {
+        "prompt": "Design your operations chain with all 5 agent types:\n1. TRIGGER: What starts it?\n2. DATA: What information is gathered?\n3. ANALYSIS: What decisions are made?\n4. ACTION: What is done?\n5. QUALITY: How is it verified?",
+        "expectedOutputSchema": {
+          "chain": "object",
+          "triggerAgent": "object",
+          "dataAgent": "object",
+          "analysisAgent": "object",
+          "actionAgent": "object",
+          "qualityAgent": "object"
+        },
+        "hints": [
+          "Each agent should have a single responsibility",
+          "Define what data passes between agents",
+          "Include error handling for each step"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Chain architecture diagram",
+        "textual": "Agent specifications",
+        "handsOn": "Chain builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "chain", "type": "exists", "expected": true },
+          { "field": "triggerAgent", "type": "exists", "expected": true },
+          { "field": "actionAgent", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o4-03",
+      "category": "ai_operations",
+      "title": "Agent Communication Protocols",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-o4-02"],
+      "businessKPI": "chain_reliability",
+      "concept": "Agents need clear handoff protocols.\n\n**Data packet structure:**\n```json\n{\n  \"chain_id\": \"unique-id\",\n  \"step\": \"current-step\",\n  \"status\": \"success|fail|pending\",\n  \"data\": { /* relevant data */ },\n  \"next_agent\": \"agent-name\",\n  \"timestamp\": \"2024-01-01T00:00:00Z\"\n}\n```\n\n**Handoff rules:**\n1. Complete current step before passing\n2. Include all data next agent needs\n3. Log every handoff\n4. Handle failures gracefully\n\n**Error handling:**\n- Retry with backoff\n- Alert on repeated failures\n- Human escalation path\n- Full rollback capability",
+      "sandboxChallenge": {
+        "prompt": "Define communication protocols for your chain:\n1. Data structure passed between each agent\n2. Success/failure criteria for each step\n3. Error handling for each agent\n4. Logging requirements",
+        "expectedOutputSchema": {
+          "protocols": "object",
+          "dataStructures": "array",
+          "errorHandling": "array",
+          "loggingSpec": "object"
+        },
+        "hints": [
+          "Be specific about required data fields",
+          "Define what constitutes success vs failure",
+          "Include retry logic and escalation"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Protocol diagram",
+        "textual": "Specification document",
+        "handsOn": "Protocol builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "protocols", "type": "exists", "expected": true },
+          { "field": "errorHandling", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o4-04",
+      "category": "ai_operations",
+      "title": "Monitoring and Optimization",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-o4-03"],
+      "businessKPI": "chain_performance",
+      "concept": "Operations chains need constant monitoring.\n\n**Key metrics:**\n\n**Throughput:**\n- How many items processed per hour/day?\n- Bottleneck identification\n\n**Latency:**\n- Time from trigger to completion\n- Per-agent timing\n\n**Success Rate:**\n- % completing successfully\n- Error categorization\n\n**Quality:**\n- Output accuracy\n- Customer satisfaction (if applicable)\n\n**Cost:**\n- API costs per run\n- Infrastructure costs\n\n**Optimization levers:**\n- Parallelize independent steps\n- Cache repeated lookups\n- Batch similar operations\n- Optimize prompts for efficiency",
+      "sandboxChallenge": {
+        "prompt": "Design your monitoring dashboard:\n1. What metrics will you track?\n2. What are target values for each?\n3. What alerts will you set up?\n4. How will you identify optimization opportunities?",
+        "expectedOutputSchema": {
+          "dashboard": "object",
+          "metrics": "array",
+          "targets": "object",
+          "alerts": "array"
+        },
+        "hints": [
+          "Include both leading and lagging metrics",
+          "Set realistic but ambitious targets",
+          "Design alerts that are actionable"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Dashboard mockup",
+        "textual": "Metrics specification",
+        "handsOn": "Dashboard builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "metrics", "type": "exists", "expected": true },
+          { "field": "alerts", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o4-05",
+      "category": "ai_operations",
+      "title": "Build Your Operations Chain",
+      "duration": 15,
+      "prerequisiteAKUs": ["aku-o4-04"],
+      "businessKPI": "chain_deployment",
+      "concept": "Capstone: Build a complete multi-agent operations chain.\n\n**Your deliverable:**\n1. Complete chain architecture (5 agents)\n2. Communication protocols\n3. Error handling\n4. Monitoring setup\n5. Documentation\n\n**Implementation approach:**\n- Start with simple version\n- Test each agent individually\n- Connect and test chain\n- Add monitoring\n- Document everything",
+      "sandboxChallenge": {
+        "prompt": "Build your Multi-Agent Operations Chain:\n\n1. Complete chain architecture with all 5 agents\n2. Each agent's system prompt/instructions\n3. Communication protocols between agents\n4. Error handling for each step\n5. Monitoring dashboard design\n6. Test results (or test plan)\n7. Documentation for maintenance\n\nThis is your Module 4 Deliverable!",
+        "expectedOutputSchema": {
+          "operationsChain": "object",
+          "agents": "array",
+          "protocols": "object",
+          "errorHandling": "object",
+          "monitoring": "object",
+          "testResults": "string",
+          "documentation": "string"
+        },
+        "hints": [
+          "Start with the simplest version that works",
+          "Test each agent in isolation first",
+          "Include real or realistic test data",
+          "Document for future you"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Chain blueprint",
+        "textual": "Complete specification",
+        "handsOn": "Building workshop"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "operationsChain", "type": "exists", "expected": true },
+          { "field": "agents", "type": "exists", "expected": true },
+          { "field": "protocols", "type": "exists", "expected": true },
+          { "field": "documentation", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": [],
+        "kpiThreshold": 85
+      }
+    }
+  ]
+}

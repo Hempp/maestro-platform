@@ -1,0 +1,245 @@
+{
+  "moduleId": "student-m5",
+  "moduleTitle": "Building Your AI Portfolio",
+  "tier": "student",
+  "akus": [
+    {
+      "id": "aku-s5-01",
+      "category": "portfolio_building",
+      "title": "Why Portfolios Beat Resumes",
+      "duration": 4,
+      "prerequisiteAKUs": ["aku-s3-05", "aku-s4-05"],
+      "businessKPI": "career_readiness",
+      "concept": "Skills without proof are just claims. Your portfolio is evidence.\n\n**Resume says:** 'Experienced with AI tools'\n**Portfolio shows:** 'Built 3 automations that saved 10 hours/week'\n\n**What employers want to see:**\n1. Real problems you've solved\n2. Your thought process and methodology\n3. Measurable results\n4. Technical skills applied practically\n\n**AI portfolios are different:**\n- Show the prompts you built\n- Document automations that work\n- Demonstrate before/after results\n- Include your systematic approach\n\n**Key insight:** Hiring managers spend 6 seconds on resumes. Portfolios get minutes of attention and stick in memory.",
+      "sandboxChallenge": {
+        "prompt": "Write a 2-minute pitch for why an employer should look at your AI portfolio instead of just your resume. What can a portfolio show that a resume can't?",
+        "expectedOutputSchema": {
+          "pitch": "string",
+          "keyDifferences": "array"
+        },
+        "hints": [
+          "Think about what makes AI skills hard to describe",
+          "Consider what employers are really trying to learn",
+          "Focus on proof over claims"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Resume vs Portfolio comparison",
+        "textual": "Portfolio impact examples",
+        "handsOn": "Pitch practice"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "pitch", "type": "exists", "expected": true },
+          { "field": "keyDifferences", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s5-02",
+      "category": "portfolio_building",
+      "title": "The Case Study Framework",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-s5-01"],
+      "businessKPI": "career_readiness",
+      "concept": "Every portfolio piece should follow the Case Study Framework.\n\n**The PSAR Structure:**\n\n**P - Problem**\nWhat challenge were you facing?\n'I was spending 3 hours/week summarizing meeting notes manually.'\n\n**S - Solution**\nWhat did you build/create?\n'I created an AI-powered meeting summarizer using...'\n\n**A - Approach**\nHow did you solve it?\n'I used CTFC prompting, Chain of Thought reasoning, and automated it with Zapier.'\n\n**R - Results**\nWhat was the measurable outcome?\n'Reduced meeting note processing from 3 hours to 15 minutes/week. 90% time savings.'\n\n**Always include:**\n- The actual prompts you used\n- Screenshots or recordings\n- Metrics where possible\n- What you learned",
+      "sandboxChallenge": {
+        "prompt": "Using the PSAR framework, write a case study for ONE project you built during this course (Prompt Library, Decision Assistant, Content Generator, or Brand Voice Assistant).",
+        "expectedOutputSchema": {
+          "caseStudy": "object",
+          "hasProblem": "boolean",
+          "hasSolution": "boolean",
+          "hasApproach": "boolean",
+          "hasResults": "boolean"
+        },
+        "hints": [
+          "Be specific about the problem you faced",
+          "Include the actual techniques you used",
+          "Quantify results if possible (time saved, quality improved)",
+          "Mention what you learned"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Case study template",
+        "textual": "Example case studies",
+        "handsOn": "Case study builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "hasProblem", "type": "matches", "expected": true },
+          { "field": "hasSolution", "type": "matches", "expected": true },
+          { "field": "hasApproach", "type": "matches", "expected": true },
+          { "field": "hasResults", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s5-03",
+      "category": "portfolio_building",
+      "title": "Curating Your Prompt Library",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-s5-02"],
+      "businessKPI": "career_readiness",
+      "concept": "Your Prompt Library is a showcase of your AI engineering skills.\n\n**What to include:**\n- Your best reusable prompts\n- Different categories (writing, analysis, coding, etc.)\n- Clear documentation for each\n\n**For each prompt, document:**\n1. **Purpose** - What problem it solves\n2. **The Prompt** - Full text with all components\n3. **Example Output** - What it produces\n4. **Usage Tips** - How to customize it\n5. **Pattern Used** - CTFC, CoT, Few-Shot, etc.\n\n**Organization tips:**\n- Group by use case or category\n- Include difficulty levels\n- Mark your favorites\n- Update regularly with improvements",
+      "sandboxChallenge": {
+        "prompt": "Document 3 prompts from your work in this course. For each one, include:\n\n1. Name and purpose\n2. The complete prompt\n3. What techniques it uses (CTFC, CoT, Few-Shot, etc.)\n4. Example of what it produces\n5. How to customize it for different uses",
+        "expectedOutputSchema": {
+          "promptLibrary": "array",
+          "count": "number",
+          "hasDocumentation": "boolean"
+        },
+        "hints": [
+          "Choose your most useful prompts",
+          "Include the complete prompt text",
+          "Explain what makes each one effective",
+          "Show a real example output"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Prompt library template",
+        "textual": "Documentation guide",
+        "handsOn": "Library organizer tool"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "promptLibrary", "type": "exists", "expected": true },
+          { "field": "count", "type": "type_check", "expected": "number" },
+          { "field": "hasDocumentation", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s5-04",
+      "category": "portfolio_building",
+      "title": "Documenting Your Automations",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-s5-03"],
+      "businessKPI": "career_readiness",
+      "concept": "Your automations show that you can build systems, not just prompts.\n\n**For each automation, document:**\n\n**1. Overview**\n- Name and one-sentence description\n- What triggers it\n- What it produces\n\n**2. Architecture**\n- Trigger → Steps → Output diagram\n- Tools used (Zapier, Make, etc.)\n- AI model and settings\n\n**3. The AI Prompt**\n- Full prompt text\n- Why you structured it this way\n- Variables it uses\n\n**4. Results**\n- Time saved\n- Accuracy/quality metrics\n- Cost per run\n\n**5. Lessons Learned**\n- What worked well\n- What you'd do differently\n- Potential improvements",
+      "sandboxChallenge": {
+        "prompt": "Create complete documentation for your Content Generator automation from Module 3. Include all 5 sections: Overview, Architecture, AI Prompt, Results, and Lessons Learned.",
+        "expectedOutputSchema": {
+          "automationDoc": "object",
+          "hasOverview": "boolean",
+          "hasArchitecture": "boolean",
+          "hasPrompt": "boolean",
+          "hasResults": "boolean",
+          "hasLessons": "boolean"
+        },
+        "hints": [
+          "Start with a clear one-sentence description",
+          "Draw or describe the flow diagram",
+          "Include actual metrics if you have them",
+          "Be honest about what you'd improve"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Automation documentation template",
+        "textual": "Documentation examples",
+        "handsOn": "Documentation generator"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "hasOverview", "type": "matches", "expected": true },
+          { "field": "hasArchitecture", "type": "matches", "expected": true },
+          { "field": "hasPrompt", "type": "matches", "expected": true },
+          { "field": "hasResults", "type": "matches", "expected": true },
+          { "field": "hasLessons", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s5-05",
+      "category": "portfolio_building",
+      "title": "Your Professional Summary",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-s5-04"],
+      "businessKPI": "career_readiness",
+      "concept": "Your portfolio needs a compelling professional summary that ties everything together.\n\n**The Summary Structure:**\n\n**1. Who You Are** (1-2 sentences)\n'AI-enabled [role] who uses artificial intelligence to [key value you provide].'\n\n**2. What You've Built** (2-3 sentences)\n'I've created [number] automation systems that [impact]. My prompt engineering saves [time/money].'\n\n**3. Key Capabilities** (bullet list)\n- Prompt engineering (CTFC, CoT, Few-Shot)\n- Workflow automation (Zapier, Make)\n- AI integration and API usage\n- [Specific skills relevant to your target role]\n\n**4. What's Next** (1 sentence)\n'I'm looking to apply these skills to [target role/company type].'\n\n**Pro tip:** Customize this for each job application.",
+      "sandboxChallenge": {
+        "prompt": "Write your professional summary following the structure above. Make it specific to your actual skills and the type of role you're targeting.",
+        "expectedOutputSchema": {
+          "summary": "string",
+          "hasWhoYouAre": "boolean",
+          "hasWhatYouBuilt": "boolean",
+          "hasCapabilities": "boolean",
+          "hasWhatsNext": "boolean"
+        },
+        "hints": [
+          "Be specific about what role you're targeting",
+          "Reference real projects you built in this course",
+          "Make capabilities relevant to your target role",
+          "Keep it concise but impactful"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Summary builder interface",
+        "textual": "Example summaries by role",
+        "handsOn": "Summary workshop"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "summary", "type": "exists", "expected": true },
+          { "field": "hasWhoYouAre", "type": "matches", "expected": true },
+          { "field": "hasCapabilities", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s5-06",
+      "category": "portfolio_building",
+      "title": "Assemble Your Complete Portfolio",
+      "duration": 15,
+      "prerequisiteAKUs": ["aku-s5-05"],
+      "businessKPI": "career_readiness",
+      "concept": "Final Capstone: Put everything together into a complete, professional portfolio.\n\n**Portfolio Structure:**\n\n**1. Professional Summary**\n- Your summary from the previous exercise\n\n**2. Case Studies (3)**\n- Your best projects in PSAR format\n- Include actual prompts and outputs\n\n**3. Prompt Library**\n- 5+ documented reusable prompts\n- Organized by category\n\n**4. Automations**\n- Working systems you've built\n- Documentation and results\n\n**5. Skills & Certifications**\n- AI techniques mastered\n- Tools you can use\n- This certificate upon completion\n\n**Presentation options:**\n- Notion page (free, easy)\n- GitHub repository\n- Personal website\n- PDF document",
+      "sandboxChallenge": {
+        "prompt": "Create the complete structure for your portfolio. Include:\n\n1. Your professional summary\n2. Outlines for 3 case studies (using projects from this course)\n3. Your prompt library (5+ prompts, organized)\n4. Your automation documentation\n5. A skills list with the techniques you've learned\n\nThis is your capstone deliverable!",
+        "expectedOutputSchema": {
+          "portfolio": "object",
+          "hasSummary": "boolean",
+          "caseStudyCount": "number",
+          "promptCount": "number",
+          "hasAutomation": "boolean",
+          "hasSkills": "boolean",
+          "isComplete": "boolean"
+        },
+        "hints": [
+          "Start with your professional summary",
+          "Reference all the work you've done in this course",
+          "Make sure case studies follow PSAR format",
+          "Organize prompts by category",
+          "Be comprehensive but not overwhelming"
+        ],
+        "maxHints": 5
+      },
+      "alternativeFormats": {
+        "visual": "Portfolio template in Notion",
+        "textual": "Complete portfolio guide",
+        "handsOn": "Portfolio builder wizard"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "hasSummary", "type": "matches", "expected": true },
+          { "field": "caseStudyCount", "type": "type_check", "expected": "number" },
+          { "field": "promptCount", "type": "type_check", "expected": "number" },
+          { "field": "hasAutomation", "type": "matches", "expected": true },
+          { "field": "hasSkills", "type": "matches", "expected": true },
+          { "field": "isComplete", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": [],
+        "kpiThreshold": 80
+      }
+    }
+  ]
+}

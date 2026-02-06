@@ -1,0 +1,193 @@
+{
+  "moduleId": "employee-m3",
+  "moduleTitle": "Custom GPT Development",
+  "tier": "employee",
+  "akus": [
+    {
+      "id": "aku-e3-01",
+      "category": "ai_applications",
+      "title": "From Generic to Custom AI",
+      "duration": 4,
+      "prerequisiteAKUs": ["aku-e2-05"],
+      "businessKPI": "specialization",
+      "concept": "A Custom GPT is YOUR AI assistant—trained on YOUR documents, answering YOUR questions.\n\n**Generic ChatGPT:**\n- General knowledge\n- No context about your work\n- You explain things every conversation\n\n**Custom GPT:**\n- Knows your company/domain\n- Pre-loaded with relevant context\n- Ready to help immediately\n\n**Use cases:**\n- HR Policy Bot (answers employee questions)\n- Sales Assistant (knows products, pricing, competitors)\n- Technical Support (troubleshooting guides)\n- Onboarding Buddy (new employee questions)\n- Content Writer (brand voice, style guide)",
+      "sandboxChallenge": {
+        "prompt": "Identify a Custom GPT that would save time for your team. Describe:\n1. Who would use it\n2. What questions it would answer\n3. What documents it needs to know\n4. How often it would be used",
+        "expectedOutputSchema": {
+          "gptConcept": "object",
+          "users": "array",
+          "frequency": "string"
+        },
+        "hints": [
+          "Think about repetitive questions people ask",
+          "Consider who spends time answering those questions",
+          "Identify documents that contain the answers"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Use case gallery",
+        "textual": "Concept exploration",
+        "handsOn": "Use case builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "gptConcept", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e3-02",
+      "category": "ai_applications",
+      "title": "Anatomy of a Custom GPT",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-e3-01"],
+      "businessKPI": "specialization",
+      "concept": "Every Custom GPT has four components:\n\n**1. NAME & DESCRIPTION**\nWhat users see before they use it.\n\n**2. SYSTEM PROMPT (Instructions)**\nThe detailed instructions that define behavior:\n- Who the GPT is\n- What it does and doesn't do\n- How it responds\n- When to escalate\n\n**3. KNOWLEDGE FILES**\nDocuments the GPT can reference:\n- PDFs, docs, spreadsheets\n- FAQs, guides, policies\n- Examples of good outputs\n\n**4. CONVERSATION STARTERS**\nSuggested prompts to get users started:\n- 'What's our return policy?'\n- 'Help me write a customer email'\n- 'Summarize the latest product updates'",
+      "sandboxChallenge": {
+        "prompt": "For your Custom GPT concept, draft:\n1. A name and one-sentence description\n2. The main purpose (what problem it solves)\n3. List of knowledge files it needs\n4. 4 conversation starters users would find helpful",
+        "expectedOutputSchema": {
+          "name": "string",
+          "description": "string",
+          "knowledgeFiles": "array",
+          "conversationStarters": "array"
+        },
+        "hints": [
+          "Keep the name simple and descriptive",
+          "The description should explain the value",
+          "Conversation starters should cover main use cases"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Component breakdown diagram",
+        "textual": "Component deep dive",
+        "handsOn": "Component builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "name", "type": "exists", "expected": true },
+          { "field": "knowledgeFiles", "type": "exists", "expected": true },
+          { "field": "conversationStarters", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e3-03",
+      "category": "ai_applications",
+      "title": "Writing System Prompts for GPTs",
+      "duration": 6,
+      "prerequisiteAKUs": ["aku-e3-02"],
+      "businessKPI": "specialization",
+      "concept": "The system prompt is the brain of your Custom GPT.\n\n**Structure:**\n```\n# IDENTITY\nYou are [Name], a [role description].\n\n# PURPOSE\nYour job is to [main function].\n\n# KNOWLEDGE\nYou have access to [list documents].\n\n# BEHAVIOR\n- Always [behavior 1]\n- Never [behavior 2]\n- When unsure, [fallback behavior]\n\n# OUTPUT FORMAT\nRespond using [format preferences].\n\n# EXAMPLES\nHere's how to handle common scenarios:\n[Example 1]\n[Example 2]\n```\n\n**Pro tips:**\n- Be specific, not vague\n- Include examples of good responses\n- Define edge cases explicitly\n- Test and iterate",
+      "sandboxChallenge": {
+        "prompt": "Write the complete system prompt for your Custom GPT. Include all sections: Identity, Purpose, Knowledge, Behavior, Output Format, and Examples.",
+        "expectedOutputSchema": {
+          "systemPrompt": "string",
+          "hasIdentity": "boolean",
+          "hasBehavior": "boolean",
+          "hasExamples": "boolean"
+        },
+        "hints": [
+          "Start with a clear identity statement",
+          "Be specific about what it should never do",
+          "Include at least 2 example interactions",
+          "Define what to do when uncertain"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "System prompt template",
+        "textual": "Section-by-section guide",
+        "handsOn": "Prompt builder wizard"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "systemPrompt", "type": "exists", "expected": true },
+          { "field": "hasIdentity", "type": "matches", "expected": true },
+          { "field": "hasBehavior", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e3-04",
+      "category": "ai_applications",
+      "title": "Testing and Refining",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-e3-03"],
+      "businessKPI": "specialization",
+      "concept": "A Custom GPT is only as good as its testing.\n\n**Testing checklist:**\n\n**1. Happy Path**\n- Test common questions\n- Verify correct answers\n- Check formatting\n\n**2. Edge Cases**\n- Questions not in knowledge\n- Ambiguous questions\n- Off-topic requests\n\n**3. Adversarial**\n- Try to break it\n- Ask for things it shouldn't do\n- Test boundary behaviors\n\n**4. User Experience**\n- Is it helpful?\n- Are responses too long/short?\n- Does it sound natural?\n\n**Refinement cycle:**\n1. Test with scenario\n2. Note what went wrong\n3. Update system prompt\n4. Test again\n5. Repeat until solid",
+      "sandboxChallenge": {
+        "prompt": "Create a test plan for your Custom GPT:\n1. 5 happy path test questions (should work perfectly)\n2. 3 edge case tests (tricky scenarios)\n3. 2 adversarial tests (trying to break it)\n4. Success criteria for each test",
+        "expectedOutputSchema": {
+          "testPlan": "object",
+          "happyPathTests": "array",
+          "edgeCaseTests": "array",
+          "adversarialTests": "array"
+        },
+        "hints": [
+          "Think about what users will actually ask",
+          "Consider questions where the answer isn't in your docs",
+          "Try to confuse or mislead the GPT"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Test matrix template",
+        "textual": "Testing guide",
+        "handsOn": "Testing exercise"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "happyPathTests", "type": "exists", "expected": true },
+          { "field": "edgeCaseTests", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e3-05",
+      "category": "ai_applications",
+      "title": "Deploy Your Department Assistant",
+      "duration": 10,
+      "prerequisiteAKUs": ["aku-e3-04"],
+      "businessKPI": "specialization",
+      "concept": "Capstone: Build and deploy your Custom GPT.\n\n**Deliverables:**\n1. Working Custom GPT (or detailed specification)\n2. Complete system prompt\n3. Knowledge files uploaded\n4. Test results documented\n5. User guide for your team\n\n**Deployment checklist:**\n- [ ] Name and description set\n- [ ] System prompt finalized\n- [ ] Knowledge files uploaded\n- [ ] Conversation starters added\n- [ ] Testing completed\n- [ ] Sharing configured\n- [ ] Team notified",
+      "sandboxChallenge": {
+        "prompt": "Create your Department-Specific AI Assistant:\n\n1. Final name and description\n2. Complete system prompt\n3. List of knowledge files with summaries\n4. Test results (what worked, what you fixed)\n5. User guide: How teammates should use this\n\nThis is your Module 3 deliverable!",
+        "expectedOutputSchema": {
+          "gpt": "object",
+          "systemPrompt": "string",
+          "knowledgeFiles": "array",
+          "testResults": "array",
+          "userGuide": "string"
+        },
+        "hints": [
+          "Make the user guide simple and practical",
+          "Include examples of what to ask",
+          "Document any limitations",
+          "Explain how to provide feedback"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Deployment checklist",
+        "textual": "Complete guide",
+        "handsOn": "Deployment wizard"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "systemPrompt", "type": "exists", "expected": true },
+          { "field": "knowledgeFiles", "type": "exists", "expected": true },
+          { "field": "testResults", "type": "exists", "expected": true },
+          { "field": "userGuide", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": [],
+        "kpiThreshold": 80
+      }
+    }
+  ]
+}

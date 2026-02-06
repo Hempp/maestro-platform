@@ -1,0 +1,184 @@
+{
+  "moduleId": "student-m2",
+  "moduleTitle": "Chain of Thought Prompting",
+  "tier": "student",
+  "akus": [
+    {
+      "id": "aku-s2-01",
+      "category": "prompt_engineering",
+      "title": "Why AI Jumps to Conclusions",
+      "duration": 3,
+      "prerequisiteAKUs": ["aku-s1-06"],
+      "businessKPI": "accuracy_improvement",
+      "concept": "AI often 'jumps to conclusions' with wrong answers, especially on complex problems. It's like a student who writes the answer without showing their work—they might be right, but often they make hidden mistakes.\n\n**The problem:**\n- AI tries to answer in one step\n- Complex reasoning gets skipped\n- Errors are invisible until you see the wrong output\n\n**The solution: Chain of Thought (CoT)**\nForce AI to show its work, step by step. Just like how math teachers require students to show their steps—not because they're strict, but because it catches errors and ensures understanding.",
+      "sandboxChallenge": {
+        "prompt": "Ask AI to solve this problem WITHOUT chain of thought:\n\n'A store has 50 apples. They sell 23 in the morning and receive 15 more. Then they sell 18 in the afternoon. How many are left?'\n\nThen explain why the AI might make a mistake without step-by-step reasoning.",
+        "expectedOutputSchema": {
+          "directAnswer": "number",
+          "explanation": "string"
+        },
+        "hints": [
+          "Try running the problem without asking for steps",
+          "Think about how many operations need to happen",
+          "Consider what could go wrong with order of operations"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Flowchart showing how AI processes with/without CoT",
+        "textual": "Error examples from real AI responses",
+        "handsOn": "Compare outputs with and without CoT"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "directAnswer", "type": "exists", "expected": true },
+          { "field": "explanation", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s2-02",
+      "category": "prompt_engineering",
+      "title": "The Magic Phrases for Step-by-Step",
+      "duration": 4,
+      "prerequisiteAKUs": ["aku-s2-01"],
+      "businessKPI": "accuracy_improvement",
+      "concept": "Certain phrases trigger Chain of Thought reasoning in AI. These are your power words.\n\n**Key phrases that work:**\n- 'Let's think through this step by step'\n- 'Walk me through your reasoning'\n- 'Break this down into steps before answering'\n- 'First analyze, then conclude'\n- 'Show your work'\n- 'Explain your thought process'\n\n**Where to put them:**\n- At the START of your prompt (sets expectation)\n- At the END before the question (final instruction)\n- Or BOTH for best results\n\n**Research shows:**\nAdding 'Let's think step by step' improves accuracy by 20-40% on complex reasoning tasks.",
+      "sandboxChallenge": {
+        "prompt": "Take the same apple problem from before and add a Chain of Thought trigger phrase. Write the complete prompt and predict how the AI's response will differ.",
+        "expectedOutputSchema": {
+          "cotPrompt": "string",
+          "triggerPhrase": "string"
+        },
+        "hints": [
+          "Add one of the magic phrases before or after the problem",
+          "Phrases like 'step by step' or 'show your work' are most effective",
+          "The phrase should explicitly ask AI to reason through the problem"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Phrase effectiveness comparison chart",
+        "textual": "Phrase library with use cases",
+        "handsOn": "A/B testing exercise"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "cotPrompt", "type": "exists", "expected": true },
+          { "field": "triggerPhrase", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s2-03",
+      "category": "prompt_engineering",
+      "title": "The CoT Structure Template",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-s2-02"],
+      "businessKPI": "accuracy_improvement",
+      "concept": "For best results, guide the AI with a specific reasoning structure.\n\n**The CoT Template:**\n```\nBefore answering:\n1. Restate the problem in your own words\n2. Identify what information you have\n3. Determine what you need to find\n4. Work through the logic step by step\n5. Verify your answer makes sense\n6. State your final conclusion\n```\n\n**Why this works:**\n- Step 1 catches misunderstandings early\n- Step 2-3 organizes the problem\n- Step 4 shows the work\n- Step 5 catches errors\n- Step 6 gives a clear answer\n\n**When to use full template vs simple phrase:**\n- Simple problems: Just 'think step by step'\n- Complex problems: Full template\n- High-stakes answers: Full template + verification",
+      "sandboxChallenge": {
+        "prompt": "Create a prompt using the full CoT template for this problem:\n\n'A freelancer charges $75/hour. They worked 6 hours on Monday, 8 hours on Tuesday, and 4.5 hours on Wednesday. They give a 10% discount to repeat clients. Calculate the total bill for a repeat client.'",
+        "expectedOutputSchema": {
+          "templatePrompt": "string",
+          "hasAllSteps": "boolean"
+        },
+        "hints": [
+          "Include all 6 steps from the template",
+          "Put the problem statement clearly",
+          "Ask for the final answer to be clearly stated at the end"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Step-by-step reasoning flowchart",
+        "textual": "Template variations by problem type",
+        "handsOn": "Template customization exercise"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "templatePrompt", "type": "exists", "expected": true },
+          { "field": "hasAllSteps", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s2-04",
+      "category": "prompt_engineering",
+      "title": "CoT for Decision Making",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-s2-03"],
+      "businessKPI": "decision_quality",
+      "concept": "Chain of Thought is especially powerful for decisions with multiple options.\n\n**Decision CoT Template:**\n```\nHelp me decide: [decision]\n\nFor each option:\n1. List the pros\n2. List the cons\n3. Identify risks\n4. Consider second-order effects\n\nThen:\n5. Compare options directly\n6. Make a recommendation with reasoning\n```\n\n**Why decisions need CoT:**\n- Decisions have trade-offs\n- Quick answers miss nuance\n- You want to see the reasoning to trust it\n\n**Real example:**\nA financial analyst was getting inconsistent investment advice. After adding CoT: 'Step 1: Calculate P/E ratio. Step 2: Compare to industry average...' accuracy went from 65% to 94%.",
+      "sandboxChallenge": {
+        "prompt": "Create a decision analysis prompt using CoT for:\n\n'Should I learn Python or JavaScript as my first programming language?'\n\nUse the decision CoT template to structure a thorough analysis.",
+        "expectedOutputSchema": {
+          "decisionPrompt": "string",
+          "hasProsCons": "boolean",
+          "hasRecommendation": "boolean"
+        },
+        "hints": [
+          "Include the decision question clearly",
+          "Request pros and cons for each option",
+          "Ask for a final recommendation with reasoning"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Decision matrix template",
+        "textual": "Decision prompt library",
+        "handsOn": "Real decision analysis exercise"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "decisionPrompt", "type": "exists", "expected": true },
+          { "field": "hasProsCons", "type": "matches", "expected": true },
+          { "field": "hasRecommendation", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s2-05",
+      "category": "prompt_engineering",
+      "title": "Build Your Decision Assistant",
+      "duration": 8,
+      "prerequisiteAKUs": ["aku-s2-04"],
+      "businessKPI": "decision_quality",
+      "concept": "Now you'll build a reusable Decision Analysis Assistant—a prompt you can use for any decision.\n\n**What makes a great decision assistant:**\n- Clear input format (how to present the decision)\n- Structured analysis (consistent framework)\n- Balanced consideration (doesn't favor one option)\n- Clear output (recommendation you can act on)\n\n**Your assistant should:**\n1. Understand the decision context\n2. Analyze each option thoroughly\n3. Consider risks and second-order effects\n4. Weigh trade-offs explicitly\n5. Make a clear recommendation\n6. Explain the reasoning",
+      "sandboxChallenge": {
+        "prompt": "Create a complete Decision Analysis Assistant prompt that combines CTFC with Chain of Thought.\n\nYour prompt should:\n1. Have a clear role (Context)\n2. Define the analysis process (Task)\n3. Specify output structure (Format)\n4. Include thinking requirements (CoT)\n5. Set quality constraints\n\nTest it with a real decision you're facing.",
+        "expectedOutputSchema": {
+          "assistantPrompt": "string",
+          "hasContext": "boolean",
+          "hasCoT": "boolean",
+          "testedOnRealDecision": "boolean"
+        },
+        "hints": [
+          "Start with defining the AI as a decision analyst",
+          "Include the CoT template in your Task section",
+          "Specify how you want the recommendation formatted",
+          "Test it with a decision you're actually facing"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Decision assistant builder interface",
+        "textual": "Assistant prompt templates",
+        "handsOn": "Live decision analysis session"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "assistantPrompt", "type": "exists", "expected": true },
+          { "field": "hasContext", "type": "matches", "expected": true },
+          { "field": "hasCoT", "type": "matches", "expected": true },
+          { "field": "testedOnRealDecision", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    }
+  ]
+}

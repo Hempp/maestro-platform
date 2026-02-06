@@ -1,0 +1,205 @@
+{
+  "moduleId": "owner-m5",
+  "moduleTitle": "AI Operations Manual Capstone",
+  "tier": "owner",
+  "akus": [
+    {
+      "id": "aku-o5-01",
+      "category": "documentation",
+      "title": "The Value of Operations Documentation",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-o4-05"],
+      "businessKPI": "business_value",
+      "concept": "Your AI Operations Manual is your business's competitive advantage, documented.\n\n**Why it matters:**\n\n**1. Scalability**\nSystems run without you understanding every detail.\n\n**2. Trainability**\nNew team members learn quickly.\n\n**3. Transferability**\nBusiness value isn't locked in your head.\n\n**4. Sellability**\nDocumented systems increase valuation.\n\n**Real impact:**\nA service business with documented AI operations sold for 40% higher valuation than comparable businesses without documentation.",
+      "sandboxChallenge": {
+        "prompt": "Inventory everything you've built in this tier:\n1. Audit results and roadmap\n2. Research agent\n3. Customer support system\n4. Operations chain\n\nFor each: current state, dependencies, maintenance needs",
+        "expectedOutputSchema": {
+          "inventory": "array",
+          "dependencies": "object",
+          "maintenanceNeeds": "array"
+        },
+        "hints": [
+          "Include all systems from modules 1-4",
+          "Note what each system depends on",
+          "Identify regular maintenance tasks"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "System inventory map",
+        "textual": "Inventory template",
+        "handsOn": "Inventory builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "inventory", "type": "exists", "expected": true },
+          { "field": "maintenanceNeeds", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o5-02",
+      "category": "documentation",
+      "title": "System Architecture Documentation",
+      "duration": 6,
+      "prerequisiteAKUs": ["aku-o5-01"],
+      "businessKPI": "system_clarity",
+      "concept": "Document your complete AI operations architecture.\n\n**Architecture doc structure:**\n\n**1. Overview**\n- Visual system diagram\n- Component list\n- Integration points\n\n**2. Data Flows**\n- What data goes where\n- Transformation points\n- Storage locations\n\n**3. Dependencies**\n- External services\n- API requirements\n- Access credentials (reference, not actual)\n\n**4. Failure Modes**\n- What can fail\n- How to detect\n- How to recover",
+      "sandboxChallenge": {
+        "prompt": "Create your System Architecture Document:\n1. Visual diagram (describe it in text)\n2. Complete component list\n3. Data flow documentation\n4. Dependency map\n5. Failure mode analysis",
+        "expectedOutputSchema": {
+          "architecture": "object",
+          "diagram": "string",
+          "components": "array",
+          "dataFlows": "array",
+          "failureModes": "array"
+        },
+        "hints": [
+          "Make the diagram understandable to non-technical readers",
+          "Include all external dependencies",
+          "Be thorough about failure modes"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Architecture template",
+        "textual": "Documentation guide",
+        "handsOn": "Architecture builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "architecture", "type": "exists", "expected": true },
+          { "field": "components", "type": "exists", "expected": true },
+          { "field": "failureModes", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o5-03",
+      "category": "documentation",
+      "title": "Operations Runbooks",
+      "duration": 6,
+      "prerequisiteAKUs": ["aku-o5-02"],
+      "businessKPI": "operational_readiness",
+      "concept": "Runbooks are step-by-step guides for operating your systems.\n\n**Runbook structure:**\n\n**1. Daily Operations**\n- Monitoring checks\n- Health verification\n- Metric review\n\n**2. Weekly Tasks**\n- Performance review\n- Cost analysis\n- Optimization checks\n\n**3. Incident Response**\n- How to detect problems\n- Step-by-step resolution\n- Escalation procedures\n\n**4. Maintenance**\n- Update procedures\n- Backup/restore\n- Testing protocols",
+      "sandboxChallenge": {
+        "prompt": "Create runbooks for your AI operations:\n1. Daily operations checklist\n2. Weekly review process\n3. Incident response for top 3 failure scenarios\n4. Monthly maintenance tasks",
+        "expectedOutputSchema": {
+          "runbooks": "object",
+          "dailyOps": "array",
+          "weeklyReview": "array",
+          "incidentResponse": "array",
+          "maintenance": "array"
+        },
+        "hints": [
+          "Make steps specific and actionable",
+          "Include time estimates",
+          "Define who is responsible for each task"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Runbook templates",
+        "textual": "Procedure guides",
+        "handsOn": "Runbook builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "runbooks", "type": "exists", "expected": true },
+          { "field": "incidentResponse", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o5-04",
+      "category": "documentation",
+      "title": "Training and Governance",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-o5-03"],
+      "businessKPI": "team_readiness",
+      "concept": "Your manual must include training and governance.\n\n**Training materials:**\n\n**1. Role-Specific Guides**\n- What each role needs to know\n- Their responsibilities\n- Access levels\n\n**2. Common Scenarios**\n- How to handle X\n- Decision trees\n- Examples\n\n**3. Troubleshooting**\n- Common issues\n- Solutions\n- When to escalate\n\n**Governance:**\n\n**1. Security**\n- Access controls\n- Data handling\n- Audit requirements\n\n**2. Compliance**\n- Regulatory requirements\n- Policy adherence\n- Documentation needs\n\n**3. Quality**\n- Standards to maintain\n- Monitoring requirements\n- Improvement process",
+      "sandboxChallenge": {
+        "prompt": "Create training and governance documentation:\n1. Role-specific training for 2-3 roles\n2. Top 5 scenario guides with decision trees\n3. Security and access control policy\n4. Quality standards and monitoring requirements",
+        "expectedOutputSchema": {
+          "training": "object",
+          "roleGuides": "array",
+          "scenarios": "array",
+          "governance": "object",
+          "qualityStandards": "array"
+        },
+        "hints": [
+          "Think about who will actually use these systems",
+          "Include realistic scenarios",
+          "Be specific about security requirements"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Training presentation",
+        "textual": "Complete guides",
+        "handsOn": "Training builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "training", "type": "exists", "expected": true },
+          { "field": "governance", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o5-05",
+      "category": "documentation",
+      "title": "Complete AI Operations Manual",
+      "duration": 20,
+      "prerequisiteAKUs": ["aku-o5-04"],
+      "businessKPI": "manual_completion",
+      "concept": "Final Capstone: Your Complete AI Operations Manual.\n\n**Manual structure:**\n\n**1. Executive Summary**\n- AI transformation overview\n- Key systems built\n- Total ROI achieved\n\n**2. System Architecture**\n- Complete visual diagram\n- All components documented\n- Data flows mapped\n\n**3. Individual Systems**\n- Research Agent docs\n- Support System docs\n- Operations Chain docs\n\n**4. Runbooks**\n- Daily, weekly, monthly operations\n- Incident response\n- Maintenance procedures\n\n**5. Training & Governance**\n- Role guides\n- Security policies\n- Quality standards\n\n**6. ROI & Metrics**\n- Cost savings\n- Efficiency gains\n- Quality improvements\n\n**7. Future Roadmap**\n- Planned improvements\n- Scaling plans\n- Technology evolution",
+      "sandboxChallenge": {
+        "prompt": "Create your Complete AI Operations Manual:\n\n1. Executive Summary (transformation story + key metrics)\n2. System Architecture (complete diagram + documentation)\n3. System Documentation (all 3 major systems)\n4. Operations Runbooks (daily/weekly/incident/maintenance)\n5. Training Materials (2-3 role guides)\n6. Governance (security + compliance + quality)\n7. ROI Analysis (total value created)\n8. Future Roadmap (next 12 months)\n\nThis is your TIER CAPSTONE DELIVERABLE!\n\nThis document proves you can build and operate AI systems at scale.",
+        "expectedOutputSchema": {
+          "manual": "object",
+          "executiveSummary": "string",
+          "architecture": "object",
+          "systemDocs": "array",
+          "runbooks": "object",
+          "training": "object",
+          "governance": "object",
+          "roiAnalysis": "object",
+          "roadmap": "array",
+          "isComplete": "boolean"
+        },
+        "hints": [
+          "This is your most important deliverable",
+          "Make it professional and thorough",
+          "Include real numbers where possible",
+          "Think about who will read this",
+          "Document for your future self and team"
+        ],
+        "maxHints": 5
+      },
+      "alternativeFormats": {
+        "visual": "Manual presentation",
+        "textual": "Complete written document",
+        "handsOn": "Manual assembly wizard"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "executiveSummary", "type": "exists", "expected": true },
+          { "field": "architecture", "type": "exists", "expected": true },
+          { "field": "systemDocs", "type": "exists", "expected": true },
+          { "field": "runbooks", "type": "exists", "expected": true },
+          { "field": "training", "type": "exists", "expected": true },
+          { "field": "governance", "type": "exists", "expected": true },
+          { "field": "roiAnalysis", "type": "exists", "expected": true },
+          { "field": "isComplete", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": [],
+        "kpiThreshold": 90
+      }
+    }
+  ]
+}

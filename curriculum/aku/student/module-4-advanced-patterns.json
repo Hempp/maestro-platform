@@ -1,0 +1,187 @@
+{
+  "moduleId": "student-m4",
+  "moduleTitle": "Advanced Prompt Patterns",
+  "tier": "student",
+  "akus": [
+    {
+      "id": "aku-s4-01",
+      "category": "prompt_engineering",
+      "title": "Few-Shot Learning",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-s2-05"],
+      "businessKPI": "output_quality",
+      "concept": "Few-Shot Learning: Show AI what you want through examples.\n\n**How it works:**\nInstead of describing what you want, SHOW examples of good output.\n\n**The pattern:**\n```\nHere are examples of the style I want:\n\nExample 1:\nInput: [sample input]\nOutput: [sample output]\n\nExample 2:\nInput: [sample input]\nOutput: [sample output]\n\nExample 3:\nInput: [sample input]\nOutput: [sample output]\n\nNow do the same for:\nInput: [your actual input]\n```\n\n**Why it works:**\n- AI learns patterns from examples\n- More precise than descriptions\n- Captures nuances words can't explain\n\n**Best practice:** Use 3-5 examples for consistent results.",
+      "sandboxChallenge": {
+        "prompt": "Create a few-shot prompt for tweet writing. Provide 3 example tweets about productivity tips in your preferred style, then ask AI to write one about time management.",
+        "expectedOutputSchema": {
+          "fewShotPrompt": "string",
+          "exampleCount": "number",
+          "hasNewRequest": "boolean"
+        },
+        "hints": [
+          "Include at least 3 example tweets",
+          "Make sure examples show the style you want",
+          "End with a clear request for the new tweet"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Example gallery with patterns",
+        "textual": "Few-shot template library",
+        "handsOn": "Example builder exercise"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "fewShotPrompt", "type": "exists", "expected": true },
+          { "field": "exampleCount", "type": "type_check", "expected": "number" }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s4-02",
+      "category": "prompt_engineering",
+      "title": "Role Prompting Deep Dive",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-s4-01"],
+      "businessKPI": "output_quality",
+      "concept": "Role Prompting: Define a detailed persona for specialized responses.\n\n**Basic role:**\n'You are a marketing expert.'\n\n**Advanced role:**\n'You are a senior marketing strategist with 15 years of experience in B2B SaaS. You've led campaigns for companies from startup to IPO. You explain concepts simply but never oversimplify. You always back recommendations with data when possible. You're direct and avoid buzzwords.'\n\n**Role components:**\n1. **Title/Position** - What they do\n2. **Experience** - How long, what contexts\n3. **Style** - How they communicate\n4. **Values** - What they prioritize\n5. **Constraints** - What they avoid\n\n**Pro tip:** Base roles on real experts you admire.",
+      "sandboxChallenge": {
+        "prompt": "Create a detailed role prompt for a code reviewer. Include:\n1. Their title and expertise\n2. Years of experience and context\n3. How they communicate feedback\n4. What they prioritize in reviews\n5. What they avoid doing",
+        "expectedOutputSchema": {
+          "rolePrompt": "string",
+          "hasAllComponents": "boolean"
+        },
+        "hints": [
+          "Think about the best code reviewers you've encountered",
+          "Include specific technologies they know",
+          "Define how they give constructive feedback"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Role persona template cards",
+        "textual": "Role library by profession",
+        "handsOn": "Role building workshop"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "rolePrompt", "type": "exists", "expected": true },
+          { "field": "hasAllComponents", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s4-03",
+      "category": "prompt_engineering",
+      "title": "Output Templates",
+      "duration": 4,
+      "prerequisiteAKUs": ["aku-s4-02"],
+      "businessKPI": "output_quality",
+      "concept": "Output Templates: Force AI to respond in exact structures.\n\n**Why templates matter:**\n- Consistent formatting across responses\n- Easy to parse and process\n- Prevents AI from 'going off track'\n\n**Template types:**\n\n**Markdown:**\n```\n## Summary\n[1-2 sentences]\n\n## Key Points\n- Point 1\n- Point 2\n- Point 3\n\n## Action Items\n1. [Action]\n2. [Action]\n```\n\n**JSON:**\n```json\n{\n  \"summary\": \"\",\n  \"keyPoints\": [],\n  \"actionItems\": []\n}\n```\n\n**Instruction:** 'Respond ONLY in this format. Do not include any other text.'",
+      "sandboxChallenge": {
+        "prompt": "Create an output template for meeting notes. Design a structure that includes:\n- Meeting title and date\n- Attendees\n- Key discussions (bullet points)\n- Decisions made\n- Action items with owners\n- Next meeting date",
+        "expectedOutputSchema": {
+          "template": "string",
+          "hasAllSections": "boolean"
+        },
+        "hints": [
+          "Use markdown or a clear text structure",
+          "Include placeholders showing what goes where",
+          "Make action items include owner names"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Template gallery",
+        "textual": "Template library by use case",
+        "handsOn": "Template builder tool"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "template", "type": "exists", "expected": true },
+          { "field": "hasAllSections", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s4-04",
+      "category": "prompt_engineering",
+      "title": "Self-Critique and Refinement",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-s4-03"],
+      "businessKPI": "output_quality",
+      "concept": "Self-Critique: Make AI check and improve its own work.\n\n**The pattern:**\n```\n[Your request]\n\nAfter your response:\n1. Critique your own answer - what could be better?\n2. Rate it 1-10 with reasons\n3. Provide an improved version\n```\n\n**Why it works:**\n- First drafts are rarely best\n- AI catches its own mistakes\n- Forces deeper thinking\n- Results in higher quality output\n\n**Advanced version:**\n```\nCreate your response.\nThen imagine 3 experts reviewing it:\n- A skeptic who looks for flaws\n- A user who asks 'is this practical?'\n- An editor who checks clarity\nIncorporate their feedback into a final version.\n```",
+      "sandboxChallenge": {
+        "prompt": "Write a prompt that asks AI to write a LinkedIn post about AI in business, then critique and improve its own work. Include the self-critique instructions.",
+        "expectedOutputSchema": {
+          "selfCritiquePrompt": "string",
+          "hasCritiqueStep": "boolean",
+          "hasImproveStep": "boolean"
+        },
+        "hints": [
+          "Include the original request first",
+          "Add specific critique questions",
+          "Ask for an improved version at the end"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Self-critique flowchart",
+        "textual": "Critique prompt templates",
+        "handsOn": "Before/after comparison"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "selfCritiquePrompt", "type": "exists", "expected": true },
+          { "field": "hasCritiqueStep", "type": "matches", "expected": true },
+          { "field": "hasImproveStep", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s4-05",
+      "category": "prompt_engineering",
+      "title": "Build Your Brand Voice Assistant",
+      "duration": 10,
+      "prerequisiteAKUs": ["aku-s4-04"],
+      "businessKPI": "brand_consistency",
+      "concept": "Capstone: Create an AI assistant that writes in a consistent brand voice.\n\n**What you'll build:**\nA reusable prompt that makes AI write like YOUR brand (or a brand you choose).\n\n**Components:**\n1. Brand definition (personality, values, style)\n2. Few-shot examples (5+ samples)\n3. Output templates\n4. Self-critique for quality\n\n**Success criteria:**\n- AI produces consistent output\n- Voice matches across content types\n- Quality improves with self-critique\n- Template ensures usable format",
+      "sandboxChallenge": {
+        "prompt": "Create a complete Brand Voice Assistant. Include:\n\n1. Brand definition (choose a brand or create one)\n   - Personality traits\n   - Communication style\n   - What the brand always/never does\n\n2. 5 example pieces showing the voice\n\n3. An output template\n\n4. Self-critique instructions\n\nTest it by asking for 3 different content types (tweet, email, blog intro).",
+        "expectedOutputSchema": {
+          "brandAssistant": "object",
+          "hasBrandDef": "boolean",
+          "hasExamples": "boolean",
+          "hasTemplate": "boolean",
+          "hasCritique": "boolean",
+          "testResults": "string"
+        },
+        "hints": [
+          "Start by defining what makes this brand unique",
+          "Examples should be realistic content the brand would create",
+          "Test with different content types to check consistency",
+          "The self-critique should check for brand voice adherence"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Brand voice builder interface",
+        "textual": "Complete guide with templates",
+        "handsOn": "Interactive brand workshop"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "hasBrandDef", "type": "matches", "expected": true },
+          { "field": "hasExamples", "type": "matches", "expected": true },
+          { "field": "hasTemplate", "type": "matches", "expected": true },
+          { "field": "hasCritique", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    }
+  ]
+}

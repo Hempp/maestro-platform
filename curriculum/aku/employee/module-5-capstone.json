@@ -1,0 +1,201 @@
+{
+  "moduleId": "employee-m5",
+  "moduleTitle": "Workflow Efficiency Capstone",
+  "tier": "employee",
+  "akus": [
+    {
+      "id": "aku-e5-01",
+      "category": "integration",
+      "title": "Taking Stock of Your Systems",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-e3-05", "aku-e4-05"],
+      "businessKPI": "system_integration",
+      "concept": "Before integrating, inventory everything you've built.\n\n**Your AI toolkit so far:**\n- Automation Roadmap (M1)\n- Team Knowledge Assistant (M2)\n- Department Custom GPT (M3)\n- Communication Suite (M4)\n\n**Integration opportunities:**\n- Knowledge Assistant feeds into Custom GPT\n- Meeting summaries go to Knowledge base\n- Email templates use knowledge from RAG\n- Workflows connect multiple tools\n\n**System thinking:**\nIndividual tools are useful. Integrated systems are transformational.",
+      "sandboxChallenge": {
+        "prompt": "Create an inventory of all AI tools you've built:\n1. List each tool with its purpose\n2. What data does each one use?\n3. What output does each produce?\n4. Identify 3 potential integrations between them",
+        "expectedOutputSchema": {
+          "inventory": "array",
+          "integrations": "array"
+        },
+        "hints": [
+          "Include tools from each module",
+          "Think about data flows between tools",
+          "Consider where one tool's output could be another's input"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Tool inventory map",
+        "textual": "Inventory template",
+        "handsOn": "Inventory builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "inventory", "type": "exists", "expected": true },
+          { "field": "integrations", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e5-02",
+      "category": "integration",
+      "title": "Creating Your System Architecture",
+      "duration": 6,
+      "prerequisiteAKUs": ["aku-e5-01"],
+      "businessKPI": "system_integration",
+      "concept": "Map how your tools work together.\n\n**System diagram elements:**\n\n**Inputs:**\n- Emails, documents, meetings\n- Questions from teammates\n- Data from business systems\n\n**Processors:**\n- Custom GPT (answers questions)\n- Knowledge base (stores info)\n- Automation workflows (handles tasks)\n\n**Outputs:**\n- Drafted emails\n- Meeting summaries\n- Answered questions\n- Updated documents\n\n**Connections:**\n- Arrows showing data flow\n- Labels for what data moves\n- Notes on frequency",
+      "sandboxChallenge": {
+        "prompt": "Draw your system architecture:\n1. List all inputs (where data comes from)\n2. List all processors (tools that do work)\n3. List all outputs (where results go)\n4. Draw the connections with descriptions\n\nThis can be text-based—describe what a diagram would show.",
+        "expectedOutputSchema": {
+          "inputs": "array",
+          "processors": "array",
+          "outputs": "array",
+          "connections": "array"
+        },
+        "hints": [
+          "Start with the most common workflows",
+          "Label what data flows through each connection",
+          "Note which connections are automated vs manual"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Architecture diagram template",
+        "textual": "Text-based architecture",
+        "handsOn": "Diagram builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "inputs", "type": "exists", "expected": true },
+          { "field": "processors", "type": "exists", "expected": true },
+          { "field": "outputs", "type": "exists", "expected": true },
+          { "field": "connections", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e5-03",
+      "category": "integration",
+      "title": "Documentation That Scales",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-e5-02"],
+      "businessKPI": "knowledge_sharing",
+      "concept": "Good documentation lets others use (and maintain) your systems.\n\n**For each tool, document:**\n\n**1. Overview**\n- Name and purpose\n- Who uses it\n- What problem it solves\n\n**2. How It Works**\n- Technical setup\n- Data flow\n- Dependencies\n\n**3. Usage Guide**\n- How to use it\n- Common scenarios\n- Examples\n\n**4. Maintenance**\n- How to update\n- Troubleshooting\n- Who to contact\n\n**5. Metrics**\n- How to measure success\n- Current performance\n- Goals",
+      "sandboxChallenge": {
+        "prompt": "Write complete documentation for ONE of your tools (choose your most complex one). Include all 5 sections: Overview, How It Works, Usage Guide, Maintenance, and Metrics.",
+        "expectedOutputSchema": {
+          "documentation": "object",
+          "hasOverview": "boolean",
+          "hasUsageGuide": "boolean",
+          "hasMaintenanceSection": "boolean"
+        },
+        "hints": [
+          "Write for someone who's never seen the tool",
+          "Include actual examples",
+          "Be specific about maintenance steps",
+          "Define measurable metrics"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Documentation template",
+        "textual": "Section-by-section guide",
+        "handsOn": "Documentation generator"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "documentation", "type": "exists", "expected": true },
+          { "field": "hasOverview", "type": "matches", "expected": true },
+          { "field": "hasUsageGuide", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e5-04",
+      "category": "integration",
+      "title": "Measuring and Sharing Impact",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-e5-03"],
+      "businessKPI": "impact_measurement",
+      "concept": "Quantify your impact to justify and expand your AI work.\n\n**Metrics to track:**\n\n**Time Saved**\n- Before: X hours on task\n- After: Y hours on task\n- Savings: X - Y hours/week\n\n**Quality Improvements**\n- Faster response times\n- More consistent outputs\n- Fewer errors\n\n**Adoption**\n- Team members using tools\n- Frequency of use\n- Satisfaction ratings\n\n**ROI Calculation:**\n```\nTime Saved × Hourly Rate = Value Created\n20 hrs/month × $50/hr = $1,000/month value\n```\n\n**Sharing your work:**\n- Present to team/manager\n- Document for knowledge base\n- Template for others to replicate",
+      "sandboxChallenge": {
+        "prompt": "Calculate and document your impact:\n1. Estimate time saved per week (be realistic)\n2. List quality improvements you've observed\n3. Calculate monthly value created\n4. Create a 1-page summary for your manager",
+        "expectedOutputSchema": {
+          "timeSaved": "string",
+          "qualityImprovements": "array",
+          "monthlyValue": "string",
+          "executiveSummary": "string"
+        },
+        "hints": [
+          "Use specific numbers when possible",
+          "Include both time and quality benefits",
+          "Keep the summary concise and impactful",
+          "Focus on business value, not technical details"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Impact dashboard",
+        "textual": "Impact report template",
+        "handsOn": "ROI calculator"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "timeSaved", "type": "exists", "expected": true },
+          { "field": "monthlyValue", "type": "exists", "expected": true },
+          { "field": "executiveSummary", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e5-05",
+      "category": "integration",
+      "title": "Complete Workflow Efficiency System",
+      "duration": 15,
+      "prerequisiteAKUs": ["aku-e5-04"],
+      "businessKPI": "system_completion",
+      "concept": "Final Capstone: Assemble everything into your Complete Workflow Efficiency System.\n\n**Your deliverable includes:**\n\n1. **Executive Summary**\n- What you built\n- Total impact\n- Key achievements\n\n2. **System Architecture**\n- All tools and connections\n- Data flows\n- Integration points\n\n3. **Tool Documentation**\n- Each tool documented\n- Usage guides included\n\n4. **Metrics Dashboard**\n- Time saved\n- Quality improvements\n- Adoption rates\n\n5. **Sharing Guide**\n- How teammates can use your tools\n- How to replicate your approach",
+      "sandboxChallenge": {
+        "prompt": "Create your Complete Workflow Efficiency System document:\n\n1. Executive Summary (1 paragraph: what, why, impact)\n2. System Architecture (all tools, connections, data flows)\n3. Documentation links/summaries for each tool\n4. Metrics: Time saved, value created, adoption\n5. Team Guide: How others can use your systems\n6. Future Roadmap: What you'll build next\n\nThis is your Tier Capstone Deliverable!",
+        "expectedOutputSchema": {
+          "executiveSummary": "string",
+          "systemArchitecture": "object",
+          "toolDocumentation": "array",
+          "metrics": "object",
+          "teamGuide": "string",
+          "futureRoadmap": "array",
+          "isComplete": "boolean"
+        },
+        "hints": [
+          "Make the executive summary punchy and results-focused",
+          "Include all tools from modules 1-4",
+          "Be specific about metrics and impact",
+          "Make the team guide actionable",
+          "Include realistic next steps"
+        ],
+        "maxHints": 5
+      },
+      "alternativeFormats": {
+        "visual": "System overview presentation",
+        "textual": "Complete written guide",
+        "handsOn": "Interactive system tour"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "executiveSummary", "type": "exists", "expected": true },
+          { "field": "systemArchitecture", "type": "exists", "expected": true },
+          { "field": "toolDocumentation", "type": "exists", "expected": true },
+          { "field": "metrics", "type": "exists", "expected": true },
+          { "field": "teamGuide", "type": "exists", "expected": true },
+          { "field": "isComplete", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": [],
+        "kpiThreshold": 85
+      }
+    }
+  ]
+}

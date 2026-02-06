@@ -1,0 +1,194 @@
+{
+  "moduleId": "owner-m1",
+  "moduleTitle": "AI Operations Audit",
+  "tier": "owner",
+  "akus": [
+    {
+      "id": "aku-o1-01",
+      "category": "strategy",
+      "title": "The Business Owner's AI Opportunity",
+      "duration": 5,
+      "prerequisiteAKUs": [],
+      "businessKPI": "strategic_vision",
+      "concept": "AI isn't about productivity for business owners. It's about scalability.\n\n**Employee mindset:** 'How do I work faster?'\n**Owner mindset:** 'How do I make the business work without me?'\n\n**The real opportunity:**\n- Replace high-cost labor with automated systems\n- Scale operations without scaling headcount\n- Create competitive advantages through efficiency\n- Build systems that run while you sleep\n\n**The transformation:**\n- Before: Business depends on people being busy\n- After: Business runs on intelligent systems\n\n**This tier:** Build your AI Operations Manual—the blueprint for an automated business.",
+      "sandboxChallenge": {
+        "prompt": "List 5 business processes that currently require human labor and could potentially be automated. For each, estimate:\n1. Monthly cost (labor + overhead)\n2. Error rate or quality issues\n3. Scalability bottleneck",
+        "expectedOutputSchema": {
+          "processes": "array",
+          "totalMonthlyCost": "number",
+          "biggestBottleneck": "string"
+        },
+        "hints": [
+          "Think about where you're paying people for repetitive work",
+          "Consider customer-facing processes",
+          "Include back-office operations"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Opportunity map",
+        "textual": "Process inventory",
+        "handsOn": "Cost calculator"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "processes", "type": "exists", "expected": true },
+          { "field": "biggestBottleneck", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o1-02",
+      "category": "strategy",
+      "title": "Complete Process Mapping",
+      "duration": 6,
+      "prerequisiteAKUs": ["aku-o1-01"],
+      "businessKPI": "process_visibility",
+      "concept": "Before automating, you need complete visibility into your operations.\n\n**Process Mapping Framework:**\n\n**For each business process:**\n\n1. **Trigger** - What starts this process?\n2. **Inputs** - What data/materials are needed?\n3. **Steps** - What happens, in order?\n4. **Decisions** - Where do humans make judgments?\n5. **Outputs** - What's produced?\n6. **Stakeholders** - Who's involved?\n7. **Systems** - What tools are used?\n8. **Frequency** - How often does this happen?\n9. **Duration** - How long does it take?\n10. **Cost** - What does it cost per occurrence?",
+      "sandboxChallenge": {
+        "prompt": "Map your most expensive business process using all 10 framework elements. Be thorough—this is the foundation for automation.",
+        "expectedOutputSchema": {
+          "processMap": "object",
+          "trigger": "string",
+          "steps": "array",
+          "decisionPoints": "array",
+          "estimatedCost": "number"
+        },
+        "hints": [
+          "Include ALL steps, even small ones",
+          "Be specific about decision points",
+          "Calculate real costs including time and overhead"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Process map template",
+        "textual": "Mapping worksheet",
+        "handsOn": "Interactive mapper"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "processMap", "type": "exists", "expected": true },
+          { "field": "steps", "type": "exists", "expected": true },
+          { "field": "decisionPoints", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o1-03",
+      "category": "strategy",
+      "title": "The Automation Scoring Matrix",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-o1-02"],
+      "businessKPI": "prioritization",
+      "concept": "Score each process to prioritize automation.\n\n**Scoring Dimensions (1-5 each):**\n\n**Volume (V):** How often?\n1=Rarely, 5=Constantly\n\n**Complexity (C):** How much judgment?\n1=Complex, 5=Simple/repeatable\n\n**Value (V):** Business impact?\n1=Minor, 5=Critical\n\n**Data (D):** How structured?\n1=Messy, 5=Clean/digital\n\n**Priority Score = V × C × V × D / 10**\n\n**Score interpretation:**\n- 50+: Automate immediately\n- 25-49: Strong candidate\n- 10-24: Consider carefully\n- <10: Probably not worth it",
+      "sandboxChallenge": {
+        "prompt": "Score your top 5 business processes using the matrix. Calculate priority scores and rank them. Include your reasoning for each score.",
+        "expectedOutputSchema": {
+          "scoredProcesses": "array",
+          "rankings": "array",
+          "topPriority": "string"
+        },
+        "hints": [
+          "Be honest about complexity",
+          "Consider data quality carefully",
+          "Validate scores with actual numbers"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Scoring matrix template",
+        "textual": "Scoring guide",
+        "handsOn": "Interactive scorer"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "scoredProcesses", "type": "exists", "expected": true },
+          { "field": "topPriority", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o1-04",
+      "category": "strategy",
+      "title": "Risk and Compliance Assessment",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-o1-03"],
+      "businessKPI": "risk_management",
+      "concept": "Before automating, assess risks.\n\n**Risk Categories:**\n\n**1. Error Impact**\n- What happens if AI makes a mistake?\n- Financial cost of errors?\n- Customer relationship impact?\n\n**2. Compliance**\n- Regulatory requirements?\n- Data privacy concerns?\n- Industry-specific rules?\n\n**3. Customer Experience**\n- Will customers notice?\n- Human touch requirements?\n- Escalation paths?\n\n**4. Operational**\n- Dependency on systems?\n- Failure recovery?\n- Monitoring needs?\n\n**Risk Mitigation:**\n- Human-in-the-loop for high-stakes decisions\n- Gradual rollout (pilot first)\n- Clear escalation paths\n- Monitoring and alerting",
+      "sandboxChallenge": {
+        "prompt": "Complete a risk assessment for your top priority process:\n1. List potential errors and their impact\n2. Identify compliance requirements\n3. Assess customer experience risks\n4. Define mitigation strategies for each risk",
+        "expectedOutputSchema": {
+          "riskAssessment": "object",
+          "risks": "array",
+          "mitigations": "array",
+          "overallRiskLevel": "string"
+        },
+        "hints": [
+          "Consider worst-case scenarios",
+          "Check regulatory requirements for your industry",
+          "Plan for system failures",
+          "Define clear human oversight points"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Risk matrix",
+        "textual": "Risk assessment template",
+        "handsOn": "Risk workshop"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "riskAssessment", "type": "exists", "expected": true },
+          { "field": "mitigations", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o1-05",
+      "category": "strategy",
+      "title": "Complete AI Audit Document",
+      "duration": 10,
+      "prerequisiteAKUs": ["aku-o1-04"],
+      "businessKPI": "audit_completion",
+      "concept": "Capstone: Create your Complete Business Operations AI Audit.\n\n**Document structure:**\n\n1. **Executive Summary**\n- Total processes audited\n- Top opportunities identified\n- Estimated ROI potential\n\n2. **Process Inventory**\n- All processes mapped\n- Costs documented\n\n3. **Prioritization Matrix**\n- All processes scored\n- Rankings with rationale\n\n4. **Risk Assessment**\n- Risks identified\n- Mitigations planned\n\n5. **Implementation Roadmap**\n- Phase 1: Quick wins\n- Phase 2: Strategic projects\n- Phase 3: Long-term transformation",
+      "sandboxChallenge": {
+        "prompt": "Create your Complete AI Operations Audit:\n\n1. Executive Summary (key findings and ROI potential)\n2. Top 5 processes fully mapped\n3. Prioritization scores for all 5\n4. Risk assessment for top 3\n5. Implementation roadmap with phases\n\nThis is your Module 1 Deliverable!",
+        "expectedOutputSchema": {
+          "audit": "object",
+          "executiveSummary": "string",
+          "processInventory": "array",
+          "prioritization": "array",
+          "riskAssessment": "object",
+          "roadmap": "object"
+        },
+        "hints": [
+          "Make the executive summary compelling for stakeholders",
+          "Include real cost estimates",
+          "Be realistic about timelines",
+          "Prioritize based on your scores"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Audit presentation",
+        "textual": "Complete audit document",
+        "handsOn": "Audit builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "executiveSummary", "type": "exists", "expected": true },
+          { "field": "processInventory", "type": "exists", "expected": true },
+          { "field": "prioritization", "type": "exists", "expected": true },
+          { "field": "roadmap", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": [],
+        "kpiThreshold": 80
+      }
+    }
+  ]
+}

@@ -1,0 +1,190 @@
+{
+  "moduleId": "employee-m4",
+  "moduleTitle": "AI-Powered Meeting & Email Mastery",
+  "tier": "employee",
+  "akus": [
+    {
+      "id": "aku-e4-01",
+      "category": "communication",
+      "title": "The Communication Time Drain",
+      "duration": 4,
+      "prerequisiteAKUs": ["aku-e1-05"],
+      "businessKPI": "communication_efficiency",
+      "concept": "Communication eats your day:\n- 28% of workweek on email (11+ hours)\n- 15% in meetings (6+ hours)\n- Hours more on follow-ups, summaries, scheduling\n\n**What AI can automate:**\n\n**Meetings:**\n- Transcription\n- Summary generation\n- Action item extraction\n- Follow-up drafting\n\n**Email:**\n- Response drafting\n- Classification and prioritization\n- Thread summarization\n- Follow-up reminders\n\n**The goal:** Not to eliminate communication, but to eliminate the busy work around it.",
+      "sandboxChallenge": {
+        "prompt": "Track one day of communication work. List:\n1. How many emails you sent/received\n2. How many meetings you attended\n3. Time spent on post-meeting tasks\n4. Time spent drafting emails\nIdentify the biggest time sink.",
+        "expectedOutputSchema": {
+          "communicationAudit": "object",
+          "biggestTimeSink": "string",
+          "automationOpportunity": "string"
+        },
+        "hints": [
+          "Include both sending and receiving time",
+          "Count time spent on meeting prep and follow-up",
+          "Consider repetitive email types"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Time breakdown chart",
+        "textual": "Audit template",
+        "handsOn": "Time tracking exercise"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "communicationAudit", "type": "exists", "expected": true },
+          { "field": "biggestTimeSink", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e4-02",
+      "category": "communication",
+      "title": "Meeting Automation Stack",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-e4-01"],
+      "businessKPI": "communication_efficiency",
+      "concept": "The complete meeting automation stack:\n\n**1. TRANSCRIPTION**\nTools: Otter, Fireflies, Grain, Fathom\nCaptures every word automatically.\n\n**2. SUMMARY**\nAI prompt: 'Summarize this meeting in:\n- Key decisions made\n- Action items with owners\n- Questions that need follow-up\n- Next steps'\n\n**3. ACTION ITEMS**\nAI prompt: 'Extract all action items. Format:\n- [ ] Task: [description]\n- Owner: [name]\n- Due: [date if mentioned]'\n\n**4. FOLLOW-UP EMAIL**\nAI prompt: 'Draft a follow-up email:\n- Thank attendees\n- Summarize key points\n- List action items\n- Confirm next meeting'",
+      "sandboxChallenge": {
+        "prompt": "Create prompts for each step of meeting automation:\n1. Summary prompt\n2. Action item extraction prompt\n3. Follow-up email prompt\nMake each specific to your meeting types.",
+        "expectedOutputSchema": {
+          "summaryPrompt": "string",
+          "actionItemPrompt": "string",
+          "followUpPrompt": "string"
+        },
+        "hints": [
+          "Customize for your meeting types",
+          "Include specific sections you always need",
+          "Consider your company's email style"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Meeting automation flow",
+        "textual": "Prompt library",
+        "handsOn": "Template builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "summaryPrompt", "type": "exists", "expected": true },
+          { "field": "actionItemPrompt", "type": "exists", "expected": true },
+          { "field": "followUpPrompt", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e4-03",
+      "category": "communication",
+      "title": "Email Response Templates",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-e4-02"],
+      "businessKPI": "communication_efficiency",
+      "concept": "Create AI prompts for your common email types.\n\n**Template structure:**\n```\nYou are [my role] at [company].\n\nI need to respond to this email:\n[PASTE EMAIL]\n\nContext: [any additional context]\n\nWrite a response that:\n- [Tone requirement]\n- [Length requirement]\n- [Key points to include]\n- [Action to request]\n```\n\n**Common templates:**\n1. Customer inquiry response\n2. Meeting request handling\n3. Status update requests\n4. Feedback responses\n5. Scheduling coordination\n\n**Pro tip:** Save these prompts with placeholders like [EMAIL] and [CONTEXT] for quick reuse.",
+      "sandboxChallenge": {
+        "prompt": "Create 3 email response templates for emails you write frequently:\n1. Identify the email type\n2. Write the complete AI prompt\n3. Include placeholders for variable content\n4. Specify tone and constraints",
+        "expectedOutputSchema": {
+          "templates": "array",
+          "hasPlaceholders": "boolean"
+        },
+        "hints": [
+          "Think about emails you write weekly",
+          "Include specific tone guidance",
+          "Make placeholders clear and easy to fill"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Template gallery",
+        "textual": "Template library",
+        "handsOn": "Template builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "templates", "type": "exists", "expected": true },
+          { "field": "hasPlaceholders", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e4-04",
+      "category": "communication",
+      "title": "Setting Up Automation Workflows",
+      "duration": 6,
+      "prerequisiteAKUs": ["aku-e4-03"],
+      "businessKPI": "communication_efficiency",
+      "concept": "Connect your prompts into automated workflows.\n\n**Meeting Workflow:**\n```\nTrigger: Calendar event ends\n→ Get transcript from Otter/Fireflies\n→ Send to AI for summary\n→ Add to Google Doc\n→ Email summary to attendees\n```\n\n**Email Workflow:**\n```\nTrigger: New email matches label\n→ Send to AI for draft response\n→ Add draft to Gmail as reply\n→ Notify you to review and send\n```\n\n**Key principle:** AI drafts, you review.\nNever fully automate sending without human review.\n\n**Tools:** Zapier, Make, or n8n can connect:\n- Calendar (Google/Outlook)\n- Transcription services\n- AI (OpenAI, Claude)\n- Documents (Docs, Sheets)\n- Email (Gmail, Outlook)",
+      "sandboxChallenge": {
+        "prompt": "Design an automated workflow for meeting summaries:\n1. Draw the workflow (Trigger → Steps → Output)\n2. Specify which tools you'll use\n3. Include the exact AI prompt\n4. Define where human review happens",
+        "expectedOutputSchema": {
+          "workflow": "object",
+          "tools": "array",
+          "aiPrompt": "string",
+          "humanReviewPoint": "string"
+        },
+        "hints": [
+          "Start with the trigger event",
+          "Map each step clearly",
+          "Include where you'll review before action",
+          "Choose tools you have access to"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Workflow diagram",
+        "textual": "Setup guide",
+        "handsOn": "Workflow builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "workflow", "type": "exists", "expected": true },
+          { "field": "humanReviewPoint", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e4-05",
+      "category": "communication",
+      "title": "Build Your Communication Suite",
+      "duration": 10,
+      "prerequisiteAKUs": ["aku-e4-04"],
+      "businessKPI": "communication_efficiency",
+      "concept": "Capstone: Create your complete communication automation suite.\n\n**Deliverables:**\n1. Meeting automation (summary + action items + follow-up)\n2. Email templates (3+ for common types)\n3. At least one working automation workflow\n4. Time savings estimate\n\n**Success criteria:**\n- Workflows trigger correctly\n- AI produces useful output\n- Human review is built in\n- Measurable time saved",
+      "sandboxChallenge": {
+        "prompt": "Build your Communication Automation Suite:\n\n1. Meeting automation prompts (summary, actions, follow-up)\n2. 3+ email templates with placeholders\n3. One working workflow diagram\n4. Estimated time savings per week\n5. Implementation plan: what you'll build first\n\nThis is your Module 4 deliverable!",
+        "expectedOutputSchema": {
+          "meetingPrompts": "object",
+          "emailTemplates": "array",
+          "workflowDiagram": "string",
+          "timeSavings": "string",
+          "implementationPlan": "string"
+        },
+        "hints": [
+          "Include all three meeting prompts",
+          "Test your email templates mentally",
+          "Be realistic about time savings",
+          "Start with the highest-impact automation"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Suite overview",
+        "textual": "Complete guide",
+        "handsOn": "Building wizard"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "meetingPrompts", "type": "exists", "expected": true },
+          { "field": "emailTemplates", "type": "exists", "expected": true },
+          { "field": "workflowDiagram", "type": "exists", "expected": true },
+          { "field": "timeSavings", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": [],
+        "kpiThreshold": 80
+      }
+    }
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "moduleId": "student-m3",
+  "moduleTitle": "Your First API Integration",
+  "tier": "student",
+  "akus": [
+    {
+      "id": "aku-s3-01",
+      "category": "api_integration",
+      "title": "From ChatGPT to Real Power",
+      "duration": 4,
+      "prerequisiteAKUs": ["aku-s1-06"],
+      "businessKPI": "technical_capability",
+      "concept": "ChatGPT is training wheels. APIs are the real bicycle.\n\n**The difference:**\n- ChatGPT: Manual, one-at-a-time, can't connect to other tools\n- API: Automated, scalable, connects AI to any application\n\n**Every AI product you use is built on APIs:**\n- Notion AI\n- Grammarly\n- Custom chatbots\n- Voice assistants\n- Email automation\n\n**What APIs enable:**\n- Automate repetitive AI tasks\n- Build AI into your own tools\n- Create custom workflows\n- Scale to thousands of requests\n\nThis skill separates AI users from AI builders.",
+      "sandboxChallenge": {
+        "prompt": "List 3 tasks you currently do manually with ChatGPT that would benefit from automation. For each task, describe:\n1. What you do manually now\n2. How often you do it\n3. How automation would help",
+        "expectedOutputSchema": {
+          "tasks": "array",
+          "count": "number"
+        },
+        "hints": [
+          "Think about repetitive prompts you use often",
+          "Consider tasks that follow a pattern",
+          "Look for tasks that could run without you watching"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Manual vs Automated comparison infographic",
+        "textual": "API use case library",
+        "handsOn": "Automation opportunity assessment"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "tasks", "type": "exists", "expected": true },
+          { "field": "count", "type": "type_check", "expected": "number" }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s3-02",
+      "category": "api_integration",
+      "title": "Anatomy of an API Call",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-s3-01"],
+      "businessKPI": "technical_capability",
+      "concept": "An API call has four essential parts. You don't need to code—just understand the structure.\n\n**1. Endpoint URL** - Where to send the request\n```\nhttps://api.openai.com/v1/chat/completions\n```\n\n**2. Authentication** - Your API key\n```\nAuthorization: Bearer sk-your-api-key\n```\n\n**3. Request Body** - Your prompt and settings\n```json\n{\n  \"model\": \"gpt-4\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"Your prompt\"}]\n}\n```\n\n**4. Response** - What comes back\n```json\n{\n  \"choices\": [{\"message\": {\"content\": \"AI response here\"}}]\n}\n```\n\n**Key insight:** This is just sending and receiving text in a structured format. No magic.",
+      "sandboxChallenge": {
+        "prompt": "Match each API component to its purpose:\n\nComponents:\nA. Endpoint URL\nB. API Key\nC. Request Body\nD. Response\n\nPurposes:\n1. Contains your prompt and model settings\n2. Where the API lives on the internet\n3. Proves you're allowed to use the API\n4. The AI's answer in structured format",
+        "expectedOutputSchema": {
+          "matches": "object",
+          "allCorrect": "boolean"
+        },
+        "hints": [
+          "Think about what each component does",
+          "The endpoint is like an address",
+          "The API key is like a password"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "API call diagram with labeled parts",
+        "textual": "Detailed breakdown with examples",
+        "handsOn": "Interactive API explorer"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "matches", "type": "exists", "expected": true },
+          { "field": "allCorrect", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s3-03",
+      "category": "api_integration",
+      "title": "No-Code API Tools",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-s3-02"],
+      "businessKPI": "technical_capability",
+      "concept": "You don't need to code to use APIs. No-code tools handle the technical parts.\n\n**Popular no-code automation tools:**\n\n**Zapier**\n- Best for: Simple automations\n- Connects 5,000+ apps\n- Drag-and-drop interface\n\n**Make (formerly Integromat)**\n- Best for: Complex workflows\n- More flexible than Zapier\n- Better for visual thinkers\n\n**n8n**\n- Best for: Power users\n- Free self-hosted option\n- Most customizable\n\n**How they work:**\n1. Trigger: Something happens (email received, form submitted)\n2. Action: AI processes the input\n3. Output: Result goes somewhere (sheet, email, database)",
+      "sandboxChallenge": {
+        "prompt": "Design a simple automation workflow using this format:\n\nTRIGGER: [What starts the automation]\nAI STEP: [What AI does with the input]\nOUTPUT: [Where the result goes]\n\nChoose a real task from your earlier list that could work with this structure.",
+        "expectedOutputSchema": {
+          "workflow": "object",
+          "hasTrigger": "boolean",
+          "hasAIStep": "boolean",
+          "hasOutput": "boolean"
+        },
+        "hints": [
+          "Pick a task that has a clear starting point (trigger)",
+          "The AI step should transform or analyze something",
+          "The output should go somewhere useful"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Tool comparison matrix",
+        "textual": "Detailed tool guides",
+        "handsOn": "Tool selection quiz"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "hasTrigger", "type": "matches", "expected": true },
+          { "field": "hasAIStep", "type": "matches", "expected": true },
+          { "field": "hasOutput", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s3-04",
+      "category": "api_integration",
+      "title": "Setting Up Your First Automation",
+      "duration": 8,
+      "prerequisiteAKUs": ["aku-s3-03"],
+      "businessKPI": "technical_capability",
+      "concept": "Let's walk through setting up a real automation step by step.\n\n**Example: Email Summarizer**\n\n**Step 1: Choose your trigger**\n- New email arrives in Gmail\n- Subject contains 'newsletter'\n\n**Step 2: Configure AI step**\n- Send email body to GPT\n- Prompt: 'Summarize this newsletter in 3 bullet points'\n- Settings: GPT-4, temperature 0.3\n\n**Step 3: Set up output**\n- Create a row in Google Sheets\n- Columns: Date, Subject, Summary\n\n**Step 4: Test**\n- Send yourself a test email\n- Check if summary appears in sheet\n\n**Common gotchas:**\n- Rate limits (don't spam the API)\n- Error handling (what if AI fails?)\n- Cost awareness (each API call costs money)",
+      "sandboxChallenge": {
+        "prompt": "Write detailed setup instructions for your automation from the previous exercise. Include:\n\n1. Exact trigger configuration\n2. The complete AI prompt you'll use\n3. Output destination and format\n4. One potential error and how to handle it",
+        "expectedOutputSchema": {
+          "setupInstructions": "object",
+          "hasPrompt": "boolean",
+          "hasErrorHandling": "boolean"
+        },
+        "hints": [
+          "Be specific about the trigger conditions",
+          "Use CTFC for your AI prompt",
+          "Think about what could go wrong"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Step-by-step visual guide",
+        "textual": "Detailed written tutorial",
+        "handsOn": "Guided automation builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "setupInstructions", "type": "exists", "expected": true },
+          { "field": "hasPrompt", "type": "matches", "expected": true },
+          { "field": "hasErrorHandling", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s3-05",
+      "category": "api_integration",
+      "title": "Build Your Content Generator",
+      "duration": 10,
+      "prerequisiteAKUs": ["aku-s3-04"],
+      "businessKPI": "productivity_gain",
+      "concept": "Your capstone project: Build a working automation that generates content automatically.\n\n**Project options:**\n\n**Option A: Social Media from Topics**\n- Input: Topic keyword (manual or from RSS)\n- Output: Social media post draft\n\n**Option B: Email Drafts from Bullets**\n- Input: Bullet points in a doc\n- Output: Full email draft\n\n**Option C: Meeting Summaries**\n- Input: Meeting notes\n- Output: Structured summary with action items\n\n**Success criteria:**\n1. Automation triggers correctly\n2. AI produces useful output\n3. Output goes to the right place\n4. You can run it without intervention",
+      "sandboxChallenge": {
+        "prompt": "Build your content generator automation. Document:\n\n1. Which option you chose and why\n2. Complete trigger setup\n3. Your CTFC prompt for the AI step\n4. Output destination\n5. Test results (describe what happened)\n\nIf you don't have access to automation tools, write a detailed plan that someone could follow to build it.",
+        "expectedOutputSchema": {
+          "automation": "object",
+          "optionChosen": "string",
+          "prompt": "string",
+          "testResults": "string"
+        },
+        "hints": [
+          "Choose the option that matches a real need you have",
+          "Make your AI prompt specific with CTFC",
+          "Test with realistic input",
+          "Document what worked and what didn't"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Automation blueprint template",
+        "textual": "Detailed build guide",
+        "handsOn": "Live building session"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "optionChosen", "type": "exists", "expected": true },
+          { "field": "prompt", "type": "exists", "expected": true },
+          { "field": "testResults", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    }
+  ]
+}

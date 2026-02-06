@@ -1,0 +1,198 @@
+{
+  "moduleId": "owner-m2",
+  "moduleTitle": "Building AI Agents",
+  "tier": "owner",
+  "akus": [
+    {
+      "id": "aku-o2-01",
+      "category": "agent_orchestration",
+      "title": "From Chatbots to Agents",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-o1-05"],
+      "businessKPI": "agent_capability",
+      "concept": "Regular AI answers questions. Agents TAKE ACTION.\n\n**Chatbot:** 'Here's information about your order.'\n**Agent:** Looks up order, checks inventory, updates shipping, sends confirmation email.\n\n**Agent capabilities:**\n- Browse the web and research\n- Read and write files\n- Send emails and messages\n- Query databases\n- Call APIs\n- Make decisions based on data\n\n**The power shift:**\n- Chatbot: Human asks, AI answers, human acts\n- Agent: Human defines goal, AI plans and acts\n\n**Business implication:**\nAgents can handle complete workflows, not just questions.",
+      "sandboxChallenge": {
+        "prompt": "From your audit, select one process. Describe how it would work as:\n1. A chatbot (just answering questions)\n2. An agent (taking actions)\nWhat's the difference in value?",
+        "expectedOutputSchema": {
+          "process": "string",
+          "chatbotVersion": "string",
+          "agentVersion": "string",
+          "valueDifference": "string"
+        },
+        "hints": [
+          "Think about all the steps in the process",
+          "Identify what actions an agent could take",
+          "Calculate time saved by autonomous action"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Chatbot vs Agent comparison",
+        "textual": "Capability breakdown",
+        "handsOn": "Use case exploration"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "process", "type": "exists", "expected": true },
+          { "field": "agentVersion", "type": "exists", "expected": true },
+          { "field": "valueDifference", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o2-02",
+      "category": "agent_orchestration",
+      "title": "Agent Architecture",
+      "duration": 6,
+      "prerequisiteAKUs": ["aku-o2-01"],
+      "businessKPI": "agent_capability",
+      "concept": "Every agent has five components:\n\n**1. PERCEPTION**\nUnderstand the task and context.\n'I need to research competitors and create a report.'\n\n**2. PLANNING**\nBreak task into steps.\n'Step 1: Search for competitors. Step 2: Visit websites. Step 3: Extract data. Step 4: Format report.'\n\n**3. TOOLS**\nCapabilities the agent can use.\n- Web browser\n- File editor\n- Email sender\n- Database querier\n\n**4. EXECUTION**\nPerform each step.\nAgent runs the plan, using tools as needed.\n\n**5. VERIFICATION**\nCheck results and adjust.\n'Report complete. Contains 5 competitors with key metrics.'",
+      "sandboxChallenge": {
+        "prompt": "Design an agent architecture for your selected process:\n1. What will it perceive? (inputs, triggers)\n2. How will it plan? (step breakdown)\n3. What tools does it need?\n4. What execution looks like?\n5. How will it verify success?",
+        "expectedOutputSchema": {
+          "agentDesign": "object",
+          "perception": "string",
+          "planning": "string",
+          "tools": "array",
+          "execution": "string",
+          "verification": "string"
+        },
+        "hints": [
+          "Be specific about what triggers the agent",
+          "List every tool it would need",
+          "Define what 'success' looks like"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Agent architecture diagram",
+        "textual": "Component breakdown",
+        "handsOn": "Architecture builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "agentDesign", "type": "exists", "expected": true },
+          { "field": "tools", "type": "exists", "expected": true },
+          { "field": "verification", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o2-03",
+      "category": "agent_orchestration",
+      "title": "Agent Tools and Capabilities",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-o2-02"],
+      "businessKPI": "tool_integration",
+      "concept": "Agents are only as powerful as their tools.\n\n**Common agent tools:**\n\n**Research:**\n- Web browsing and search\n- Document reading\n- Data extraction\n\n**Communication:**\n- Email sending\n- Slack/Teams messages\n- Calendar management\n\n**Data:**\n- Database queries\n- API calls\n- Spreadsheet operations\n\n**Creation:**\n- Document writing\n- Report generation\n- Code creation\n\n**Tool selection criteria:**\n- Does the tool have an API?\n- Can it be automated securely?\n- What are the rate limits?\n- What are the costs?",
+      "sandboxChallenge": {
+        "prompt": "Create a tool inventory for your agent:\n1. List all tools needed\n2. For each tool: what it does, how it connects, any limitations\n3. Identify any tools that don't exist yet (you'd need to build)",
+        "expectedOutputSchema": {
+          "toolInventory": "array",
+          "connections": "array",
+          "gaps": "array"
+        },
+        "hints": [
+          "Think about every action in your process",
+          "Check if tools have APIs",
+          "Note any security or access concerns"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Tool capability matrix",
+        "textual": "Tool guide",
+        "handsOn": "Tool explorer"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "toolInventory", "type": "exists", "expected": true },
+          { "field": "gaps", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o2-04",
+      "category": "agent_orchestration",
+      "title": "Agent Safety and Oversight",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-o2-03"],
+      "businessKPI": "safe_deployment",
+      "concept": "Autonomous agents need guardrails.\n\n**Safety principles:**\n\n**1. Clear Boundaries**\n- What can the agent do?\n- What can it NEVER do?\n- Define explicitly.\n\n**2. Human Checkpoints**\n- High-stakes decisions need approval\n- Unusual situations escalate\n- Regular audits of actions\n\n**3. Logging Everything**\n- Every action recorded\n- Every decision logged\n- Audit trail complete\n\n**4. Gradual Rollout**\n- Start with low-risk tasks\n- Expand as trust builds\n- Monitor closely initially\n\n**5. Kill Switch**\n- Ability to stop immediately\n- Rollback capability\n- Manual override always available",
+      "sandboxChallenge": {
+        "prompt": "Design the safety framework for your agent:\n1. Explicit boundaries (can do / can't do)\n2. Human checkpoint triggers\n3. What gets logged\n4. Rollout plan (phases)\n5. Emergency stop procedure",
+        "expectedOutputSchema": {
+          "safetyFramework": "object",
+          "boundaries": "object",
+          "checkpoints": "array",
+          "logging": "array",
+          "killSwitch": "string"
+        },
+        "hints": [
+          "Think about worst-case scenarios",
+          "Define clear escalation triggers",
+          "Make the kill switch accessible",
+          "Plan for gradual trust-building"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Safety framework diagram",
+        "textual": "Safety guidelines",
+        "handsOn": "Safety planner"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "safetyFramework", "type": "exists", "expected": true },
+          { "field": "boundaries", "type": "exists", "expected": true },
+          { "field": "killSwitch", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o2-05",
+      "category": "agent_orchestration",
+      "title": "Build Your Business Research Agent",
+      "duration": 12,
+      "prerequisiteAKUs": ["aku-o2-04"],
+      "businessKPI": "agent_deployment",
+      "concept": "Capstone: Build a working business research agent.\n\n**Your agent will:**\n1. Accept a research topic\n2. Search for relevant information\n3. Analyze and synthesize findings\n4. Produce a structured report\n\n**Implementation options:**\n- Custom GPT with web browsing\n- Claude with computer use\n- Automation platforms (Make/Zapier)\n- Code-based (if technical)\n\n**Deliverable:**\nA working agent that can research any topic and produce a useful report.",
+      "sandboxChallenge": {
+        "prompt": "Build your Business Research Agent:\n\n1. Agent name and purpose\n2. Complete architecture (all 5 components)\n3. Tool list and connections\n4. Safety framework\n5. System prompt / instructions\n6. Test with a real business question\n7. Document results and improvements\n\nThis is your Module 2 Deliverable!",
+        "expectedOutputSchema": {
+          "agent": "object",
+          "architecture": "object",
+          "systemPrompt": "string",
+          "testResults": "string",
+          "improvements": "array"
+        },
+        "hints": [
+          "Start simple and iterate",
+          "Test with real research questions",
+          "Document what works and what doesn't",
+          "Include the complete system prompt"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Agent blueprint",
+        "textual": "Complete build guide",
+        "handsOn": "Building session"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "agent", "type": "exists", "expected": true },
+          { "field": "architecture", "type": "exists", "expected": true },
+          { "field": "systemPrompt", "type": "exists", "expected": true },
+          { "field": "testResults", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": [],
+        "kpiThreshold": 80
+      }
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+{
+  "moduleId": "student-m1",
+  "moduleTitle": "The Anatomy of an Effective Prompt",
+  "tier": "student",
+  "akus": [
+    {
+      "id": "aku-s1-01",
+      "category": "prompt_engineering",
+      "title": "Why Prompt Structure Matters",
+      "duration": 3,
+      "prerequisiteAKUs": [],
+      "businessKPI": "prompt_effectiveness",
+      "concept": "Unstructured prompts waste 60% of AI's potential. The difference between 'help me with emails' and a well-structured prompt is the difference between a confused intern and a senior assistant who knows exactly what you need.\n\nThink of it like giving directions. 'Go somewhere nice' vs 'Take Highway 101 North for 2 miles, exit at Oak Street, the restaurant is on the left with a blue awning.' Which one gets you there?\n\nEvery effective prompt has four key components: Context, Task, Format, and Constraints (CTFC). Master these, and your AI outputs become predictable and high-quality.",
+      "visualAid": "prompt-structure-diagram",
+      "sandboxChallenge": {
+        "prompt": "Compare these two prompts and identify what makes the second one better:\n\nPrompt A: 'Write me an email'\n\nPrompt B: 'You are a customer service rep for a software company. Write an apologetic email to a customer whose subscription renewal failed due to a payment error. Keep it under 100 words and offer a solution.'",
+        "expectedOutputSchema": {
+          "analysis": "string",
+          "differences": "array"
+        },
+        "hints": [
+          "Look for who the AI should pretend to be (Context)",
+          "Look for what specific action is requested (Task)",
+          "Notice any restrictions on length or style (Constraints)"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Side-by-side comparison chart showing CTFC components",
+        "textual": "Detailed breakdown of each component with examples",
+        "handsOn": "Interactive prompt builder exercise"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "analysis", "type": "exists", "expected": true },
+          { "field": "differences", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s1-02",
+      "category": "prompt_engineering",
+      "title": "The Context Component",
+      "duration": 4,
+      "prerequisiteAKUs": ["aku-s1-01"],
+      "businessKPI": "prompt_effectiveness",
+      "concept": "Context sets the scene. It tells the AI who it should be and what background knowledge to use.\n\n**Why it matters:** An AI without context is like an actor without a script—they'll improvise, often poorly.\n\n**Structure:**\n'You are a [role] with [experience/expertise] in [domain].'\n\n**Examples:**\n- 'You are a senior marketing copywriter with 10 years in B2B SaaS.'\n- 'You are a helpful coding assistant who specializes in Python and data science.'\n- 'You are a patient teacher explaining concepts to a complete beginner.'\n\nThe more specific your context, the more tailored the response.",
+      "sandboxChallenge": {
+        "prompt": "Write a context statement for an AI that will help you draft professional LinkedIn posts. Include the role, expertise level, and domain knowledge it should have.",
+        "expectedOutputSchema": {
+          "context": "string",
+          "hasRole": "boolean",
+          "hasExpertise": "boolean"
+        },
+        "hints": [
+          "Start with 'You are a...'",
+          "Include years of experience or expertise level",
+          "Mention the specific platform (LinkedIn) and content type"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Role persona cards with examples",
+        "textual": "Library of context templates by industry",
+        "handsOn": "Context builder form"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "context", "type": "contains", "expected": "You are" },
+          { "field": "hasRole", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s1-03",
+      "category": "prompt_engineering",
+      "title": "The Task Component",
+      "duration": 4,
+      "prerequisiteAKUs": ["aku-s1-02"],
+      "businessKPI": "prompt_effectiveness",
+      "concept": "The Task is your specific request. It tells the AI exactly what you want done.\n\n**Bad tasks:** Vague, open-ended, or ambiguous\n- 'Help me with this'\n- 'Make it better'\n- 'Write something'\n\n**Good tasks:** Specific, actionable, and measurable\n- 'Write a cold email to CTOs introducing our security product'\n- 'Summarize this article in 3 bullet points'\n- 'Review this code and identify potential bugs'\n\n**Pro tip:** Use action verbs: Write, Create, Analyze, Summarize, Compare, Explain, List, Generate, Review, Improve.",
+      "sandboxChallenge": {
+        "prompt": "Transform this vague task into a specific one:\n\nVague: 'Help me with my resume'\n\nWrite a specific task statement that tells the AI exactly what to do with your resume.",
+        "expectedOutputSchema": {
+          "specificTask": "string",
+          "hasActionVerb": "boolean"
+        },
+        "hints": [
+          "Start with an action verb (Review, Improve, Rewrite, Analyze)",
+          "Specify what aspect of the resume to focus on",
+          "Include what the desired outcome should be"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Before/after task transformation examples",
+        "textual": "Action verb library with use cases",
+        "handsOn": "Task specificity slider exercise"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "specificTask", "type": "exists", "expected": true },
+          { "field": "hasActionVerb", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s1-04",
+      "category": "prompt_engineering",
+      "title": "The Format Component",
+      "duration": 4,
+      "prerequisiteAKUs": ["aku-s1-03"],
+      "businessKPI": "prompt_effectiveness",
+      "concept": "Format specifies how you want the output structured. Without it, AI guesses—and often guesses wrong.\n\n**Format options:**\n- **Structure:** 'Use bullet points', 'Write in paragraphs', 'Create a numbered list'\n- **Length:** 'Keep it under 100 words', 'Write exactly 3 sentences'\n- **Style:** 'Use markdown headers', 'Format as JSON', 'Create a table'\n- **Sections:** 'Include: Introduction, Main Points, Conclusion'\n\n**Example:**\n'Respond using this format:\n- Subject Line: [catchy subject]\n- Opening: [personalized greeting]\n- Body: [3 bullet points]\n- CTA: [clear call to action]'",
+      "sandboxChallenge": {
+        "prompt": "You want the AI to analyze a competitor's website. Write a format specification that tells the AI exactly how to structure its analysis output.",
+        "expectedOutputSchema": {
+          "formatSpec": "string",
+          "hasSections": "boolean"
+        },
+        "hints": [
+          "Think about what sections you'd want in the analysis",
+          "Specify whether you want bullets, numbers, or paragraphs",
+          "Consider including a summary section"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Output format gallery with examples",
+        "textual": "Format template library",
+        "handsOn": "Format builder with preview"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "formatSpec", "type": "exists", "expected": true },
+          { "field": "hasSections", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s1-05",
+      "category": "prompt_engineering",
+      "title": "The Constraints Component",
+      "duration": 4,
+      "prerequisiteAKUs": ["aku-s1-04"],
+      "businessKPI": "prompt_effectiveness",
+      "concept": "Constraints set boundaries. They tell the AI what to include, exclude, or limit.\n\n**Types of constraints:**\n- **Length:** 'Maximum 200 words', 'Exactly 5 bullet points'\n- **Tone:** 'Professional but friendly', 'Technical and precise', 'Casual and conversational'\n- **Content:** 'Don't mention competitors', 'Include at least one statistic', 'Avoid jargon'\n- **Audience:** 'Write for a non-technical audience', 'Assume the reader is a CEO'\n\n**Stacking constraints:**\nYou can combine multiple constraints:\n'Keep it under 150 words. Use a professional but approachable tone. Include one statistic. End with a question.'",
+      "sandboxChallenge": {
+        "prompt": "You're writing a product announcement for social media. Write 3-4 constraints that would make the AI output appropriate for LinkedIn.",
+        "expectedOutputSchema": {
+          "constraints": "array",
+          "count": "number"
+        },
+        "hints": [
+          "Think about appropriate length for LinkedIn posts",
+          "Consider the professional tone expected on LinkedIn",
+          "Think about what makes LinkedIn content engaging (questions, calls to action)"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Constraint categories with toggle switches",
+        "textual": "Constraint library by use case",
+        "handsOn": "Constraint stacking exercise"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "constraints", "type": "exists", "expected": true },
+          { "field": "count", "type": "type_check", "expected": "number" }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-s1-06",
+      "category": "prompt_engineering",
+      "title": "Build Your First CTFC Prompt",
+      "duration": 8,
+      "prerequisiteAKUs": ["aku-s1-05"],
+      "businessKPI": "prompt_effectiveness",
+      "concept": "Now let's put it all together. A complete CTFC prompt combines all four components into one powerful request.\n\n**The formula:**\n```\n[CONTEXT]\nYou are a [role] with [expertise].\n\n[TASK]\n[Action verb] [specific deliverable] about [topic].\n\n[FORMAT]\nStructure your response as:\n- [Section 1]\n- [Section 2]\n- [Section 3]\n\n[CONSTRAINTS]\n- [Limit 1]\n- [Limit 2]\n- [Limit 3]\n```\n\n**Example complete prompt:**\n'You are a senior marketing copywriter with 10 years of B2B SaaS experience.\n\nWrite a cold email to CTOs introducing our security product.\n\nFormat: Subject line, opening hook, 3 benefit bullet points, and a clear CTA.\n\nConstraints: Keep under 150 words. Professional but friendly tone. Don't mention pricing.'",
+      "sandboxChallenge": {
+        "prompt": "Create a complete CTFC prompt for one of these scenarios:\n\n1. Getting help writing a cover letter for a tech job\n2. Having AI review your code for bugs\n3. Generating social media content for a small business\n\nInclude all four components: Context, Task, Format, and Constraints.",
+        "expectedOutputSchema": {
+          "fullPrompt": "string",
+          "hasContext": "boolean",
+          "hasTask": "boolean",
+          "hasFormat": "boolean",
+          "hasConstraints": "boolean"
+        },
+        "hints": [
+          "Start with defining who the AI should be (Context)",
+          "Use a specific action verb for what you want done (Task)",
+          "Describe exactly how the output should look (Format)",
+          "Add 2-3 boundaries or requirements (Constraints)"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "CTFC prompt builder wizard",
+        "textual": "Step-by-step guide with templates",
+        "handsOn": "Live prompt testing sandbox"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "hasContext", "type": "matches", "expected": true },
+          { "field": "hasTask", "type": "matches", "expected": true },
+          { "field": "hasFormat", "type": "matches", "expected": true },
+          { "field": "hasConstraints", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    }
+  ]
+}

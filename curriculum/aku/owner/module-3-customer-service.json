@@ -1,0 +1,195 @@
+{
+  "moduleId": "owner-m3",
+  "moduleTitle": "Customer Service Automation",
+  "tier": "owner",
+  "akus": [
+    {
+      "id": "aku-o3-01",
+      "category": "customer_operations",
+      "title": "The Customer Service Scale Problem",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-o2-05"],
+      "businessKPI": "service_scalability",
+      "concept": "Customer service is expensive, hard to scale, and often inconsistent.\n\n**The economics:**\n- Average support ticket cost: $15-25\n- Good support rep salary: $40-60K/year\n- Training time: 2-4 weeks\n- Turnover rate: 30-45% annually\n\n**The AI opportunity:**\n- Handle 60-80% of inquiries instantly\n- Response time: seconds vs hours\n- 24/7 availability\n- Perfect consistency\n- Scales without hiring\n\n**But: AI support done wrong loses customers.**\nThe key is intelligent automation with seamless human handoff.",
+      "sandboxChallenge": {
+        "prompt": "Analyze your current customer service:\n1. Monthly ticket volume by category\n2. Average resolution time\n3. Current cost per ticket\n4. Customer satisfaction score\n5. Which inquiries could AI handle?",
+        "expectedOutputSchema": {
+          "currentState": "object",
+          "ticketCategories": "array",
+          "aiCandidates": "array",
+          "potentialSavings": "string"
+        },
+        "hints": [
+          "Include all customer touchpoints",
+          "Calculate true cost including overhead",
+          "Identify repetitive vs complex inquiries"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Support analysis dashboard",
+        "textual": "Analysis template",
+        "handsOn": "Cost calculator"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "currentState", "type": "exists", "expected": true },
+          { "field": "aiCandidates", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o3-02",
+      "category": "customer_operations",
+      "title": "The AI Support Stack",
+      "duration": 6,
+      "prerequisiteAKUs": ["aku-o3-01"],
+      "businessKPI": "service_architecture",
+      "concept": "A complete AI support system has four layers:\n\n**Layer 1: First Response**\n- Instant acknowledgment\n- Basic question answering\n- Ticket categorization\n- Route to right queue\n\n**Layer 2: Knowledge Base (RAG)**\n- Product information\n- Policy lookup\n- How-to guides\n- FAQ answers\n\n**Layer 3: Action Agents**\n- Order status lookup\n- Account updates\n- Simple transactions\n- Appointment scheduling\n\n**Layer 4: Human Handoff**\n- Complex issues\n- Angry customers\n- High-value accounts\n- Policy exceptions",
+      "sandboxChallenge": {
+        "prompt": "Design your 4-layer AI support stack:\n1. First Response: What happens immediately?\n2. Knowledge Base: What information does AI need?\n3. Action Agents: What actions can AI take?\n4. Human Handoff: When does AI escalate?",
+        "expectedOutputSchema": {
+          "supportStack": "object",
+          "firstResponse": "object",
+          "knowledgeBase": "array",
+          "actionAgents": "array",
+          "escalationTriggers": "array"
+        },
+        "hints": [
+          "Start with your most common inquiries",
+          "Be specific about what data AI can access",
+          "Define clear escalation triggers"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Support stack diagram",
+        "textual": "Layer specifications",
+        "handsOn": "Stack builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "supportStack", "type": "exists", "expected": true },
+          { "field": "escalationTriggers", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o3-03",
+      "category": "customer_operations",
+      "title": "Building the Knowledge Layer",
+      "duration": 6,
+      "prerequisiteAKUs": ["aku-o3-02"],
+      "businessKPI": "knowledge_quality",
+      "concept": "Your AI support is only as good as its knowledge.\n\n**Knowledge sources:**\n- Product documentation\n- FAQ database\n- Policy documents\n- Training materials\n- Past ticket solutions\n\n**Knowledge organization:**\n1. **Category** - What topic?\n2. **Question variations** - How customers ask\n3. **Answer** - Clear, complete response\n4. **Actions** - What can be done?\n5. **Escalation** - When to involve humans\n\n**Quality requirements:**\n- Current and accurate\n- Easy to understand\n- Covers edge cases\n- Regularly updated",
+      "sandboxChallenge": {
+        "prompt": "Build your support knowledge base structure:\n1. List top 10 customer question categories\n2. For each: sample questions, model answer, any actions available\n3. Identify gaps in your current documentation",
+        "expectedOutputSchema": {
+          "knowledgeBase": "array",
+          "categories": "number",
+          "documentationGaps": "array"
+        },
+        "hints": [
+          "Pull from actual support tickets",
+          "Include question variations",
+          "Note where current docs are missing"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Knowledge base template",
+        "textual": "Category guide",
+        "handsOn": "KB builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "knowledgeBase", "type": "exists", "expected": true },
+          { "field": "documentationGaps", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o3-04",
+      "category": "customer_operations",
+      "title": "Escalation Intelligence",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-o3-03"],
+      "businessKPI": "escalation_quality",
+      "concept": "Smart escalation is what separates good AI support from frustrating AI support.\n\n**Escalation triggers:**\n\n**Sentiment-based:**\n- Angry language detected\n- Frustration signals\n- Multiple attempts at same question\n\n**Complexity-based:**\n- Question not in knowledge base\n- Requires judgment call\n- Policy exception needed\n\n**Value-based:**\n- High-value customer\n- Large transaction\n- Churn risk signals\n\n**Explicit:**\n- Customer asks for human\n- 'Representative' keywords\n- After X failed attempts",
+      "sandboxChallenge": {
+        "prompt": "Design your escalation logic:\n1. List all escalation triggers (be comprehensive)\n2. For each trigger: what happens next?\n3. How is context passed to human?\n4. What's the SLA for human response?",
+        "expectedOutputSchema": {
+          "escalationLogic": "object",
+          "triggers": "array",
+          "handoffProcess": "string",
+          "sla": "string"
+        },
+        "hints": [
+          "Include sentiment detection",
+          "Define customer value tiers",
+          "Ensure context passes to human",
+          "Set realistic SLAs"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Escalation flowchart",
+        "textual": "Trigger documentation",
+        "handsOn": "Logic builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "escalationLogic", "type": "exists", "expected": true },
+          { "field": "triggers", "type": "exists", "expected": true },
+          { "field": "handoffProcess", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-o3-05",
+      "category": "customer_operations",
+      "title": "Build Your AI Support System",
+      "duration": 12,
+      "prerequisiteAKUs": ["aku-o3-04"],
+      "businessKPI": "support_deployment",
+      "concept": "Capstone: Build your complete AI customer support system.\n\n**Your system includes:**\n1. First response automation\n2. RAG-powered knowledge base\n3. Escalation logic\n4. Human handoff workflow\n5. Monitoring and metrics\n\n**Success metrics:**\n- Resolution rate (% solved without human)\n- Response time\n- Customer satisfaction\n- Escalation rate\n- Cost per ticket",
+      "sandboxChallenge": {
+        "prompt": "Build your AI Customer Support System:\n\n1. System architecture (all 4 layers)\n2. Complete knowledge base (top 10 categories)\n3. AI system prompt with personality and rules\n4. Escalation logic with all triggers\n5. Success metrics and targets\n6. Implementation plan\n\nThis is your Module 3 Deliverable!",
+        "expectedOutputSchema": {
+          "supportSystem": "object",
+          "architecture": "object",
+          "knowledgeBase": "array",
+          "systemPrompt": "string",
+          "escalationLogic": "object",
+          "metrics": "object"
+        },
+        "hints": [
+          "Make the system prompt customer-friendly",
+          "Include all escalation scenarios",
+          "Set realistic metric targets",
+          "Plan for gradual rollout"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "System blueprint",
+        "textual": "Complete guide",
+        "handsOn": "Building workshop"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "supportSystem", "type": "exists", "expected": true },
+          { "field": "knowledgeBase", "type": "exists", "expected": true },
+          { "field": "systemPrompt", "type": "exists", "expected": true },
+          { "field": "escalationLogic", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": [],
+        "kpiThreshold": 80
+      }
+    }
+  ]
+}

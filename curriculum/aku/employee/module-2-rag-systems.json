@@ -1,0 +1,191 @@
+{
+  "moduleId": "employee-m2",
+  "moduleTitle": "RAG: Making AI Know Your Data",
+  "tier": "employee",
+  "akus": [
+    {
+      "id": "aku-e2-01",
+      "category": "rag_pipeline",
+      "title": "The AI Knowledge Problem",
+      "duration": 4,
+      "prerequisiteAKUs": ["aku-e1-05"],
+      "businessKPI": "knowledge_accessibility",
+      "concept": "AI doesn't know YOUR data.\n\n**The problem:**\n- ChatGPT knows the internet, not your company\n- It can't read your documents, policies, or history\n- It makes things up when it doesn't know\n\n**The solution: RAG**\nRetrieval Augmented Generation\n\nInstead of hoping AI knows your data, you:\n1. Store your documents in a searchable format\n2. When asked a question, find relevant documents\n3. Give those documents to AI as context\n4. AI answers using YOUR information\n\n**It's like giving AI an open-book test—with YOUR book.**",
+      "sandboxChallenge": {
+        "prompt": "List 5 types of questions your team asks regularly that require internal knowledge (policies, processes, project history, etc.). These are perfect RAG candidates.",
+        "expectedOutputSchema": {
+          "questions": "array",
+          "documentSources": "array"
+        },
+        "hints": [
+          "Think about questions new employees ask",
+          "Consider policy or process questions",
+          "Include project or client history questions"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "RAG concept diagram",
+        "textual": "Use case examples",
+        "handsOn": "Question audit exercise"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "questions", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e2-02",
+      "category": "rag_pipeline",
+      "title": "How RAG Works",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-e2-01"],
+      "businessKPI": "knowledge_accessibility",
+      "concept": "The RAG Pipeline in 4 steps:\n\n**1. EMBED**\nConvert documents into 'vectors' (numerical representations).\nSimilar concepts = similar vectors.\n\n**2. STORE**\nSave vectors in a vector database.\nThis makes finding relevant content fast.\n\n**3. RETRIEVE**\nWhen asked a question:\n- Convert question to vector\n- Find similar vectors in database\n- Pull those document chunks\n\n**4. GENERATE**\nGive AI the question + retrieved documents.\nAI answers using your actual content.\n\n**The magic:**\nStep 3 finds relevant information even if keywords don't match.\n'PTO policy' finds 'vacation days' and 'time off requests'.",
+      "sandboxChallenge": {
+        "prompt": "Map out a RAG pipeline for your team's documentation. Identify:\n1. What documents would you include?\n2. What questions should it answer?\n3. How would you organize the documents?\n4. Who would use this system?",
+        "expectedOutputSchema": {
+          "documents": "array",
+          "questions": "array",
+          "organization": "string",
+          "users": "array"
+        },
+        "hints": [
+          "Start with your most-asked questions",
+          "Group related documents together",
+          "Think about who asks these questions most"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "RAG pipeline diagram",
+        "textual": "Technical breakdown",
+        "handsOn": "Pipeline planner"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "documents", "type": "exists", "expected": true },
+          { "field": "questions", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e2-03",
+      "category": "rag_pipeline",
+      "title": "No-Code RAG Setup",
+      "duration": 6,
+      "prerequisiteAKUs": ["aku-e2-02"],
+      "businessKPI": "knowledge_accessibility",
+      "concept": "You don't need to code to use RAG. Several tools make it easy.\n\n**Option 1: ChatGPT Custom GPT**\n- Upload files directly\n- Automatic RAG behind the scenes\n- Easy to set up\n- Limited to ChatGPT interface\n\n**Option 2: Claude Projects**\n- Upload documents to a project\n- Reference them in conversations\n- Good for team collaboration\n\n**Option 3: Specialized tools**\n- Notion AI (for Notion docs)\n- Guru, Slite (knowledge bases)\n- CustomGPT.ai (dedicated RAG)\n\n**Choosing the right tool:**\n- Internal team use → Custom GPT or Claude Projects\n- Customer-facing → Specialized tools\n- Already in Notion → Notion AI",
+      "sandboxChallenge": {
+        "prompt": "Choose a RAG tool for your team's knowledge base. Explain:\n1. Which tool and why\n2. What documents you'll upload first\n3. How you'll organize them\n4. Who will have access",
+        "expectedOutputSchema": {
+          "toolChoice": "string",
+          "reasoning": "string",
+          "firstDocuments": "array",
+          "accessPlan": "string"
+        },
+        "hints": [
+          "Consider what tools your team already uses",
+          "Start with the most frequently needed documents",
+          "Think about security and access control"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "Tool comparison chart",
+        "textual": "Tool deep dives",
+        "handsOn": "Tool selection wizard"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "toolChoice", "type": "exists", "expected": true },
+          { "field": "reasoning", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e2-04",
+      "category": "rag_pipeline",
+      "title": "Writing RAG System Prompts",
+      "duration": 5,
+      "prerequisiteAKUs": ["aku-e2-03"],
+      "businessKPI": "knowledge_accessibility",
+      "concept": "A RAG system needs a good system prompt to work well.\n\n**Key elements:**\n\n1. **Role Definition**\n'You are a helpful assistant for [Company] employees. You answer questions about company policies, processes, and procedures.'\n\n2. **Knowledge Boundaries**\n'Only answer questions using the documents provided. If the answer isn't in the documents, say \"I don't have that information in my knowledge base.\"'\n\n3. **Citation Requirements**\n'Always cite which document your answer comes from. Use the format: [Document Name, Section].'\n\n4. **Escalation Path**\n'If the question requires human judgment or is about sensitive matters, recommend they contact [appropriate person/department].'\n\n5. **Tone and Style**\n'Be helpful, clear, and professional. Explain concepts simply.'",
+      "sandboxChallenge": {
+        "prompt": "Write a complete system prompt for your team's knowledge assistant. Include all 5 elements: role, boundaries, citations, escalation, and tone.",
+        "expectedOutputSchema": {
+          "systemPrompt": "string",
+          "hasRole": "boolean",
+          "hasBoundaries": "boolean",
+          "hasCitations": "boolean",
+          "hasEscalation": "boolean"
+        },
+        "hints": [
+          "Be specific about what the assistant knows",
+          "Include what to do when information isn't available",
+          "Define when to recommend human contact"
+        ],
+        "maxHints": 3
+      },
+      "alternativeFormats": {
+        "visual": "System prompt template",
+        "textual": "Element deep dive",
+        "handsOn": "Prompt builder"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "systemPrompt", "type": "exists", "expected": true },
+          { "field": "hasRole", "type": "matches", "expected": true },
+          { "field": "hasBoundaries", "type": "matches", "expected": true }
+        ],
+        "executionRequirements": []
+      }
+    },
+    {
+      "id": "aku-e2-05",
+      "category": "rag_pipeline",
+      "title": "Build Your Team Knowledge Assistant",
+      "duration": 10,
+      "prerequisiteAKUs": ["aku-e2-04"],
+      "businessKPI": "knowledge_accessibility",
+      "concept": "Capstone: Build and deploy a working knowledge assistant.\n\n**Your deliverable:**\nA RAG-powered assistant that your team can actually use.\n\n**Steps:**\n1. Gather 5-10 key documents\n2. Set up your chosen tool\n3. Upload and organize documents\n4. Write and test system prompt\n5. Test with real questions\n6. Document for team use\n\n**Success criteria:**\n- Answers questions accurately\n- Cites sources properly\n- Knows when to say 'I don't know'\n- Team members can access it",
+      "sandboxChallenge": {
+        "prompt": "Build your Team Knowledge Assistant:\n\n1. List the documents you've uploaded (or will upload)\n2. Your complete system prompt\n3. 5 test questions and how it answered\n4. What worked well and what needs improvement\n5. Instructions for team members to use it\n\nThis is your Module 2 deliverable!",
+        "expectedOutputSchema": {
+          "documents": "array",
+          "systemPrompt": "string",
+          "testResults": "array",
+          "improvements": "array",
+          "teamInstructions": "string"
+        },
+        "hints": [
+          "Start with your most important documents",
+          "Test edge cases and tricky questions",
+          "Be honest about limitations",
+          "Make instructions simple for teammates"
+        ],
+        "maxHints": 4
+      },
+      "alternativeFormats": {
+        "visual": "Setup wizard",
+        "textual": "Complete guide",
+        "handsOn": "Live building session"
+      },
+      "verificationCriteria": {
+        "outputValidation": [
+          { "field": "documents", "type": "exists", "expected": true },
+          { "field": "systemPrompt", "type": "exists", "expected": true },
+          { "field": "testResults", "type": "exists", "expected": true },
+          { "field": "teamInstructions", "type": "exists", "expected": true }
+        ],
+        "executionRequirements": [],
+        "kpiThreshold": 80
+      }
+    }
+  ]
+}
