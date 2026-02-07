@@ -73,7 +73,7 @@ export async function middleware(request: NextRequest) {
   const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
 
   // PREVIEW MODE - set to false for production
-  const PREVIEW_MODE = true;
+  const PREVIEW_MODE = false;
 
   // Redirect to login if accessing admin route without auth
   if (!PREVIEW_MODE && isAdminRoute && !user) {

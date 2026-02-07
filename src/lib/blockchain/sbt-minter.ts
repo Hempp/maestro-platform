@@ -27,7 +27,7 @@ export class SBTMinter {
   constructor() {
     // Initialize Thirdweb SDK for Polygon
     this.sdk = ThirdwebSDK.fromPrivateKey(
-      process.env.MAESTRO_WALLET_PRIVATE_KEY!,
+      process.env.PHAZUR_WALLET_PRIVATE_KEY!,
       'polygon', // Use 'mumbai' for testnet
       {
         secretKey: process.env.THIRDWEB_SECRET_KEY,
