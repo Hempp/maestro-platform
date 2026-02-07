@@ -248,10 +248,10 @@ export default function Home() {
               Sign In
             </Link>
             <Link
-              href="/dashboard"
+              href="/signup"
               className="px-4 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-lg text-sm font-medium transition-colors"
             >
-              Get Started
+              Start Free
             </Link>
           </div>
         </nav>
@@ -313,11 +313,13 @@ export default function Home() {
               className="flex flex-col sm:flex-row items-center justify-center gap-3"
             >
               <Link
-                href="/dashboard"
+                href="/signup"
                 className="px-6 py-3 bg-white text-slate-900 hover:bg-slate-100 rounded-lg font-medium transition-colors flex items-center gap-2"
               >
-                <span className="w-5 h-5 bg-slate-900 text-white rounded text-xs flex items-center justify-center font-bold">P</span>
-                Start Building
+                Start Free
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </Link>
               <a
                 href="#paths"
@@ -335,9 +337,9 @@ export default function Home() {
               animate="visible"
               className="mt-20 pt-8 border-t border-slate-800/50 grid grid-cols-3 gap-8 max-w-lg mx-auto"
             >
-              <StatItem value="60" suffix="s" label="First result" />
-              <StatItem value="$0" label="Until ship" />
-              <StatItem value="SBT" label="On-chain" />
+              <StatItem value="3" label="Learning Paths" />
+              <StatItem value="$0" label="Until Certified" />
+              <StatItem value="100" suffix="%" label="Project-Based" />
             </motion.div>
           </motion.div>
         </section>
@@ -497,7 +499,7 @@ export default function Home() {
                   'Master Claude Code to scaffold apps in minutes',
                   <>Earn <span className="text-purple-400 font-semibold">Certified AI Associate</span> SBT</>,
                 ]}
-                price="$299"
+                price="$49"
                 color="purple"
                 cta="Start Learning Free"
                 delay={0}
@@ -518,7 +520,7 @@ export default function Home() {
                   'Build automated email & workflow systems',
                   <>Earn <span className="text-blue-400 font-semibold">Workflow Efficiency Lead</span> SBT</>,
                 ]}
-                price="$599"
+                price="$199"
                 color="blue"
                 cta="Start Learning Free"
                 popular
@@ -540,11 +542,75 @@ export default function Home() {
                   'Orchestrate multi-agent systems for full-scale ops',
                   <>Earn <span className="text-emerald-400 font-semibold">AI Operations Master</span> SBT</>,
                 ]}
-                price="$999"
+                price="$499"
                 color="emerald"
                 cta="Start Learning Free"
                 delay={0.2}
               />
+            </div>
+          </div>
+        </section>
+
+        {/* Social Proof Section */}
+        <section className="py-16 px-6 border-t border-slate-800/40 bg-[#0a0c0f]">
+          <div className="max-w-5xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-10"
+            >
+              <p className="text-slate-500 text-sm uppercase tracking-wider mb-2">What Learners Say</p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                {
+                  quote: "Finally, an AI course that makes you build real things. I deployed my first AI workflow in week 2.",
+                  name: "Marcus T.",
+                  role: "Software Developer",
+                  path: "Student Path",
+                },
+                {
+                  quote: "Cut my weekly admin work by 8 hours. The automation templates alone were worth it.",
+                  name: "Sarah K.",
+                  role: "Operations Manager",
+                  path: "Employee Path",
+                },
+                {
+                  quote: "Built an AI sales research system that does what my intern used to do. Runs 24/7.",
+                  name: "James L.",
+                  role: "Startup Founder",
+                  path: "Owner Path",
+                },
+              ].map((testimonial, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="bg-slate-800/20 border border-slate-800/40 rounded-xl p-5"
+                >
+                  <div className="flex gap-1 mb-3">
+                    {[...Array(5)].map((_, j) => (
+                      <svg key={j} className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-slate-300 text-sm leading-relaxed mb-4">"{testimonial.quote}"</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-white text-sm font-medium">{testimonial.name}</p>
+                      <p className="text-slate-500 text-xs">{testimonial.role}</p>
+                    </div>
+                    <span className="text-xs px-2 py-1 bg-slate-800/50 text-slate-400 rounded">
+                      {testimonial.path}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
@@ -751,7 +817,7 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-center text-slate-600 text-sm mt-6"
             >
-              Free to learn individually. Certifications from <span className="text-white">$299</span>.
+              Free to learn individually. Certifications from <span className="text-white">$49</span>.
               <Link href="#paths" className="text-cyan-500 hover:text-cyan-400 ml-1">See all paths →</Link>
             </motion.p>
           </div>

@@ -44,9 +44,9 @@ export default function SignupPage() {
       }
 
       setSuccess(true);
-      // Redirect after a short delay
+      // Redirect to onboarding after a short delay
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/onboarding');
         router.refresh();
       }, 2000);
     } catch (err) {
@@ -66,7 +66,7 @@ export default function SignupPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-semibold text-white mb-2">Account Created!</h1>
-          <p className="text-slate-400">Redirecting you to the dashboard...</p>
+          <p className="text-slate-400">Let's set up your learning path...</p>
         </div>
       </div>
     );
