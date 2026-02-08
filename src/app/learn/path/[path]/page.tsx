@@ -41,7 +41,6 @@ export default function LearnPage() {
   const router = useRouter();
   const path = params.path as PathType;
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -53,7 +52,11 @@ export default function LearnPage() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    setIsAuthenticated(!!user);
+    if (!user) {
+      // Redirect to dashboard if not authenticated
+      router.push('/dashboard');
+      return;
+    }
     setIsLoading(false);
   };
 
@@ -78,35 +81,6 @@ export default function LearnPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="text-center max-w-md mx-auto p-4 sm:p-8 w-full">
-          <div className="text-5xl sm:text-6xl mb-4">{info.icon}</div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{info.title}</h1>
-          <p className="text-gray-600 mt-2 text-sm sm:text-base">{info.subtitle}</p>
-          <div className="mt-6 space-y-3 sm:space-y-4">
-            <button
-              onClick={() => router.push('/signup')}
-              className="w-full py-3.5 min-h-[48px] px-4 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 active:bg-indigo-800 transition-colors"
-            >
-              Sign Up Free to Start
-            </button>
-            <button
-              onClick={() => router.push('/login')}
-              className="w-full py-3.5 min-h-[48px] px-4 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 active:bg-gray-100 transition-colors"
-            >
-              Already have an account? Log in
-            </button>
-          </div>
-          <p className="text-xs sm:text-sm text-gray-500 mt-4">
-            Free to learn. Pay ${info.price} only after certification.
-          </p>
-        </div>
       </div>
     );
   }
