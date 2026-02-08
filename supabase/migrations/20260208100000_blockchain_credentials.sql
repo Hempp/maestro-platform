@@ -93,10 +93,13 @@ BEGIN
   END IF;
 END $$;
 
--- Add wallet_address to users table if not present
+-- Add wallet_address to users table if table exists and column doesn't
 DO $$
 BEGIN
-  IF NOT EXISTS (
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_name = 'users'
+  ) AND NOT EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'users' AND column_name = 'wallet_address'
   ) THEN
@@ -112,14 +115,17 @@ ALTER TABLE pending_mints ENABLE ROW LEVEL SECURITY;
 ALTER TABLE claimable_credentials ENABLE ROW LEVEL SECURITY;
 
 -- Users can view their own pending mints
+DROP POLICY IF EXISTS "Users view own pending mints" ON pending_mints;
 CREATE POLICY "Users view own pending mints" ON pending_mints
   FOR SELECT USING (auth.uid() = user_id);
 
 -- Users can view their own claimable credentials
+DROP POLICY IF EXISTS "Users view own claimable credentials" ON claimable_credentials;
 CREATE POLICY "Users view own claimable credentials" ON claimable_credentials
   FOR SELECT USING (auth.uid() = user_id);
 
 -- Allow claiming by claim code (public access for claim verification)
+DROP POLICY IF EXISTS "Public claim code lookup" ON claimable_credentials;
 CREATE POLICY "Public claim code lookup" ON claimable_credentials
   FOR SELECT USING (
     status = 'pending' AND expires_at > NOW()
@@ -139,7 +145,13 @@ CREATE INDEX IF NOT EXISTS idx_claimable_credentials_pending ON claimable_creden
   WHERE status = 'pending';
 
 CREATE INDEX IF NOT EXISTS idx_certificates_token_id ON certificates(token_id);
-CREATE INDEX IF NOT EXISTS idx_certificates_user_type ON certificates(user_id, certificate_type);
+-- Create index only if both table and column exist
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'certificates' AND column_name = 'certificate_type') THEN
+    CREATE INDEX IF NOT EXISTS idx_certificates_user_type ON certificates(user_id, certificate_type);
+  END IF;
+END $$;
 
 -- =====================================================
 -- HELPER FUNCTIONS

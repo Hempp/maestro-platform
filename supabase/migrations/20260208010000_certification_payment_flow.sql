@@ -59,10 +59,13 @@ ALTER TABLE pending_mints ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users view own pending mints" ON pending_mints
   FOR SELECT USING (auth.uid() = user_id);
 
--- Add wallet_address to profiles if not exists
+-- Add wallet_address to profiles if table and column don't exist
 DO $$
 BEGIN
-  IF NOT EXISTS (
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_name = 'profiles'
+  ) AND NOT EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'profiles' AND column_name = 'wallet_address'
   ) THEN
