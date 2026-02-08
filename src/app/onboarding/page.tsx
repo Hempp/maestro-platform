@@ -60,8 +60,11 @@ export default function OnboardingPage() {
     // Store path selection
     if (selectedPath) {
       localStorage.setItem('phazur_selected_path', selectedPath);
+      // Go directly to the learning path
+      router.push(`/learn/path/${selectedPath}`);
+    } else {
+      router.push('/dashboard');
     }
-    router.push('/dashboard');
   };
 
   const getColorClasses = (color: string, isSelected: boolean) => {
