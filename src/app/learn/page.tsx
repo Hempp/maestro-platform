@@ -63,11 +63,13 @@ function ModuleCard({
   index,
   status,
   completedModules,
+  tier,
 }: {
   module: ModulePreview;
   index: number;
   status: 'locked' | 'available' | 'in_progress' | 'completed';
   completedModules: string[];
+  tier: 'student' | 'employee' | 'owner';
 }) {
   const isLocked = status === 'locked';
   const isCompleted = status === 'completed';
@@ -160,7 +162,7 @@ function ModuleCard({
 
       {!isLocked && (
         <Link
-          href={`/learn/${module.id}`}
+          href={`/learn/path/${tier}`}
           className={`block w-full py-2.5 text-center rounded-lg text-xs font-medium transition ${
             isCompleted
               ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20'
@@ -169,7 +171,7 @@ function ModuleCard({
               : 'bg-slate-700/60 text-slate-300 hover:bg-slate-700'
           }`}
         >
-          {isCompleted ? 'Review Module' : isInProgress ? 'Continue Learning' : 'Start Module'}
+          {isCompleted ? 'Review' : isInProgress ? 'Continue' : 'Start'} in Terminal
         </Link>
       )}
     </div>
@@ -406,12 +408,21 @@ export default function LearnPage() {
               </p>
             </div>
           </div>
-          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
             <div
               className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 rounded-full transition-all duration-500"
               style={{ width: `${Math.max(completionPercent, 2)}%` }}
             />
           </div>
+          <Link
+            href={`/learn/path/${selectedTier}`}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-cyan-500 hover:bg-cyan-400 text-white rounded-lg text-sm font-medium transition"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {completedModules.length > 0 ? 'Continue in Terminal' : 'Start Learning in Terminal'}
+          </Link>
         </div>
 
         {/* Certificates Earned */}
@@ -482,6 +493,7 @@ export default function LearnPage() {
                 index={index}
                 status={getModuleStatus(module, index)}
                 completedModules={completedModules.map((m) => m.id)}
+                tier={selectedTier}
               />
             ))}
           </div>
