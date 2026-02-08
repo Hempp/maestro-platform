@@ -18,13 +18,19 @@ import type {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export class LearnerModelService {
-  private pinecone: Pinecone;
+  private _pinecone: Pinecone | null = null;
   private indexName = 'phazur-learners';
 
-  constructor() {
-    this.pinecone = new Pinecone({
-      apiKey: process.env.PINECONE_API_KEY!,
-    });
+  private get pinecone(): Pinecone {
+    if (!this._pinecone) {
+      if (!process.env.PINECONE_API_KEY) {
+        throw new Error('PINECONE_API_KEY is not configured');
+      }
+      this._pinecone = new Pinecone({
+        apiKey: process.env.PINECONE_API_KEY,
+      });
+    }
+    return this._pinecone;
   }
 
   /**

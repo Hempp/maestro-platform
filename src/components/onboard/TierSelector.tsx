@@ -7,6 +7,7 @@
 
 import { useRouter } from 'next/navigation';
 import type { BusinessTier } from '@/types';
+import { useAnalytics } from '@/components/providers/AnalyticsProvider';
 
 const TIERS: {
   id: BusinessTier;
@@ -46,8 +47,12 @@ const TIERS: {
 
 export function TierSelector() {
   const router = useRouter();
+  const { trackPathSelection, trackEvent } = useAnalytics();
 
   const selectTier = (tier: BusinessTier) => {
+    // Track path selection
+    trackPathSelection(tier);
+    trackEvent('onboarding_tier_selected', { tier });
     router.push(`/learn?tier=${tier}`);
   };
 

@@ -1982,6 +1982,106 @@ export type Database = {
           },
         ]
       }
+      certification_submissions: {
+        Row: {
+          id: string
+          user_id: string
+          path: "student" | "employee" | "owner"
+          status: Database["public"]["Enums"]["certification_submission_status"]
+          architecture_url: string | null
+          video_url: string | null
+          logs_url: string | null
+          roi_document_url: string | null
+          documentation_url: string | null
+          project_title: string
+          project_description: string | null
+          github_repo_url: string | null
+          live_demo_url: string | null
+          score_working_system: number | null
+          score_problem_fit: number | null
+          score_architecture: number | null
+          score_production_ready: number | null
+          score_roi: number | null
+          score_documentation: number | null
+          total_score: number | null
+          reviewed_by: string | null
+          reviewed_at: string | null
+          reviewer_notes: string | null
+          submitted_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          path: "student" | "employee" | "owner"
+          status?: Database["public"]["Enums"]["certification_submission_status"]
+          architecture_url?: string | null
+          video_url?: string | null
+          logs_url?: string | null
+          roi_document_url?: string | null
+          documentation_url?: string | null
+          project_title: string
+          project_description?: string | null
+          github_repo_url?: string | null
+          live_demo_url?: string | null
+          score_working_system?: number | null
+          score_problem_fit?: number | null
+          score_architecture?: number | null
+          score_production_ready?: number | null
+          score_roi?: number | null
+          score_documentation?: number | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          submitted_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          path?: "student" | "employee" | "owner"
+          status?: Database["public"]["Enums"]["certification_submission_status"]
+          architecture_url?: string | null
+          video_url?: string | null
+          logs_url?: string | null
+          roi_document_url?: string | null
+          documentation_url?: string | null
+          project_title?: string
+          project_description?: string | null
+          github_repo_url?: string | null
+          live_demo_url?: string | null
+          score_working_system?: number | null
+          score_problem_fit?: number | null
+          score_architecture?: number | null
+          score_production_ready?: number | null
+          score_roi?: number | null
+          score_documentation?: number | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          submitted_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certification_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certification_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -2025,6 +2125,7 @@ export type Database = {
       tier_type: "student" | "employee" | "owner"
       user_role: "student" | "instructor" | "admin"
       retention_email_type: "day_1" | "day_3" | "day_7"
+      certification_submission_status: "submitted" | "under_review" | "passed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2190,6 +2291,7 @@ export const Constants = {
       tier_type: ["student", "employee", "owner"],
       user_role: ["student", "instructor", "admin"],
       retention_email_type: ["day_1", "day_3", "day_7"],
+      certification_submission_status: ["submitted", "under_review", "passed", "failed"],
     },
   },
 } as const

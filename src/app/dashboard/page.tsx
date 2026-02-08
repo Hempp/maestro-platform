@@ -16,6 +16,11 @@ import { useChat } from '@/hooks/useChat';
 import { useProgress } from '@/hooks/useProgress';
 import { useRealtime } from '@/hooks/useRealtime';
 import { StreakCounter, useLocalStreak } from '@/components/dashboard/StreakCounter';
+import {
+  DashboardLearningSection,
+  useLearningProgress,
+  useSelectedPath,
+} from '@/components/dashboard/LearningProgress';
 
 type PathType = 'student' | 'employee' | 'owner' | null;
 type ViewType = 'home' | 'live-courses';
@@ -371,22 +376,36 @@ function VideoCard({
   );
 }
 
-// Tutor Sidebar component
+// Tutor Sidebar component with Learning Progress
 function TutorSidebar({
   currentStep,
   selectedPath,
   messages,
   onClose,
+  learningProgress,
 }: {
   currentStep: number;
   selectedPath: 'student' | 'employee' | 'owner' | null;
   messages: Array<{ role: string; content: string[] }>;
   onClose: () => void;
+  learningProgress?: {
+    path: 'student' | 'employee' | 'owner' | null;
+    currentMilestone: number;
+    currentMilestoneTitle: string;
+    completedMilestones: number;
+    progressPercent: number;
+    milestones: Array<{
+      number: number;
+      title: string;
+      status: 'locked' | 'active' | 'submitted' | 'approved' | 'needs_revision';
+    }>;
+  } | null;
 }) {
   const [playingVideo, setPlayingVideo] = useState<VideoResult | null>(null);
   const [videos, setVideos] = useState<VideoResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [videoSource, setVideoSource] = useState<'youtube' | 'mock'>('mock');
+  const [showAllMilestones, setShowAllMilestones] = useState(false);
 
   // Fetch videos from API when path or step changes
   useEffect(() => {
@@ -416,39 +435,73 @@ function TutorSidebar({
     fetchVideos();
   }, [selectedPath, currentStep]);
 
-  // Determine current topic based on messages and step
-  const getCurrentTopic = () => {
-    if (!selectedPath) return 'Getting Started';
-    if (currentStep < 2) return 'Introduction & Setup';
-    if (currentStep < 4) return 'Core Concepts';
-    return 'Building Projects';
+  // Path styling
+  const pathStyles: Record<string, { gradient: string; bg: string; border: string; text: string; bar: string }> = {
+    student: {
+      gradient: 'from-purple-500 to-purple-600',
+      bg: 'bg-purple-500/10',
+      border: 'border-purple-500/30',
+      text: 'text-purple-400',
+      bar: 'bg-purple-500',
+    },
+    employee: {
+      gradient: 'from-cyan-500 to-cyan-600',
+      bg: 'bg-cyan-500/10',
+      border: 'border-cyan-500/30',
+      text: 'text-cyan-400',
+      bar: 'bg-cyan-500',
+    },
+    owner: {
+      gradient: 'from-emerald-500 to-emerald-600',
+      bg: 'bg-emerald-500/10',
+      border: 'border-emerald-500/30',
+      text: 'text-emerald-400',
+      bar: 'bg-emerald-500',
+    },
   };
 
-  // Get progress steps based on path
-  const getProgressSteps = () => {
-    if (selectedPath === 'student') {
-      return ['Welcome', 'Terminal Setup', 'First Commands', 'Build Project', 'Deploy'];
-    } else if (selectedPath === 'employee') {
-      return ['Assessment', 'Workflow Map', 'Build GPT', 'Automations', 'Report'];
-    } else if (selectedPath === 'owner') {
-      return ['Audit', 'Agent Design', 'Build Agent', 'Orchestrate', 'Deploy'];
+  const currentPath = learningProgress?.path || selectedPath;
+  const styles = currentPath ? pathStyles[currentPath] : pathStyles.student;
+
+  // Get milestone status icon
+  const getMilestoneIcon = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return (
+          <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        );
+      case 'active':
+        return <div className={`w-2 h-2 ${styles.bar} rounded-full animate-pulse`} />;
+      case 'submitted':
+        return (
+          <svg className="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+      case 'needs_revision':
+        return (
+          <svg className="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        );
+      default:
+        return <div className="w-2 h-2 bg-slate-700 rounded-full" />;
     }
-    return ['Start', 'Learn', 'Build', 'Ship'];
   };
-
-  const progressSteps = getProgressSteps();
 
   return (
     <aside className="w-72 border-l border-slate-800/40 flex flex-col bg-[#0f1115] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/40">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-cyan-500/20 flex items-center justify-center">
-            <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className={`w-6 h-6 rounded ${styles.bg} flex items-center justify-center`}>
+            <svg className={`w-3.5 h-3.5 ${styles.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
-          <span className="text-sm font-medium text-slate-300">Tutor</span>
+          <span className="text-sm font-medium text-slate-300">Learning</span>
         </div>
         <button
           onClick={onClose}
@@ -462,42 +515,118 @@ function TutorSidebar({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {/* Progress Section */}
-        <CollapsibleSection title="Progress" defaultOpen={true}>
-          <div className="space-y-0">
-            {progressSteps.map((step, index) => (
-              <ProgressCheckpoint
-                key={step}
-                completed={index < currentStep}
-                current={index === currentStep}
-                label={step}
-                isLast={index === progressSteps.length - 1}
-              />
+        {/* Continue Learning Card */}
+        {currentPath && (
+          <div className={`rounded-lg border ${styles.border} ${styles.bg} p-3`}>
+            {/* Path Header */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${styles.gradient} flex items-center justify-center`}>
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="text-white text-sm font-medium">
+                    {currentPath === 'student' ? 'The Student' : currentPath === 'employee' ? 'The Employee' : 'The Owner'}
+                  </h4>
+                  <p className="text-slate-500 text-[10px]">
+                    {learningProgress?.completedMilestones || 0}/10 milestones
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Current Milestone */}
+            <div className="mb-3">
+              <p className="text-slate-500 text-[10px] uppercase tracking-wider mb-1">Current Milestone</p>
+              <div className="flex items-center gap-2">
+                <span className={`w-5 h-5 rounded-full bg-gradient-to-br ${styles.gradient} flex items-center justify-center text-white text-[10px] font-medium`}>
+                  {learningProgress?.currentMilestone || 1}
+                </span>
+                <span className="text-slate-200 text-xs font-medium truncate">
+                  {learningProgress?.currentMilestoneTitle || 'Getting Started'}
+                </span>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-3">
+              <div className="flex items-center justify-between text-[10px] text-slate-500 mb-1">
+                <span>Progress</span>
+                <span>{learningProgress?.progressPercent || 0}%</span>
+              </div>
+              <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${styles.bar} rounded-full transition-all duration-500`}
+                  style={{ width: `${learningProgress?.progressPercent || 0}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Continue Button */}
+            <Link
+              href={`/learn/path/${currentPath}`}
+              className={`block w-full py-2 rounded-lg bg-gradient-to-r ${styles.gradient} text-white text-xs font-medium text-center transition hover:opacity-90`}
+            >
+              Continue Learning
+            </Link>
+          </div>
+        )}
+
+        {/* Milestones Progress */}
+        <CollapsibleSection title="Milestones" defaultOpen={true}>
+          <div className="space-y-1">
+            {(learningProgress?.milestones || Array.from({ length: 10 }, (_, i) => ({
+              number: i + 1,
+              title: `Milestone ${i + 1}`,
+              status: i === 0 ? 'active' : 'locked' as const,
+            }))).slice(0, showAllMilestones ? 10 : 5).map((milestone) => (
+              <div
+                key={milestone.number}
+                className={`flex items-center gap-2.5 p-2 rounded-lg border transition-colors ${
+                  milestone.status === 'active'
+                    ? `${styles.border} ${styles.bg}`
+                    : milestone.status === 'approved'
+                    ? 'border-emerald-500/20 bg-emerald-500/5'
+                    : 'border-slate-800/60 bg-slate-800/20'
+                }`}
+              >
+                <div className="w-5 h-5 rounded-full bg-slate-800/50 flex items-center justify-center flex-shrink-0">
+                  {getMilestoneIcon(milestone.status)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className={`text-xs truncate block ${
+                    milestone.status === 'active' ? styles.text :
+                    milestone.status === 'approved' ? 'text-slate-300' :
+                    'text-slate-500'
+                  }`}>
+                    {milestone.number}. {milestone.title}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
-          <p className="text-[10px] text-slate-600 mt-3">
-            Track your progress through the learning path.
-          </p>
+          {!showAllMilestones && (
+            <button
+              onClick={() => setShowAllMilestones(true)}
+              className="w-full mt-2 text-[10px] text-cyan-500/70 hover:text-cyan-400 transition"
+            >
+              Show all 10 milestones
+            </button>
+          )}
+          {showAllMilestones && (
+            <button
+              onClick={() => setShowAllMilestones(false)}
+              className="w-full mt-2 text-[10px] text-cyan-500/70 hover:text-cyan-400 transition"
+            >
+              Show less
+            </button>
+          )}
         </CollapsibleSection>
 
-        {/* Current Topic */}
-        <div className="flex items-center justify-between p-3 bg-slate-800/30 border border-slate-800/40 rounded-lg">
-          <div>
-            <p className="text-[10px] text-slate-600 uppercase tracking-wider">Current Topic</p>
-            <p className="text-sm font-medium text-slate-300">{getCurrentTopic()}</p>
-          </div>
-          <div className="flex items-center gap-1">
-            <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-            <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </div>
-
         {/* Relevant Videos */}
-        <CollapsibleSection title={`Videos ${videoSource === 'youtube' ? '' : '(Demo)'}`} defaultOpen={true}>
+        <CollapsibleSection title={`Videos ${videoSource === 'youtube' ? '' : '(Demo)'}`} defaultOpen={false}>
           {isLoading ? (
             <div className="flex items-center justify-center py-4">
               <div className="w-5 h-5 border-2 border-slate-700 border-t-cyan-500 rounded-full animate-spin" />
@@ -518,13 +647,13 @@ function TutorSidebar({
           )}
           {videos.length > 4 && (
             <button className="w-full mt-2 text-[10px] text-cyan-500/70 hover:text-cyan-400 transition">
-              View all {videos.length} videos →
+              View all {videos.length} videos
             </button>
           )}
         </CollapsibleSection>
 
         {/* Context / Resources */}
-        <CollapsibleSection title="Context" defaultOpen={false}>
+        <CollapsibleSection title="Resources" defaultOpen={false}>
           <div className="space-y-2">
             <div className="flex items-center gap-2 p-2 bg-slate-800/30 rounded">
               <div className="w-8 h-8 bg-slate-800 rounded flex items-center justify-center">
@@ -534,7 +663,7 @@ function TutorSidebar({
               </div>
               <div className="flex-1">
                 <p className="text-xs text-slate-400">Getting Started Guide</p>
-                <p className="text-[10px] text-slate-600">PDF • 2.4 MB</p>
+                <p className="text-[10px] text-slate-600">PDF</p>
               </div>
             </div>
             <div className="flex items-center gap-2 p-2 bg-slate-800/30 rounded">
@@ -549,9 +678,6 @@ function TutorSidebar({
               </div>
             </div>
           </div>
-          <p className="text-[10px] text-slate-600 mt-3">
-            Resources related to your current task.
-          </p>
         </CollapsibleSection>
       </div>
 
@@ -787,6 +913,8 @@ function DashboardContent() {
 
   // Backend hooks
   const { user, loading: authLoading } = useAuth();
+  const { progress: learningProgress } = useLearningProgress();
+  const { selectedPath: storedPath, savePath } = useSelectedPath();
 
   // Free message limit before requiring auth
   const FREE_MESSAGE_LIMIT = 3;
@@ -800,6 +928,13 @@ function DashboardContent() {
   const { stats, progress: akuProgress } = useProgress();
   const { presence, updatePresence } = useRealtime(user?.id);
   const { streak: localStreak, recordActivity } = useLocalStreak();
+
+  // Sync stored path with local state
+  useEffect(() => {
+    if (storedPath && !selectedPath) {
+      setSelectedPath(storedPath);
+    }
+  }, [storedPath, selectedPath]);
 
   // Determine streak values - prefer API stats if available, fallback to localStorage
   const currentStreak = stats?.currentStreak ?? localStreak.current;
@@ -1374,6 +1509,24 @@ function DashboardContent() {
                 /* Chat View */
                 <div className="px-3 sm:px-6 py-4">
                   <div className="max-w-2xl mx-auto">
+                    {/* Continue Learning Card - Show at top if user has a path */}
+                    {(learningProgress?.path || selectedPath) && messages.length <= 2 && (
+                      <div className="mb-6">
+                        <DashboardLearningSection />
+                      </div>
+                    )}
+
+                    {/* Path Selection - Show if no path selected and no messages */}
+                    {!learningProgress?.path && !selectedPath && messages.length === 0 && (
+                      <div className="mb-6">
+                        <div className="text-center mb-6">
+                          <h2 className="text-xl font-semibold text-white mb-2">Welcome to Phazur</h2>
+                          <p className="text-slate-400 text-sm">Choose a learning path to get started</p>
+                        </div>
+                        <DashboardLearningSection />
+                      </div>
+                    )}
+
                     {messages.map((msg) => (
                       <div key={msg.id} className="mb-4">
                         {msg.role === 'assistant' ? (
@@ -1605,6 +1758,7 @@ function DashboardContent() {
             selectedPath={selectedPath}
             messages={messages}
             onClose={() => setShowProgressPanel(false)}
+            learningProgress={learningProgress}
           />
         </div>
       )}

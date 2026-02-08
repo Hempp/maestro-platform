@@ -9,9 +9,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useAnalytics } from '@/components/providers/AnalyticsProvider';
 
 export default function SignupPage() {
   const router = useRouter();
+  const { trackSignup, trackEvent, identifyUser } = useAnalytics();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,8 +26,12 @@ export default function SignupPage() {
     setIsLoading(true);
     setError('');
 
+    // Track signup attempt
+    trackEvent('signup_started', { method: 'email' });
+
     if (password.length < 6) {
       setError('Password must be at least 6 characters');
+      trackEvent('signup_error', { error: 'password_too_short' });
       setIsLoading(false);
       return;
     }
@@ -40,7 +46,14 @@ export default function SignupPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        trackEvent('signup_error', { error: data.error });
         throw new Error(data.error || 'Signup failed');
+      }
+
+      // Track successful signup and identify user
+      trackSignup('unknown', 'email'); // tier unknown at signup
+      if (data.user?.id) {
+        identifyUser(data.user.id, { email, name: fullName });
       }
 
       setSuccess(true);

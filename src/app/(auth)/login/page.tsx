@@ -9,9 +9,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useAnalytics } from '@/components/providers/AnalyticsProvider';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { trackEvent, identifyUser } = useAnalytics();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +23,8 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+
+    trackEvent('login_started', { method: 'email' });
 
     try {
       const response = await fetch('/api/auth/login', {
@@ -32,7 +36,18 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        trackEvent('login_error', { error: data.error });
         throw new Error(data.error || 'Login failed');
+      }
+
+      // Track successful login and identify user
+      trackEvent('login_completed', { method: 'email' });
+      if (data.user?.id) {
+        identifyUser(data.user.id, {
+          email,
+          tier: data.user.tier,
+          role: data.user.role,
+        });
       }
 
       router.push('/dashboard');

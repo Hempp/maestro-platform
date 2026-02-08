@@ -84,26 +84,26 @@ export default function LearnPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="text-6xl mb-4">{info.icon}</div>
-          <h1 className="text-2xl font-bold text-gray-900">{info.title}</h1>
-          <p className="text-gray-600 mt-2">{info.subtitle}</p>
-          <div className="mt-6 space-y-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="text-center max-w-md mx-auto p-4 sm:p-8 w-full">
+          <div className="text-5xl sm:text-6xl mb-4">{info.icon}</div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{info.title}</h1>
+          <p className="text-gray-600 mt-2 text-sm sm:text-base">{info.subtitle}</p>
+          <div className="mt-6 space-y-3 sm:space-y-4">
             <button
               onClick={() => router.push('/signup')}
-              className="w-full py-3 px-4 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+              className="w-full py-3.5 min-h-[48px] px-4 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 active:bg-indigo-800 transition-colors"
             >
               Sign Up Free to Start
             </button>
             <button
               onClick={() => router.push('/login')}
-              className="w-full py-3 px-4 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              className="w-full py-3.5 min-h-[48px] px-4 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 active:bg-gray-100 transition-colors"
             >
               Already have an account? Log in
             </button>
           </div>
-          <p className="text-sm text-gray-500 mt-4">
+          <p className="text-xs sm:text-sm text-gray-500 mt-4">
             Free to learn. Pay ${info.price} only after certification.
           </p>
         </div>
@@ -112,35 +112,38 @@ export default function LearnPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <button onClick={() => router.push('/dashboard')} className="text-gray-500 hover:text-gray-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <header className="bg-white border-b flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16 gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 hover:text-gray-700 active:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+              >
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{info.icon}</span>
-                <div>
-                  <h1 className="font-semibold text-gray-900">{info.title}</h1>
-                  <p className="text-xs text-gray-500">{info.duration} • 10 milestones</p>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xl sm:text-2xl flex-shrink-0">{info.icon}</span>
+                <div className="min-w-0">
+                  <h1 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{info.title}</h1>
+                  <p className="text-[10px] sm:text-xs text-gray-500">{info.duration} • 10 milestones</p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-500">Pay ${info.price} after certification</span>
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+              <span className="text-[10px] sm:text-sm text-gray-500 hidden xs:block">Pay ${info.price} after cert</span>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        <div className="h-[calc(100vh-140px)]">
+      {/* Main Content - Full height with proper mobile keyboard handling */}
+      <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-2 sm:px-4 py-2 sm:py-4">
+        <div className="flex-1 min-h-0">
           <TutorChat path={path} />
         </div>
       </main>

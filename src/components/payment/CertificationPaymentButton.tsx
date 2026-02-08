@@ -19,6 +19,7 @@
  */
 
 import { useState } from 'react';
+import { useAnalytics } from '@/components/providers/AnalyticsProvider';
 
 // Pricing display (in dollars)
 const TIER_PRICES = {
@@ -56,6 +57,7 @@ export function CertificationPaymentButton({
 }: CertificationPaymentButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { trackPayment, trackEvent } = useAnalytics();
 
   const price = TIER_PRICES[tier];
   const label = TIER_LABELS[tier];
@@ -63,6 +65,10 @@ export function CertificationPaymentButton({
   const handlePayment = async () => {
     setIsLoading(true);
     setError(null);
+
+    // Track payment initiated
+    trackPayment('initiated', price, tier);
+    trackEvent('payment_button_clicked', { tier, price, courseId });
 
     try {
       // Create checkout session
@@ -86,6 +92,7 @@ export function CertificationPaymentButton({
 
       // Redirect to Stripe Checkout using the URL
       if (data.url) {
+        trackEvent('checkout_redirect', { tier, price });
         onSuccess?.();
         window.location.href = data.url;
       } else {
@@ -93,6 +100,8 @@ export function CertificationPaymentButton({
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Payment failed';
+      trackPayment('failed', price, tier);
+      trackEvent('payment_error', { tier, error: errorMessage });
       setError(errorMessage);
       onError?.(errorMessage);
     } finally {
@@ -184,11 +193,13 @@ export function CompactPaymentButton({
   className = '',
 }: Omit<CertificationPaymentButtonProps, 'onSuccess' | 'onError'>) {
   const [isLoading, setIsLoading] = useState(false);
+  const { trackPayment, trackEvent } = useAnalytics();
 
   const price = TIER_PRICES[tier];
 
   const handlePayment = async () => {
     setIsLoading(true);
+    trackPayment('initiated', price, tier);
 
     try {
       const response = await fetch('/api/stripe/create-checkout', {
@@ -207,10 +218,12 @@ export function CompactPaymentButton({
 
       // Redirect to Stripe Checkout URL directly
       if (data.url) {
+        trackEvent('checkout_redirect', { tier, price });
         window.location.href = data.url;
       }
     } catch (err) {
       console.error('Payment error:', err);
+      trackPayment('failed', price, tier);
       setIsLoading(false);
     }
   };

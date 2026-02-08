@@ -21,20 +21,34 @@ export interface MintResult {
 }
 
 export class SBTMinter {
-  private sdk: ThirdwebSDK;
-  private contractAddress: string;
+  private _sdk: ThirdwebSDK | null = null;
+  private _contractAddress: string | null = null;
 
-  constructor() {
-    // Initialize Thirdweb SDK for Polygon
-    this.sdk = ThirdwebSDK.fromPrivateKey(
-      process.env.PHAZUR_WALLET_PRIVATE_KEY!,
-      'polygon', // Use 'mumbai' for testnet
-      {
-        secretKey: process.env.THIRDWEB_SECRET_KEY,
+  private get sdk(): ThirdwebSDK {
+    if (!this._sdk) {
+      if (!process.env.PHAZUR_WALLET_PRIVATE_KEY) {
+        throw new Error('PHAZUR_WALLET_PRIVATE_KEY is not configured');
       }
-    );
+      // Initialize Thirdweb SDK for Polygon
+      this._sdk = ThirdwebSDK.fromPrivateKey(
+        process.env.PHAZUR_WALLET_PRIVATE_KEY,
+        'polygon', // Use 'mumbai' for testnet
+        {
+          secretKey: process.env.THIRDWEB_SECRET_KEY,
+        }
+      );
+    }
+    return this._sdk;
+  }
 
-    this.contractAddress = process.env.SBT_CONTRACT_ADDRESS!;
+  private get contractAddress(): string {
+    if (!this._contractAddress) {
+      if (!process.env.SBT_CONTRACT_ADDRESS) {
+        throw new Error('SBT_CONTRACT_ADDRESS is not configured');
+      }
+      this._contractAddress = process.env.SBT_CONTRACT_ADDRESS;
+    }
+    return this._contractAddress;
   }
 
   /**
