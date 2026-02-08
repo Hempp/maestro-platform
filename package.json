@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "remotion:preview": "remotion studio remotion/index.ts",
+    "remotion:render": "remotion render remotion/index.ts PhazurWalkthrough out/walkthrough.mp4",
+    "remotion:render:gif": "remotion render remotion/index.ts PhazurWalkthrough out/walkthrough.gif --image-format=png"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
@@ -33,6 +36,9 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@remotion/bundler": "^4.0.419",
+    "@remotion/cli": "^4.0.419",
+    "@remotion/player": "^4.0.419",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -41,6 +47,7 @@
     "eslint-config-next": "16.1.6",
     "puppeteer": "^24.36.1",
     "puppeteer-core": "^24.36.1",
+    "remotion": "^4.0.419",
     "supabase": "^2.74.5",
     "tailwindcss": "^4",
     "typescript": "^5"
