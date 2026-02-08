@@ -462,6 +462,35 @@ export interface Database {
           updated_at?: string;
         };
       };
+      retention_emails: {
+        Row: {
+          id: string;
+          user_id: string;
+          email_type: 'day_1' | 'day_3' | 'day_7';
+          sent_at: string;
+          resend_id: string | null;
+          success: boolean;
+          error_message: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          email_type: 'day_1' | 'day_3' | 'day_7';
+          sent_at?: string;
+          resend_id?: string | null;
+          success?: boolean;
+          error_message?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          email_type?: 'day_1' | 'day_3' | 'day_7';
+          sent_at?: string;
+          resend_id?: string | null;
+          success?: boolean;
+          error_message?: string | null;
+        };
+      };
     };
     Views: {};
     Functions: {};
@@ -474,6 +503,7 @@ export interface Database {
       theme_preference: 'dark' | 'light' | 'system';
       profile_visibility: 'public' | 'private' | 'connections';
       font_size_preference: 'small' | 'medium' | 'large';
+      retention_email_type: 'day_1' | 'day_3' | 'day_7';
     };
   };
 }

@@ -86,10 +86,10 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f1115] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0f1115] flex items-center justify-center px-4 py-8 sm:p-4">
       <div className="w-full max-w-2xl">
         {/* Progress Indicator */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="flex items-center justify-center gap-2 mb-6 sm:mb-8">
           {[1, 2, 3].map((s) => (
             <div
               key={s}
@@ -107,15 +107,15 @@ export default function OnboardingPage() {
         {/* Step 1: Welcome */}
         {step === 1 && (
           <div className="text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center">
-              <span className="text-4xl">🎯</span>
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-5 sm:mb-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center">
+              <span className="text-3xl sm:text-4xl">🎯</span>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-3">Welcome to Phazur</h1>
-            <p className="text-slate-400 text-lg mb-8 max-w-md mx-auto">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">Welcome to Phazur</h1>
+            <p className="text-slate-400 text-base sm:text-lg mb-6 sm:mb-8 max-w-md mx-auto px-2">
               You're about to master AI through building, not watching. Here's how it works:
             </p>
 
-            <div className="grid gap-4 text-left max-w-md mx-auto mb-8">
+            <div className="grid gap-3 sm:gap-4 text-left max-w-md mx-auto mb-6 sm:mb-8">
               <div className="flex items-start gap-4 p-4 bg-[#1a1d21] rounded-xl border border-slate-800">
                 <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
                   <span className="text-emerald-400 font-bold">1</span>
@@ -149,7 +149,7 @@ export default function OnboardingPage() {
 
             <button
               onClick={() => setStep(2)}
-              className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl transition"
+              className="w-full sm:w-auto px-8 py-3.5 min-h-[48px] bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl transition active:bg-emerald-700"
             >
               Choose Your Path
             </button>
@@ -159,12 +159,12 @@ export default function OnboardingPage() {
         {/* Step 2: Choose Path */}
         {step === 2 && (
           <div>
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-white mb-3">Choose Your Path</h1>
-              <p className="text-slate-400">Select the journey that matches your goals</p>
+            <div className="text-center mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">Choose Your Path</h1>
+              <p className="text-slate-400 text-sm sm:text-base">Select the journey that matches your goals</p>
             </div>
 
-            <div className="grid gap-4 mb-8">
+            <div className="grid gap-3 sm:gap-4 mb-6 sm:mb-8">
               {(Object.keys(PATHS) as PathType[]).filter(Boolean).map((pathKey) => {
                 const path = PATHS[pathKey!];
                 const colors = getColorClasses(path.color, selectedPath === pathKey);
@@ -172,18 +172,18 @@ export default function OnboardingPage() {
                   <button
                     key={pathKey}
                     onClick={() => handlePathSelect(pathKey)}
-                    className={`w-full p-5 rounded-xl border-2 ${colors.border} ${colors.bg} text-left transition-all duration-200`}
+                    className={`w-full p-4 sm:p-5 rounded-xl border-2 ${colors.border} ${colors.bg} text-left transition-all duration-200 active:scale-[0.99]`}
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="text-3xl">{path.icon}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3 className="text-white font-semibold text-lg">{path.title}</h3>
-                          <span className={`text-sm font-medium ${colors.text}`}>{path.price}</span>
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className="text-2xl sm:text-3xl">{path.icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1 gap-2">
+                          <h3 className="text-white font-semibold text-base sm:text-lg">{path.title}</h3>
+                          <span className={`text-sm font-medium ${colors.text} shrink-0`}>{path.price}</span>
                         </div>
-                        <p className="text-slate-500 text-sm mb-2">{path.subtitle}</p>
+                        <p className="text-slate-500 text-sm mb-1 sm:mb-2">{path.subtitle}</p>
                         <p className="text-slate-400 text-sm">{path.description}</p>
-                        <div className="flex items-center gap-4 mt-3 text-xs">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 sm:mt-3 text-xs">
                           <span className="text-slate-500">~{path.time}</span>
                           <span className={colors.text}>{path.credential}</span>
                         </div>
@@ -201,17 +201,17 @@ export default function OnboardingPage() {
               })}
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <button
                 onClick={() => setStep(1)}
-                className="px-6 py-3 text-slate-400 hover:text-white transition"
+                className="px-6 py-3 min-h-[48px] text-slate-400 hover:text-white transition text-center"
               >
                 Back
               </button>
               <button
                 onClick={() => setStep(3)}
                 disabled={!selectedPath}
-                className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-xl transition"
+                className="px-8 py-3.5 min-h-[48px] bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-xl transition active:bg-emerald-700"
               >
                 Continue
               </button>
@@ -222,15 +222,15 @@ export default function OnboardingPage() {
         {/* Step 3: Set Expectations */}
         {step === 3 && selectedPath && (
           <div className="text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center">
-              <span className="text-4xl">{PATHS[selectedPath].icon}</span>
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-5 sm:mb-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center">
+              <span className="text-3xl sm:text-4xl">{PATHS[selectedPath].icon}</span>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-3">You're Ready!</h1>
-            <p className="text-slate-400 text-lg mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">You're Ready!</h1>
+            <p className="text-slate-400 text-base sm:text-lg mb-6 sm:mb-8">
               Here's what to expect on {PATHS[selectedPath].title} path
             </p>
 
-            <div className="bg-[#1a1d21] rounded-xl border border-slate-800 p-6 mb-8 text-left max-w-md mx-auto">
+            <div className="bg-[#1a1d21] rounded-xl border border-slate-800 p-4 sm:p-6 mb-6 sm:mb-8 text-left max-w-md mx-auto">
               <div className="space-y-4">
                 <div className="flex items-center justify-between py-2 border-b border-slate-800">
                   <span className="text-slate-400">Time commitment</span>
@@ -251,23 +251,23 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-8 max-w-md mx-auto">
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-6 sm:mb-8 max-w-md mx-auto">
               <p className="text-emerald-400 text-sm">
                 <span className="font-medium">Pro tip:</span> Consistent daily practice beats weekend cramming.
                 Set a daily reminder to keep your streak alive!
               </p>
             </div>
 
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
               <button
                 onClick={() => setStep(2)}
-                className="px-6 py-3 text-slate-400 hover:text-white transition"
+                className="px-6 py-3 min-h-[48px] text-slate-400 hover:text-white transition"
               >
                 Back
               </button>
               <button
                 onClick={handleComplete}
-                className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl transition"
+                className="px-8 py-3.5 min-h-[48px] bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl transition active:bg-emerald-700"
               >
                 Start Learning
               </button>
@@ -276,8 +276,8 @@ export default function OnboardingPage() {
         )}
 
         {/* Skip link */}
-        <div className="mt-8 text-center">
-          <Link href="/dashboard" className="text-slate-600 hover:text-slate-400 text-sm transition">
+        <div className="mt-6 sm:mt-8 text-center">
+          <Link href="/dashboard" className="inline-block py-3 px-4 min-h-[44px] text-slate-600 hover:text-slate-400 text-sm transition">
             Skip for now
           </Link>
         </div>

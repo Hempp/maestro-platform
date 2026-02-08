@@ -68,11 +68,11 @@ function GridPattern() {
 function StatItem({ value, suffix = '', label }: { value: string; suffix?: string; label: string }) {
   return (
     <motion.div variants={staggerItem} className="text-center">
-      <div className="text-2xl md:text-3xl font-semibold text-white tracking-tight">
+      <div className="text-xl sm:text-2xl md:text-3xl font-semibold text-white tracking-tight">
         {value}
         {suffix && <span className="text-cyan-400">{suffix}</span>}
       </div>
-      <div className="text-xs uppercase tracking-wider text-slate-500 mt-1">{label}</div>
+      <div className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 mt-1">{label}</div>
     </motion.div>
   );
 }
@@ -148,7 +148,7 @@ function PathCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.5, delay, ease: [0.25, 0.1, 0.25, 1] }}
-      className={`group relative bg-[#16181d] border border-slate-800/60 rounded-2xl p-8 transition-all duration-300 hover:border-slate-700/80 ${
+      className={`group relative bg-[#16181d] border border-slate-800/60 rounded-2xl p-5 sm:p-8 transition-all duration-300 hover:border-slate-700/80 ${
         popular ? `ring-1 ${colors.ring}` : ''
       }`}
     >
@@ -192,7 +192,7 @@ function PathCard({
 
         <Link
           href="/dashboard"
-          className={`block w-full py-3 ${colors.button} rounded-lg text-center text-sm font-medium transition-colors`}
+          className={`block w-full py-3.5 min-h-[48px] ${colors.button} rounded-lg text-center text-sm font-medium transition-colors flex items-center justify-center`}
         >
           {cta}
         </Link>
@@ -215,11 +215,11 @@ export default function Home() {
     <div className="min-h-screen bg-[#0f1115] text-white overflow-x-hidden">
       {/* Navigation - Clean & Minimal */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800/40 bg-[#0f1115]/80 backdrop-blur-xl">
-        <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
+        <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
             <Image src="/logo.png" alt="Phazur" width={32} height={32} className="invert opacity-90" />
-            <span className="text-lg font-semibold tracking-tight">PHAZUR</span>
-            <span className="px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] rounded font-mono">
+            <span className="text-base sm:text-lg font-semibold tracking-tight">PHAZUR</span>
+            <span className="hidden sm:inline px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] rounded font-mono">
               v2.0
             </span>
           </Link>
@@ -240,16 +240,16 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Link
               href="/login"
-              className="px-4 py-2 text-slate-400 hover:text-white text-sm transition-colors"
+              className="px-3 sm:px-4 py-2.5 min-h-[44px] flex items-center text-slate-400 hover:text-white text-sm transition-colors"
             >
               Sign In
             </Link>
             <Link
               href="/signup"
-              className="px-4 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-lg text-sm font-medium transition-colors"
+              className="px-3 sm:px-4 py-2.5 min-h-[44px] flex items-center bg-white text-slate-900 hover:bg-slate-100 rounded-lg text-sm font-medium transition-colors"
             >
               Start Free
             </Link>
@@ -259,25 +259,25 @@ export default function Home() {
 
       <main>
         {/* Hero Section - Clean & Focused */}
-        <section ref={heroRef} className="relative pt-28 pb-24 px-6 min-h-[90vh] flex items-center">
+        <section ref={heroRef} className="relative pt-24 sm:pt-28 pb-16 sm:pb-24 px-4 sm:px-6 min-h-[85vh] sm:min-h-[90vh] flex items-center">
           <SubtleGradient />
           <GridPattern />
 
           <motion.div
             style={{ opacity: heroOpacity, y: heroY }}
-            className="max-w-4xl mx-auto text-center relative z-10"
+            className="max-w-4xl mx-auto text-center relative z-10 w-full"
           >
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-full text-xs mb-8"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-full text-[11px] sm:text-xs mb-6 sm:mb-8"
             >
               <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
               <span className="text-slate-300">AI-Native Learning Lab</span>
-              <span className="text-slate-600">·</span>
-              <span className="text-slate-500">Blockchain Verified</span>
+              <span className="hidden sm:inline text-slate-600">·</span>
+              <span className="hidden sm:inline text-slate-500">Blockchain Verified</span>
             </motion.div>
 
             {/* Headline */}
@@ -314,7 +314,7 @@ export default function Home() {
             >
               <Link
                 href="/signup"
-                className="px-6 py-3 bg-white text-slate-900 hover:bg-slate-100 rounded-lg font-medium transition-colors flex items-center gap-2"
+                className="w-full sm:w-auto px-6 py-3.5 min-h-[48px] bg-white text-slate-900 hover:bg-slate-100 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
                 Start Free
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -323,7 +323,7 @@ export default function Home() {
               </Link>
               <a
                 href="#paths"
-                className="px-6 py-3 text-slate-400 hover:text-white transition-colors flex items-center gap-2"
+                className="w-full sm:w-auto px-6 py-3.5 min-h-[48px] text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2"
               >
                 Explore Paths
                 <span>→</span>
@@ -335,7 +335,7 @@ export default function Home() {
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
-              className="mt-20 pt-8 border-t border-slate-800/50 grid grid-cols-3 gap-8 max-w-lg mx-auto"
+              className="mt-12 sm:mt-20 pt-6 sm:pt-8 border-t border-slate-800/50 grid grid-cols-3 gap-4 sm:gap-8 max-w-lg mx-auto"
             >
               <StatItem value="3" label="Learning Paths" />
               <StatItem value="$0" label="Until Certified" />
@@ -345,9 +345,9 @@ export default function Home() {
         </section>
 
         {/* About Section - Innovative Learning */}
-        <section id="about" className="py-20 px-6 border-t border-slate-800/40">
+        <section id="about" className="py-12 sm:py-20 px-4 sm:px-6 border-t border-slate-800/40">
           <div className="max-w-5xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               {/* Left: Text Content */}
               <motion.div
                 initial={{ opacity: 0, x: -24 }}
@@ -381,14 +381,14 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div className="mt-8 flex items-center gap-6">
+                <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-6">
                   <Link
                     href="/dashboard"
-                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium transition-colors"
+                    className="px-5 py-3 min-h-[48px] bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium transition-colors text-center flex items-center justify-center"
                   >
                     Try it Free
                   </Link>
-                  <a href="#paths" className="text-slate-500 hover:text-slate-300 text-sm flex items-center gap-1.5 transition-colors">
+                  <a href="#paths" className="py-3 min-h-[48px] text-slate-500 hover:text-slate-300 text-sm flex items-center justify-center gap-1.5 transition-colors">
                     View paths
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
@@ -470,7 +470,7 @@ export default function Home() {
         </section>
 
         {/* Paths Section */}
-        <section id="paths" className="py-20 px-6 border-t border-slate-800/40">
+        <section id="paths" className="py-12 sm:py-20 px-4 sm:px-6 border-t border-slate-800/40">
           <div className="max-w-6xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
@@ -483,7 +483,7 @@ export default function Home() {
               <p className="text-slate-500">Every path leads to a deployed project and an on-chain credential</p>
             </motion.div>
 
-            <div className="grid lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <PathCard
                 path="PATH A"
                 title="The Student"
@@ -552,7 +552,7 @@ export default function Home() {
         </section>
 
         {/* Social Proof Section */}
-        <section className="py-16 px-6 border-t border-slate-800/40 bg-[#0a0c0f]">
+        <section className="py-12 sm:py-16 px-4 sm:px-6 border-t border-slate-800/40 bg-[#0a0c0f]">
           <div className="max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
@@ -563,7 +563,7 @@ export default function Home() {
               <p className="text-slate-500 text-sm uppercase tracking-wider mb-2">What Learners Say</p>
             </motion.div>
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {[
                 {
                   quote: "Finally, an AI course that makes you build real things. I deployed my first AI workflow in week 2.",
@@ -590,7 +590,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-slate-800/20 border border-slate-800/40 rounded-xl p-5"
+                  className="bg-slate-800/20 border border-slate-800/40 rounded-xl p-4 sm:p-5"
                 >
                   <div className="flex gap-1 mb-3">
                     {[...Array(5)].map((_, j) => (
@@ -616,7 +616,7 @@ export default function Home() {
         </section>
 
         {/* Why Phazur Section */}
-        <section id="why-phazur" className="py-20 px-6 bg-[#0c0e12] border-t border-slate-800/40">
+        <section id="why-phazur" className="py-12 sm:py-20 px-4 sm:px-6 bg-[#0c0e12] border-t border-slate-800/40">
           <div className="max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
@@ -629,7 +629,7 @@ export default function Home() {
               <p className="text-slate-500">We do things differently</p>
             </motion.div>
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {[
                 {
                   icon: (
@@ -668,7 +668,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.08 }}
-                  className="p-6 bg-[#16181d] rounded-xl border border-slate-800/60 hover:border-slate-700/80 transition-colors"
+                  className="p-5 sm:p-6 bg-[#16181d] rounded-xl border border-slate-800/60 hover:border-slate-700/80 transition-colors"
                 >
                   <div className={`w-10 h-10 rounded-lg bg-slate-800/50 ${item.color} flex items-center justify-center mb-4`}>
                     {item.icon}
@@ -697,7 +697,7 @@ export default function Home() {
         </section>
 
         {/* Email Capture / Teams Section */}
-        <section id="teams" className="py-20 px-6 border-t border-slate-800/40">
+        <section id="teams" className="py-12 sm:py-20 px-4 sm:px-6 border-t border-slate-800/40">
           <div className="max-w-3xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
@@ -719,7 +719,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-[#16181d] border border-slate-800/60 rounded-xl p-8"
+              className="bg-[#16181d] border border-slate-800/60 rounded-xl p-5 sm:p-8"
             >
               {/* Email Capture Form */}
               <form
@@ -764,7 +764,7 @@ export default function Home() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition"
+                    className="w-full py-3.5 min-h-[48px] bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition"
                   >
                     Get Early Access
                   </button>
@@ -774,7 +774,7 @@ export default function Home() {
               {/* Team Certification Bundles */}
               <div className="mt-8 pt-6 border-t border-slate-800/60">
                 <p className="text-center text-slate-500 text-sm mb-6">Popular certification bundles</p>
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
                   {[
                     {
                       name: 'Starter Team',
@@ -824,7 +824,7 @@ export default function Home() {
         </section>
 
         {/* Final CTA */}
-        <section className="py-20 px-6 bg-[#0c0e12] border-t border-slate-800/40">
+        <section className="py-16 sm:py-20 px-4 sm:px-6 bg-[#0c0e12] border-t border-slate-800/40">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -832,7 +832,7 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="max-w-2xl mx-auto text-center"
           >
-            <h2 className="text-3xl md:text-4xl font-semibold mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-4">
               Ready to Command AI?
             </h2>
             <p className="text-slate-500 mb-8">
@@ -840,7 +840,7 @@ export default function Home() {
             </p>
             <Link
               href="/dashboard"
-              className="inline-block px-8 py-3.5 bg-white text-slate-900 hover:bg-slate-100 rounded-lg font-medium transition-colors"
+              className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-4 min-h-[52px] bg-white text-slate-900 hover:bg-slate-100 rounded-lg font-medium transition-colors"
             >
               Start Your Path Free
             </Link>
@@ -849,18 +849,18 @@ export default function Home() {
       </main>
 
       {/* Footer - Minimal */}
-      <footer className="border-t border-slate-800/40 py-10 bg-[#0a0b0e]">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-8">
+      <footer className="border-t border-slate-800/40 py-8 sm:py-10 bg-[#0a0b0e]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 sm:gap-8 mb-6 sm:mb-8">
             <div className="flex items-center gap-2">
               <Image src="/logo.png" alt="Phazur" width={24} height={24} className="invert opacity-80" />
               <span className="text-sm font-medium text-slate-400">PHAZUR</span>
             </div>
-            <div className="flex flex-wrap gap-6 text-xs text-slate-600">
-              <Link href="/dashboard" className="hover:text-slate-400 transition-colors">Dashboard</Link>
-              <a href="#paths" className="hover:text-slate-400 transition-colors">Paths</a>
-              <a href="#teams" className="hover:text-slate-400 transition-colors">Teams</a>
-              <span className="text-slate-700">Docs (soon)</span>
+            <div className="flex flex-wrap gap-4 sm:gap-6 text-xs text-slate-600">
+              <Link href="/dashboard" className="py-2 hover:text-slate-400 transition-colors">Dashboard</Link>
+              <a href="#paths" className="py-2 hover:text-slate-400 transition-colors">Paths</a>
+              <a href="#teams" className="py-2 hover:text-slate-400 transition-colors">Teams</a>
+              <span className="py-2 text-slate-700">Docs (soon)</span>
             </div>
           </div>
           <div className="pt-6 border-t border-slate-800/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">

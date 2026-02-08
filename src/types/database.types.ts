@@ -1944,6 +1944,44 @@ export type Database = {
           },
         ]
       }
+      retention_emails: {
+        Row: {
+          id: string
+          user_id: string
+          email_type: Database["public"]["Enums"]["retention_email_type"]
+          sent_at: string
+          resend_id: string | null
+          success: boolean
+          error_message: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_type: Database["public"]["Enums"]["retention_email_type"]
+          sent_at?: string
+          resend_id?: string | null
+          success?: boolean
+          error_message?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_type?: Database["public"]["Enums"]["retention_email_type"]
+          sent_at?: string
+          resend_id?: string | null
+          success?: boolean
+          error_message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retention_emails_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1986,6 +2024,7 @@ export type Database = {
       terminal_status: "success" | "error"
       tier_type: "student" | "employee" | "owner"
       user_role: "student" | "instructor" | "admin"
+      retention_email_type: "day_1" | "day_3" | "day_7"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2150,6 +2189,7 @@ export const Constants = {
       terminal_status: ["success", "error"],
       tier_type: ["student", "employee", "owner"],
       user_role: ["student", "instructor", "admin"],
+      retention_email_type: ["day_1", "day_3", "day_7"],
     },
   },
 } as const

@@ -473,3 +473,322 @@ export async function sendModuleCompletionEmail(
     tags: [{ name: 'type', value: 'module-completion' }],
   });
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RETENTION EMAIL SEQUENCES
+// Day 1, Day 3, Day 7 automated emails to improve user retention
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Day 1 Email - Welcome + First Lesson Nudge
+ * Sent 24 hours after signup to encourage first engagement
+ */
+export async function sendDay1Email(
+  email: string,
+  name?: string,
+  hasStartedLearning?: boolean
+): Promise<EmailResult> {
+  const firstName = name?.split(' ')[0] || 'there';
+
+  const subject = hasStartedLearning
+    ? "Great start! Here's what to tackle next"
+    : "Ready to start your AI journey?";
+
+  const mainMessage = hasStartedLearning
+    ? `You've already taken your first steps - that's awesome! The key to mastering AI skills is consistent practice. Let's keep the momentum going.`
+    : `It's been a day since you joined, and we're excited to help you get started. The first lesson takes just 15 minutes and you'll build something real.`;
+
+  const ctaText = hasStartedLearning ? 'Continue Learning' : 'Start Your First Lesson';
+
+  return sendEmail({
+    to: email,
+    subject,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #0f1115; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 40px;">
+      <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 0;">PHAZUR</h1>
+      <p style="color: #64748b; font-size: 14px; margin: 8px 0 0;">AI Learning Lab</p>
+    </div>
+
+    <!-- Main Content -->
+    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 40px; border: 1px solid #334155;">
+      <h2 style="color: #ffffff; font-size: 24px; margin: 0 0 16px;">Hey ${firstName}!</h2>
+
+      <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+        ${mainMessage}
+      </p>
+
+      <!-- Quick Win Box -->
+      <div style="background: rgba(6, 182, 212, 0.1); border-radius: 12px; padding: 24px; margin: 24px 0;">
+        <h3 style="color: #22d3ee; font-size: 16px; margin: 0 0 12px;">Quick Win for Today</h3>
+        <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0;">
+          Complete one hands-on exercise. Just one. You'll learn how to use AI tools that professionals use daily, and it takes less time than watching a YouTube video.
+        </p>
+      </div>
+
+      <!-- CTA Button -->
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="https://pla-ten-eosin.vercel.app/learn"
+           style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+          ${ctaText}
+        </a>
+      </div>
+
+      <p style="color: #64748b; font-size: 14px; margin: 24px 0 0; text-align: center;">
+        Remember: AI skills compound over time. Start small, stay consistent.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px;">
+      <p style="color: #64748b; font-size: 12px; margin: 0;">
+        Questions? Reply to this email - we read every message.
+      </p>
+      <p style="color: #475569; font-size: 11px; margin: 16px 0 0;">
+        You're receiving this because you signed up for Phazur.
+        <a href="https://pla-ten-eosin.vercel.app/settings" style="color: #64748b;">Manage preferences</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+    `,
+    tags: [
+      { name: 'type', value: 'retention' },
+      { name: 'sequence', value: 'day_1' },
+    ],
+  });
+}
+
+/**
+ * Day 3 Email - Progress Check + Tips
+ * Sent 72 hours after signup with personalized tips based on activity
+ */
+export async function sendDay3Email(
+  email: string,
+  name?: string,
+  modulesCompleted?: number,
+  currentStreak?: number
+): Promise<EmailResult> {
+  const firstName = name?.split(' ')[0] || 'there';
+  const hasProgress = (modulesCompleted ?? 0) > 0;
+  const hasStreak = (currentStreak ?? 0) > 1;
+
+  let subject: string;
+  let mainContent: string;
+  let tipContent: string;
+
+  if (hasProgress && hasStreak) {
+    subject = `${firstName}, you're on fire! ${currentStreak}-day streak`;
+    mainContent = `You've completed ${modulesCompleted} module${modulesCompleted! > 1 ? 's' : ''} and you're on a ${currentStreak}-day streak. That puts you ahead of 80% of learners. Keep it up!`;
+    tipContent = `<strong>Pro tip:</strong> Set a specific time each day for learning. Morning learners have 40% better completion rates.`;
+  } else if (hasProgress) {
+    subject = `Nice progress, ${firstName}! Here's what's next`;
+    mainContent = `You've completed ${modulesCompleted} module${modulesCompleted! > 1 ? 's' : ''} so far. Every completed lesson gets you closer to real AI skills you can use at work.`;
+    tipContent = `<strong>Tip:</strong> Try to learn at the same time each day. Consistency beats intensity.`;
+  } else {
+    subject = `${firstName}, your AI learning path is waiting`;
+    mainContent = `We noticed you haven't started a lesson yet. No pressure - but here's the thing: the first lesson is designed to give you a quick win in under 15 minutes.`;
+    tipContent = `<strong>Getting started tip:</strong> Don't aim for perfect. Just open one lesson and follow along. You can always go deeper later.`;
+  }
+
+  return sendEmail({
+    to: email,
+    subject,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #0f1115; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 40px;">
+      <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 0;">PHAZUR</h1>
+    </div>
+
+    <!-- Main Content -->
+    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 40px; border: 1px solid #334155;">
+      <h2 style="color: #ffffff; font-size: 24px; margin: 0 0 16px;">Hey ${firstName}!</h2>
+
+      <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+        ${mainContent}
+      </p>
+
+      ${hasProgress ? `
+      <!-- Progress Stats -->
+      <div style="display: flex; gap: 16px; margin: 24px 0;">
+        <div style="flex: 1; background: rgba(16, 185, 129, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+          <p style="color: #10b981; font-size: 28px; font-weight: 600; margin: 0;">${modulesCompleted}</p>
+          <p style="color: #64748b; font-size: 12px; margin: 8px 0 0;">Modules Done</p>
+        </div>
+        <div style="flex: 1; background: rgba(6, 182, 212, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+          <p style="color: #22d3ee; font-size: 28px; font-weight: 600; margin: 0;">${currentStreak || 0}</p>
+          <p style="color: #64748b; font-size: 12px; margin: 8px 0 0;">Day Streak</p>
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- Tip Box -->
+      <div style="background: rgba(168, 85, 247, 0.1); border-left: 3px solid #a855f7; padding: 16px 20px; margin: 24px 0;">
+        <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0;">
+          ${tipContent}
+        </p>
+      </div>
+
+      <!-- CTA Button -->
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="https://pla-ten-eosin.vercel.app/learn"
+           style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+          ${hasProgress ? 'Continue Learning' : 'Start Now'}
+        </a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px;">
+      <p style="color: #64748b; font-size: 12px; margin: 0;">
+        Need help? Just reply - we're here for you.
+      </p>
+      <p style="color: #475569; font-size: 11px; margin: 16px 0 0;">
+        <a href="https://pla-ten-eosin.vercel.app/settings" style="color: #64748b;">Manage email preferences</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+    `,
+    tags: [
+      { name: 'type', value: 'retention' },
+      { name: 'sequence', value: 'day_3' },
+    ],
+  });
+}
+
+/**
+ * Day 7 Email - Re-engagement for Inactive Users
+ * Sent 168 hours (7 days) after signup, focuses on value proposition
+ */
+export async function sendDay7Email(
+  email: string,
+  name?: string,
+  modulesCompleted?: number,
+  daysInactive?: number
+): Promise<EmailResult> {
+  const firstName = name?.split(' ')[0] || 'there';
+  const hasProgress = (modulesCompleted ?? 0) > 0;
+  const isInactive = (daysInactive ?? 7) >= 3;
+
+  let subject: string;
+  let mainContent: string;
+  let valueProps: string[];
+
+  if (hasProgress && !isInactive) {
+    // Active user with progress - celebrate and encourage
+    subject = `One week in, ${firstName} - you're doing great!`;
+    mainContent = `It's been a week since you joined, and you've already completed ${modulesCompleted} module${modulesCompleted! > 1 ? 's' : ''}. You're building real skills that will pay off.`;
+    valueProps = [
+      'Your progress is saved - pick up right where you left off',
+      'Each module adds to your portfolio',
+      'Earn blockchain-verified credentials employers trust',
+    ];
+  } else if (hasProgress && isInactive) {
+    // Started but went inactive - gentle re-engagement
+    subject = `${firstName}, your progress is still here`;
+    mainContent = `We noticed it's been a few days since your last lesson. Life gets busy - we get it. The good news? Your progress is saved and you can jump back in anytime.`;
+    valueProps = [
+      'Resume exactly where you stopped',
+      'Just 15 minutes can refresh your momentum',
+      'Your learning path adapts to your schedule',
+    ];
+  } else {
+    // Never started - strong value proposition
+    subject = `${firstName}, AI skills are becoming essential`;
+    mainContent = `A week ago you signed up to learn AI. We know starting something new can feel overwhelming, but here's the reality: AI skills are becoming as essential as Excel was 20 years ago.`;
+    valueProps = [
+      'Start with a 15-minute hands-on exercise',
+      'Build real projects, not just watch videos',
+      'Get credentials you can add to LinkedIn',
+    ];
+  }
+
+  return sendEmail({
+    to: email,
+    subject,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #0f1115; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 40px;">
+      <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 0;">PHAZUR</h1>
+    </div>
+
+    <!-- Main Content -->
+    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 40px; border: 1px solid #334155;">
+      <h2 style="color: #ffffff; font-size: 24px; margin: 0 0 16px;">Hey ${firstName},</h2>
+
+      <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+        ${mainContent}
+      </p>
+
+      <!-- Value Props -->
+      <div style="background: rgba(6, 182, 212, 0.08); border-radius: 12px; padding: 24px; margin: 24px 0;">
+        <ul style="color: #94a3b8; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+          ${valueProps.map(prop => `<li style="margin-bottom: 8px;">${prop}</li>`).join('')}
+        </ul>
+      </div>
+
+      <!-- CTA Button -->
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="https://pla-ten-eosin.vercel.app/learn"
+           style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+          ${hasProgress ? 'Resume Learning' : 'Start Your First Lesson'}
+        </a>
+      </div>
+
+      ${!hasProgress ? `
+      <!-- Social Proof -->
+      <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid #334155;">
+        <p style="color: #64748b; font-size: 13px; margin: 0;">
+          Join 2,000+ learners building AI skills
+        </p>
+      </div>
+      ` : ''}
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 40px;">
+      <p style="color: #64748b; font-size: 12px; margin: 0;">
+        Questions? We're always happy to help - just reply.
+      </p>
+      <p style="color: #475569; font-size: 11px; margin: 16px 0 0;">
+        <a href="https://pla-ten-eosin.vercel.app/settings" style="color: #64748b;">Update preferences</a> |
+        <a href="https://pla-ten-eosin.vercel.app/unsubscribe" style="color: #64748b;">Unsubscribe</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+    `,
+    tags: [
+      { name: 'type', value: 'retention' },
+      { name: 'sequence', value: 'day_7' },
+    ],
+  });
+}
