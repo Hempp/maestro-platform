@@ -275,9 +275,9 @@ export default function Home() {
               className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-full text-[11px] sm:text-xs mb-6 sm:mb-8"
             >
               <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-              <span className="text-slate-300">AI-Native Learning Lab</span>
+              <span className="text-slate-300">AI Operator Certification</span>
               <span className="hidden sm:inline text-slate-600">·</span>
-              <span className="hidden sm:inline text-slate-500">Blockchain Verified</span>
+              <span className="hidden sm:inline text-slate-500">Build. Ship. Prove.</span>
             </motion.div>
 
             {/* Headline */}
@@ -301,8 +301,8 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed"
             >
-              Build real AI workflows, earn elite credentials, and mint your proof of mastery on-chain.{' '}
-              <span className="text-slate-200">Pay nothing until you ship.</span>
+              Master AI through building, not watching. Ship real projects. Earn blockchain-verified credentials employers can actually validate.{' '}
+              <span className="text-slate-200">Free until you're certified.</span>
             </motion.p>
 
             {/* CTA Buttons */}
@@ -864,7 +864,7 @@ export default function Home() {
             </div>
           </div>
           <div className="pt-6 border-t border-slate-800/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
-            <div>© 2025 Phazur. Build first, pay later.</div>
+            <div>© 2025 Phazur. Build. Ship. Prove.</div>
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
