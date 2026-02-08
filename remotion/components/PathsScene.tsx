@@ -1,5 +1,6 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } from 'remotion';
+import { SplitText, GlitchText, RevealText } from './AnimatedText';
 
 const paths = [
   {
@@ -61,7 +62,6 @@ export const PathsScene: React.FC = () => {
         style={{
           position: 'absolute',
           top: 100,
-          opacity: titleOpacity,
           transform: `translateY(${titleY}px)`,
         }}
       >
@@ -74,7 +74,13 @@ export const PathsScene: React.FC = () => {
             textAlign: 'center',
           }}
         >
-          Choose Your Path
+          <SplitText
+            text="Choose Your Path"
+            splitBy="letter"
+            startFrame={0}
+            staggerDelay={2}
+            animation="fadeUp"
+          />
         </h2>
         <p
           style={{
@@ -84,7 +90,13 @@ export const PathsScene: React.FC = () => {
             textAlign: 'center',
           }}
         >
-          Every path leads to a deployed project and an on-chain credential
+          <RevealText
+            text="Every path leads to a deployed project and an on-chain credential"
+            startFrame={20}
+            duration={40}
+            direction="center"
+            highlightColor="#22d3ee"
+          />
         </p>
       </div>
 
@@ -160,7 +172,7 @@ export const PathsScene: React.FC = () => {
                 {path.icon}
               </div>
 
-              {/* Path label */}
+              {/* Path label with glitch effect */}
               <span
                 style={{
                   fontSize: 12,
@@ -170,10 +182,17 @@ export const PathsScene: React.FC = () => {
                   marginBottom: 8,
                 }}
               >
-                {path.path}
+                <GlitchText
+                  text={path.path}
+                  startFrame={cardDelay + 5}
+                  intensity={0.5}
+                  glitchInterval={45}
+                  primaryColor={path.color}
+                  secondaryColor="#ffffff"
+                />
               </span>
 
-              {/* Name */}
+              {/* Name with split letter animation */}
               <h3
                 style={{
                   fontSize: 28,
@@ -183,7 +202,13 @@ export const PathsScene: React.FC = () => {
                   marginBottom: 8,
                 }}
               >
-                {path.name}
+                <SplitText
+                  text={path.name}
+                  splitBy="letter"
+                  startFrame={cardDelay + 10}
+                  staggerDelay={2}
+                  animation="scale"
+                />
               </h3>
 
               {/* Description */}

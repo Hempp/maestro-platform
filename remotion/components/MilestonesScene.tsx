@@ -1,5 +1,6 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } from 'remotion';
+import { CountUpNumber, SplitText, WaveText } from './AnimatedText';
 
 const milestones = [
   { number: 1, title: 'AI Fundamentals', status: 'completed' },
@@ -51,7 +52,6 @@ export const MilestonesScene: React.FC = () => {
         style={{
           position: 'absolute',
           top: 80,
-          opacity: titleOpacity,
         }}
       >
         <h2
@@ -63,7 +63,13 @@ export const MilestonesScene: React.FC = () => {
             textAlign: 'center',
           }}
         >
-          Milestone-Based Learning
+          <SplitText
+            text="Milestone-Based Learning"
+            splitBy="word"
+            startFrame={0}
+            staggerDelay={6}
+            animation="blur"
+          />
         </h2>
         <p
           style={{
@@ -73,7 +79,13 @@ export const MilestonesScene: React.FC = () => {
             textAlign: 'center',
           }}
         >
-          Complete real projects, not just courses
+          <WaveText
+            text="Complete real projects, not just courses"
+            startFrame={15}
+            waveHeight={4}
+            waveSpeed={0.12}
+            waveLength={0.2}
+          />
         </p>
       </div>
 
@@ -196,7 +208,7 @@ export const MilestonesScene: React.FC = () => {
         })}
       </div>
 
-      {/* Stats */}
+      {/* Stats with count-up animation */}
       <div
         style={{
           position: 'absolute',
@@ -206,23 +218,15 @@ export const MilestonesScene: React.FC = () => {
         }}
       >
         {[
-          { label: 'Completed', value: '3', color: '#10b981' },
-          { label: 'In Progress', value: '1', color: '#22d3ee' },
-          { label: 'Remaining', value: '6', color: '#6b7280' },
+          { label: 'Completed', value: 3, color: '#10b981' },
+          { label: 'In Progress', value: 1, color: '#22d3ee' },
+          { label: 'Remaining', value: 6, color: '#6b7280' },
         ].map((stat, i) => {
-          const statOpacity = interpolate(
-            frame,
-            [100 + i * 10, 110 + i * 10],
-            [0, 1],
-            { extrapolateRight: 'clamp' }
-          );
-
           return (
             <div
               key={stat.label}
               style={{
                 textAlign: 'center',
-                opacity: statOpacity,
               }}
             >
               <div
@@ -232,7 +236,13 @@ export const MilestonesScene: React.FC = () => {
                   color: stat.color,
                 }}
               >
-                {stat.value}
+                <CountUpNumber
+                  endValue={stat.value}
+                  startValue={0}
+                  startFrame={100 + i * 10}
+                  duration={40}
+                  easing="spring"
+                />
               </div>
               <div
                 style={{
@@ -240,7 +250,13 @@ export const MilestonesScene: React.FC = () => {
                   color: '#94a3b8',
                 }}
               >
-                {stat.label}
+                <SplitText
+                  text={stat.label}
+                  splitBy="letter"
+                  startFrame={110 + i * 10}
+                  staggerDelay={2}
+                  animation="fadeIn"
+                />
               </div>
             </div>
           );

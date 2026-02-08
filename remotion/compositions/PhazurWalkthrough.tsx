@@ -2,33 +2,57 @@ import React from 'react';
 import { AbsoluteFill, Sequence, useCurrentFrame, interpolate, spring, useVideoConfig } from 'remotion';
 import { IntroScene } from '../components/IntroScene';
 import { PathsScene } from '../components/PathsScene';
+import { FeaturesScene } from '../components/FeaturesScene';
+import { ComparisonScene } from '../components/ComparisonScene';
 import { MilestonesScene } from '../components/MilestonesScene';
 import { TutorScene } from '../components/TutorScene';
+import { TestimonialsScene } from '../components/TestimonialsScene';
 import { CertificationScene } from '../components/CertificationScene';
 import { OutroScene } from '../components/OutroScene';
+import {
+  FadeTransition,
+  SlideTransition,
+  ZoomTransition,
+  WipeTransition,
+  MorphTransition,
+  Crossfade,
+} from '../components/Transitions';
 
 export const PhazurWalkthrough: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Scene timing (in frames at 30fps)
+  // Transition overlap duration (in frames)
+  const TRANSITION_OVERLAP = 20; // ~0.67 seconds overlap for smooth transitions
+
+  // Scene timing (in frames at 30fps) with overlaps
+  // Extended 45-second video with 9 scenes
   const INTRO_START = 0;
   const INTRO_DURATION = 150; // 5 seconds
 
-  const PATHS_START = 150;
-  const PATHS_DURATION = 150; // 5 seconds
+  const PATHS_START = INTRO_DURATION - TRANSITION_OVERLAP; // 130
+  const PATHS_DURATION = 150;
 
-  const MILESTONES_START = 300;
-  const MILESTONES_DURATION = 150; // 5 seconds
+  const FEATURES_START = PATHS_START + PATHS_DURATION - TRANSITION_OVERLAP; // 260
+  const FEATURES_DURATION = 150;
 
-  const TUTOR_START = 450;
-  const TUTOR_DURATION = 150; // 5 seconds
+  const COMPARISON_START = FEATURES_START + FEATURES_DURATION - TRANSITION_OVERLAP; // 390
+  const COMPARISON_DURATION = 150;
 
-  const CERTIFICATION_START = 600;
-  const CERTIFICATION_DURATION = 150; // 5 seconds
+  const MILESTONES_START = COMPARISON_START + COMPARISON_DURATION - TRANSITION_OVERLAP; // 520
+  const MILESTONES_DURATION = 150;
 
-  const OUTRO_START = 750;
-  const OUTRO_DURATION = 150; // 5 seconds
+  const TUTOR_START = MILESTONES_START + MILESTONES_DURATION - TRANSITION_OVERLAP; // 650
+  const TUTOR_DURATION = 150;
+
+  const TESTIMONIALS_START = TUTOR_START + TUTOR_DURATION - TRANSITION_OVERLAP; // 780
+  const TESTIMONIALS_DURATION = 150;
+
+  const CERTIFICATION_START = TESTIMONIALS_START + TESTIMONIALS_DURATION - TRANSITION_OVERLAP; // 910
+  const CERTIFICATION_DURATION = 150;
+
+  const OUTRO_START = CERTIFICATION_START + CERTIFICATION_DURATION - TRANSITION_OVERLAP; // 1040
+  const OUTRO_DURATION = 150;
 
   return (
     <AbsoluteFill
@@ -40,30 +64,135 @@ export const PhazurWalkthrough: React.FC = () => {
       {/* Animated background grid */}
       <BackgroundGrid frame={frame} />
 
-      {/* Scene sequences */}
+      {/* Scene 1: Intro - Fade in, zoom out */}
       <Sequence from={INTRO_START} durationInFrames={INTRO_DURATION}>
-        <IntroScene />
+        <ZoomTransition
+          durationInFrames={INTRO_DURATION}
+          type="both"
+          mode="in"
+          scale={{ start: 1.1, end: 0.95 }}
+        >
+          <FadeTransition durationInFrames={INTRO_DURATION} type="in">
+            <IntroScene />
+          </FadeTransition>
+        </ZoomTransition>
       </Sequence>
 
+      {/* Scene 2: Paths - Slide in from right */}
       <Sequence from={PATHS_START} durationInFrames={PATHS_DURATION}>
-        <PathsScene />
+        <SlideTransition
+          durationInFrames={PATHS_DURATION}
+          direction="right"
+          type="both"
+          easing="spring"
+        >
+          <PathsScene />
+        </SlideTransition>
       </Sequence>
 
+      {/* Scene 3: Features - Zoom in with fade */}
+      <Sequence from={FEATURES_START} durationInFrames={FEATURES_DURATION}>
+        <ZoomTransition
+          durationInFrames={FEATURES_DURATION}
+          type="both"
+          mode="in"
+          scale={{ start: 0.9, end: 1.0 }}
+        >
+          <FadeTransition durationInFrames={FEATURES_DURATION} type="both">
+            <FeaturesScene />
+          </FadeTransition>
+        </ZoomTransition>
+      </Sequence>
+
+      {/* Scene 4: Comparison - Slide in from left */}
+      <Sequence from={COMPARISON_START} durationInFrames={COMPARISON_DURATION}>
+        <SlideTransition
+          durationInFrames={COMPARISON_DURATION}
+          direction="left"
+          type="both"
+          easing="spring"
+        >
+          <ComparisonScene />
+        </SlideTransition>
+      </Sequence>
+
+      {/* Scene 5: Milestones - Wipe from bottom */}
       <Sequence from={MILESTONES_START} durationInFrames={MILESTONES_DURATION}>
-        <MilestonesScene />
+        <WipeTransition
+          durationInFrames={MILESTONES_DURATION}
+          direction="up"
+          type="both"
+          color="rgba(139, 92, 246, 0.4)"
+        >
+          <MilestonesScene />
+        </WipeTransition>
       </Sequence>
 
+      {/* Scene 6: Tutor - Morph/circle reveal */}
       <Sequence from={TUTOR_START} durationInFrames={TUTOR_DURATION}>
-        <TutorScene />
+        <MorphTransition
+          durationInFrames={TUTOR_DURATION}
+          type="both"
+          shapes={{
+            start: 'circle(0% at 50% 50%)',
+            middle: 'circle(100% at 50% 50%)',
+            end: 'circle(150% at 50% 50%)',
+          }}
+          backgroundColor="#8b5cf6"
+        >
+          <TutorScene />
+        </MorphTransition>
       </Sequence>
 
+      {/* Scene 7: Testimonials - Fade with wipe */}
+      <Sequence from={TESTIMONIALS_START} durationInFrames={TESTIMONIALS_DURATION}>
+        <WipeTransition
+          durationInFrames={TESTIMONIALS_DURATION}
+          direction="right"
+          type="both"
+          color="rgba(168, 85, 247, 0.3)"
+        >
+          <FadeTransition durationInFrames={TESTIMONIALS_DURATION} type="both">
+            <TestimonialsScene />
+          </FadeTransition>
+        </WipeTransition>
+      </Sequence>
+
+      {/* Scene 8: Certification - Slide in from left with zoom */}
       <Sequence from={CERTIFICATION_START} durationInFrames={CERTIFICATION_DURATION}>
-        <CertificationScene />
+        <ZoomTransition
+          durationInFrames={CERTIFICATION_DURATION}
+          type="both"
+          mode="out"
+          scale={{ start: 1.2, end: 0.9 }}
+        >
+          <SlideTransition
+            durationInFrames={CERTIFICATION_DURATION}
+            direction="left"
+            type="both"
+            easing="spring"
+          >
+            <CertificationScene />
+          </SlideTransition>
+        </ZoomTransition>
       </Sequence>
 
+      {/* Scene 9: Outro - Fade with diagonal wipe */}
       <Sequence from={OUTRO_START} durationInFrames={OUTRO_DURATION}>
-        <OutroScene />
+        <WipeTransition
+          durationInFrames={OUTRO_DURATION}
+          direction="diagonal"
+          type="in"
+          color="rgba(99, 102, 241, 0.5)"
+        >
+          <FadeTransition durationInFrames={OUTRO_DURATION} type="in">
+            <OutroScene />
+          </FadeTransition>
+        </WipeTransition>
       </Sequence>
+
+      {/* Global transition overlay for extra polish */}
+      <TransitionGlow frame={frame} fps={fps} />
     </AbsoluteFill>
   );
 };
@@ -83,6 +212,38 @@ const BackgroundGrid: React.FC<{ frame: number }> = ({ frame }) => {
         `,
         backgroundSize: '50px 50px',
         transform: `translateY(${(frame * 0.5) % 50}px)`,
+      }}
+    />
+  );
+};
+
+// Subtle glow effect during transitions
+const TransitionGlow: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
+  // Transition points where glow should appear (updated for 9 scenes)
+  const transitionPoints = [130, 260, 390, 520, 650, 780, 910, 1040];
+  const glowDuration = 30;
+
+  let glowOpacity = 0;
+
+  for (const point of transitionPoints) {
+    if (frame >= point - 5 && frame <= point + glowDuration) {
+      const localProgress = (frame - point + 5) / (glowDuration + 5);
+      const intensity = Math.sin(localProgress * Math.PI);
+      glowOpacity = Math.max(glowOpacity, intensity * 0.15);
+    }
+  }
+
+  if (glowOpacity === 0) return null;
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'radial-gradient(ellipse at center, rgba(99, 102, 241, 0.3) 0%, transparent 70%)',
+        opacity: glowOpacity,
+        pointerEvents: 'none',
+        mixBlendMode: 'screen',
       }}
     />
   );

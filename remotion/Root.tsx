@@ -7,7 +7,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="PhazurWalkthrough"
         component={PhazurWalkthrough}
-        durationInFrames={900} // 30 seconds at 30fps
+        durationInFrames={1200} // 40 seconds at 30fps (9 scenes with transitions)
         fps={30}
         width={1920}
         height={1080}
