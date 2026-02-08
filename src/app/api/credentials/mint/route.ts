@@ -157,16 +157,14 @@ export async function POST(request: NextRequest) {
     let mintWalletAddress = walletAddress;
 
     if (!mintWalletAddress) {
-      // Check user's stored wallet from profiles
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: profileData } = await (adminClient as any)
-        .from('profiles')
-        .select('*')
+      // Check user's stored wallet from users table
+      const { data: userData } = await adminClient
+        .from('users')
+        .select('wallet_address')
         .eq('id', user.id)
         .single();
 
-      // wallet_address may be in profile metadata or a separate field
-      mintWalletAddress = profileData?.wallet_address;
+      mintWalletAddress = userData?.wallet_address ?? undefined;
     }
 
     // Step 5: Create claimable or mint directly
@@ -243,9 +241,8 @@ export async function POST(request: NextRequest) {
 
     // Step 9: Update user's wallet if not stored
     if (walletAddress) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (adminClient as any)
-        .from('profiles')
+      await adminClient
+        .from('users')
         .update({ wallet_address: walletAddress })
         .eq('id', user.id);
     }
@@ -415,10 +412,9 @@ export async function GET(request: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: certificate, error } = await (adminClient as any)
+    const { data: certificate, error } = await adminClient
       .from('certificates')
-      .select('id, certificate_type, token_id, contract_address, transaction_hash, verified_at')
+      .select('id, course_id, token_id, contract_address, transaction_hash, verified_at')
       .eq('id', certificateId)
       .eq('user_id', user.id)
       .single();
@@ -432,7 +428,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       certificateId: certificate.id,
-      certificateType: certificate.certificate_type,
+      courseId: certificate.course_id,
       paymentCompleted: !!certificate.verified_at,
       minted: !!certificate.token_id,
       tokenId: certificate.token_id,

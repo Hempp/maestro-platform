@@ -1,4 +1,3 @@
-Initialising login role...
 export type Json =
   | string
   | number
@@ -459,6 +458,7 @@ export type Database = {
       certificates: {
         Row: {
           certificate_number: string
+          certificate_type: string | null
           contract_address: string | null
           course_id: string
           expires_at: string | null
@@ -479,6 +479,7 @@ export type Database = {
         }
         Insert: {
           certificate_number: string
+          certificate_type?: string | null
           contract_address?: string | null
           course_id: string
           expires_at?: string | null
@@ -499,6 +500,7 @@ export type Database = {
         }
         Update: {
           certificate_number?: string
+          certificate_type?: string | null
           contract_address?: string | null
           course_id?: string
           expires_at?: string | null
@@ -548,13 +550,20 @@ export type Database = {
           currency: string | null
           demo_video_url: string | null
           documentation_url: string | null
+          github_repo_url: string | null
           id: string
+          live_demo_url: string | null
+          logs_url: string | null
           paid_at: string | null
           path: string
           production_logs: Json | null
+          project_description: string | null
+          project_title: string | null
           reviewed_at: string | null
+          reviewed_by: string | null
           reviewer_notes: string | null
           roi_document: string | null
+          roi_document_url: string | null
           score_architecture: number | null
           score_documentation: number | null
           score_problem_fit: number | null
@@ -567,6 +576,7 @@ export type Database = {
           submitted_at: string | null
           total_score: number | null
           user_id: string | null
+          video_url: string | null
         }
         Insert: {
           amount_paid?: number | null
@@ -574,13 +584,20 @@ export type Database = {
           currency?: string | null
           demo_video_url?: string | null
           documentation_url?: string | null
+          github_repo_url?: string | null
           id?: string
+          live_demo_url?: string | null
+          logs_url?: string | null
           paid_at?: string | null
           path: string
           production_logs?: Json | null
+          project_description?: string | null
+          project_title?: string | null
           reviewed_at?: string | null
+          reviewed_by?: string | null
           reviewer_notes?: string | null
           roi_document?: string | null
+          roi_document_url?: string | null
           score_architecture?: number | null
           score_documentation?: number | null
           score_problem_fit?: number | null
@@ -593,6 +610,7 @@ export type Database = {
           submitted_at?: string | null
           total_score?: number | null
           user_id?: string | null
+          video_url?: string | null
         }
         Update: {
           amount_paid?: number | null
@@ -600,13 +618,20 @@ export type Database = {
           currency?: string | null
           demo_video_url?: string | null
           documentation_url?: string | null
+          github_repo_url?: string | null
           id?: string
+          live_demo_url?: string | null
+          logs_url?: string | null
           paid_at?: string | null
           path?: string
           production_logs?: Json | null
+          project_description?: string | null
+          project_title?: string | null
           reviewed_at?: string | null
+          reviewed_by?: string | null
           reviewer_notes?: string | null
           roi_document?: string | null
+          roi_document_url?: string | null
           score_architecture?: number | null
           score_documentation?: number | null
           score_problem_fit?: number | null
@@ -619,6 +644,7 @@ export type Database = {
           submitted_at?: string | null
           total_score?: number | null
           user_id?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }
@@ -3865,5 +3891,3 @@ export const Constants = {
     },
   },
 } as const
-A new version of Supabase CLI is available: v2.75.0 (currently installed v2.74.5)
-We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

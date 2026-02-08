@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getMilestone, getMilestones } from '@/lib/curriculum/milestones';
 import Anthropic from '@anthropic-ai/sdk';
+import type { Json } from '@/types/database.types';
 
 // Lazy-init Anthropic client
 let anthropic: Anthropic | null = null;
@@ -35,8 +36,7 @@ interface MilestoneStatus {
 
 export async function POST(request: NextRequest) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = (await createServerSupabaseClient()) as any;
+    const supabase = await createServerSupabaseClient();
 
     // Get authenticated user
     const {
@@ -113,9 +113,9 @@ export async function POST(request: NextRequest) {
       .order('milestone_number');
 
     const milestoneStatuses: MilestoneStatus[] =
-      milestones?.map((m: { milestone_number: number; status: MilestoneStatus['status'] }) => ({
+      milestones?.map(m => ({
         number: m.milestone_number,
-        status: m.status,
+        status: (m.status || 'locked') as MilestoneStatus['status'],
       })) || [];
 
     const currentMilestoneNum = conversation.current_milestone || 1;
@@ -124,15 +124,15 @@ export async function POST(request: NextRequest) {
 
     // Get user profile for personalization
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('display_name, email')
+      .from('users')
+      .select('full_name, email')
       .eq('id', user.id)
       .single();
 
-    const userName = profile?.display_name || user.email?.split('@')[0] || 'there';
+    const userName = profile?.full_name || user.email?.split('@')[0] || 'there';
 
     // Build conversation history
-    const messages: ChatMessage[] = conversation.messages || [];
+    const messages: ChatMessage[] = (conversation.messages as unknown as ChatMessage[]) || [];
     messages.push({
       role: 'user',
       content: message,
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
     await supabase
       .from('tutor_conversations')
       .update({
-        messages,
+        messages: messages as unknown as Json,
         updated_at: new Date().toISOString(),
       })
       .eq('id', conversation.id);
@@ -299,8 +299,7 @@ ${previousSubmissions.map((s) => `Milestone ${s.milestone_number}: ${JSON.string
 // Endpoint to submit a milestone
 export async function PUT(request: NextRequest) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = (await createServerSupabaseClient()) as any;
+    const supabase = await createServerSupabaseClient();
 
     const {
       data: { user },
@@ -323,7 +322,7 @@ export async function PUT(request: NextRequest) {
       .from('user_milestones')
       .update({
         status: 'submitted',
-        submission_content: submission,
+        submission_content: submission as Json,
         submitted_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })

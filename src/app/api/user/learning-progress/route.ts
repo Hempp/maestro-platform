@@ -42,8 +42,7 @@ export async function GET() {
     }
 
     // Fetch user's milestone progress for all paths
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: milestoneData, error: milestoneError } = await (supabase as any)
+    const { data: milestoneData, error: milestoneError } = await supabase
       .from('user_milestones')
       .select('*')
       .eq('user_id', user.id)
@@ -60,8 +59,7 @@ export async function GET() {
     }
 
     // Fetch tutor conversation for current milestone
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: conversationData } = await (supabase as any)
+    const { data: conversationData } = await supabase
       .from('tutor_conversations')
       .select('path, current_milestone')
       .eq('user_id', user.id);
@@ -81,7 +79,7 @@ export async function GET() {
 
     if (conversationData) {
       for (const conv of conversationData) {
-        conversations[conv.path] = conv.current_milestone;
+        conversations[conv.path] = conv.current_milestone ?? 1;
       }
     }
 
@@ -100,11 +98,11 @@ export async function GET() {
 
       if (pathMilestones.length > 0) {
         const completedCount = pathMilestones.filter(
-          (m: { status: string }) => m.status === 'approved'
+          m => m.status === 'approved'
         ).length;
 
         const activeMilestone = pathMilestones.find(
-          (m: { status: string; milestone_number: number }) => m.status === 'active' || m.status === 'submitted' || m.status === 'needs_revision'
+          m => m.status === 'active' || m.status === 'submitted' || m.status === 'needs_revision'
         );
         const currentMilestoneNum = activeMilestone?.milestone_number ||
           conversations[pathKey] ||
@@ -115,14 +113,14 @@ export async function GET() {
         );
 
         const milestones: MilestoneProgress[] = curriculumMilestones.map(cm => {
-          const userMilestone = pathMilestones.find((m: { milestone_number: number; status: string; submitted_at?: string; approved_at?: string }) => m.milestone_number === cm.number);
+          const userMilestone = pathMilestones.find(m => m.milestone_number === cm.number);
           return {
             number: cm.number,
             title: cm.title,
             goal: cm.goal,
-            status: userMilestone?.status || 'locked',
-            submittedAt: userMilestone?.submitted_at,
-            approvedAt: userMilestone?.approved_at,
+            status: (userMilestone?.status || 'locked') as MilestoneProgress['status'],
+            submittedAt: userMilestone?.submitted_at ?? undefined,
+            approvedAt: userMilestone?.approved_at ?? undefined,
           };
         });
 

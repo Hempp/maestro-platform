@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { stripe, CERTIFICATION_PRICES, isValidTier, type CertificationTier } from '@/lib/stripe/config';
+import type { Json } from '@/types/database.types';
 
 interface SubmissionArtifacts {
   architectureUrl?: string;
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify user has completed all 10 milestones (at least 9 approved + 1 submitted/active for M10)
-    const { data: milestones, error: milestoneError } = await (supabase as any)
+    const { data: milestones, error: milestoneError } = await supabase
       .from('user_milestones')
       .select('milestone_number, status')
       .eq('user_id', user.id)
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     const approvedMilestones = milestones?.filter(
-      (m: { status: string }) => m.status === 'approved'
+      m => m.status === 'approved'
     ) || [];
 
     // User must have at least 9 approved milestones to submit certification
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already submitted
-    const { data: existingSubmission } = await (supabase as any)
+    const { data: existingSubmission } = await supabase
       .from('certification_submissions')
       .select('id, status')
       .eq('user_id', user.id)
@@ -116,14 +117,14 @@ export async function POST(request: NextRequest) {
       path,
       architecture_url: artifacts?.architectureUrl || null,
       demo_video_url: artifacts?.demoVideoUrl || null,
-      production_logs: artifacts?.productionLogs || null,
+      production_logs: (artifacts?.productionLogs as Json) || null,
       roi_document: artifacts?.roiDocument || null,
       documentation_url: artifacts?.documentationUrl || null,
       status: 'submitted',
       submitted_at: new Date().toISOString(),
     };
 
-    const { data: submission, error: submitError } = await (supabase as any)
+    const { data: submission, error: submitError } = await supabase
       .from('certification_submissions')
       .upsert(submissionData, {
         onConflict: 'user_id,path',
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark milestone 10 as submitted
-    await (supabase as any)
+    await supabase
       .from('user_milestones')
       .update({
         status: 'submitted',
@@ -152,9 +153,9 @@ export async function POST(request: NextRequest) {
       .eq('milestone_number', 10);
 
     // Get user details for checkout
-    const { data: profile } = await (supabase as any)
-      .from('profiles')
-      .select('display_name, email')
+    const { data: userData } = await supabase
+      .from('users')
+      .select('full_name, email')
       .eq('id', user.id)
       .single();
 
@@ -164,7 +165,7 @@ export async function POST(request: NextRequest) {
     const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
-      customer_email: profile?.email || user.email,
+      customer_email: userData?.email || user.email,
       client_reference_id: user.id,
       metadata: {
         userId: user.id,
@@ -235,7 +236,7 @@ export async function GET(request: NextRequest) {
 
     if (!path) {
       // Get all submissions for user
-      const { data: submissions } = await (supabase as any)
+      const { data: submissions } = await supabase
         .from('certification_submissions')
         .select('*')
         .eq('user_id', user.id);
@@ -244,7 +245,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get specific path submission
-    const { data: submission } = await (supabase as any)
+    const { data: submission } = await supabase
       .from('certification_submissions')
       .select('*')
       .eq('user_id', user.id)
@@ -259,7 +260,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get milestone progress
-    const { data: milestones } = await (supabase as any)
+    const { data: milestones } = await supabase
       .from('user_milestones')
       .select('milestone_number, status')
       .eq('user_id', user.id)
@@ -267,7 +268,7 @@ export async function GET(request: NextRequest) {
       .order('milestone_number');
 
     const approvedCount = milestones?.filter(
-      (m: { status: string }) => m.status === 'approved'
+      m => m.status === 'approved'
     ).length || 0;
 
     return NextResponse.json({

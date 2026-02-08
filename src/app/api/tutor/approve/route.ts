@@ -8,8 +8,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = (await createServerSupabaseClient()) as any;
+    const supabase = await createServerSupabaseClient();
 
     const {
       data: { user },
@@ -78,7 +77,7 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
       .eq('path', path);
 
-    const approvedCount = milestones?.filter((m: { status: string }) => m.status === 'approved').length || 0;
+    const approvedCount = milestones?.filter(m => m.status === 'approved').length || 0;
     const progress = {
       total_milestones: 10,
       approved_milestones: approvedCount,

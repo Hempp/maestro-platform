@@ -34,23 +34,10 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // Build query for certification submissions with user info
+    // Build query for certification submissions
     let query = supabase
       .from('certification_submissions')
-      .select(`
-        *,
-        user:users!certification_submissions_user_id_fkey (
-          id,
-          email,
-          full_name,
-          avatar_url
-        ),
-        reviewer:users!certification_submissions_reviewed_by_fkey (
-          id,
-          email,
-          full_name
-        )
-      `, { count: 'exact' })
+      .select('*', { count: 'exact' })
       .order('submitted_at', { ascending: false });
 
     // Apply filters
@@ -72,15 +59,38 @@ export async function GET(request: NextRequest) {
       throw error;
     }
 
-    // If search filter, we need to filter by user email/name
-    let filteredSubmissions = submissions || [];
+    // Fetch user data for all submissions
+    const userIds = [...new Set((submissions || []).map(s => s.user_id).filter(Boolean))] as string[];
+    const reviewerIds = [...new Set((submissions || []).map(s => s.reviewed_by).filter(Boolean))] as string[];
+    const allUserIds = [...new Set([...userIds, ...reviewerIds])];
+
+    let usersMap: Record<string, { id: string; email: string; full_name: string; avatar_url: string | null }> = {};
+    if (allUserIds.length > 0) {
+      const { data: users } = await supabase
+        .from('users')
+        .select('id, email, full_name, avatar_url')
+        .in('id', allUserIds);
+
+      if (users) {
+        usersMap = Object.fromEntries(users.map(u => [u.id, u]));
+      }
+    }
+
+    // Merge user data into submissions
+    const submissionsWithUsers = (submissions || []).map(sub => ({
+      ...sub,
+      user: sub.user_id ? usersMap[sub.user_id] || null : null,
+      reviewer: sub.reviewed_by ? usersMap[sub.reviewed_by] || null : null,
+    }));
+
+    // If search filter, filter by user email/name
+    let filteredSubmissions = submissionsWithUsers;
     if (search) {
       const searchLower = search.toLowerCase();
       filteredSubmissions = filteredSubmissions.filter((sub) => {
-        const user = sub.user as { email?: string; full_name?: string } | null;
         return (
-          user?.email?.toLowerCase().includes(searchLower) ||
-          user?.full_name?.toLowerCase().includes(searchLower) ||
+          sub.user?.email?.toLowerCase().includes(searchLower) ||
+          sub.user?.full_name?.toLowerCase().includes(searchLower) ||
           sub.project_title?.toLowerCase().includes(searchLower)
         );
       });

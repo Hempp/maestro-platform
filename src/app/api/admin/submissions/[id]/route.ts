@@ -31,24 +31,10 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Get the submission with user details
+    // Get the submission
     const { data: submission, error } = await supabase
       .from('certification_submissions')
-      .select(`
-        *,
-        user:users!certification_submissions_user_id_fkey (
-          id,
-          email,
-          full_name,
-          avatar_url,
-          created_at
-        ),
-        reviewer:users!certification_submissions_reviewed_by_fkey (
-          id,
-          email,
-          full_name
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single();
 
@@ -59,8 +45,35 @@ export async function GET(
       throw error;
     }
 
-    // Get additional user stats
-    const userId = (submission.user as { id: string })?.id;
+    // Get user details separately
+    const userId = submission.user_id;
+    let submissionUser = null;
+    let reviewer = null;
+
+    if (userId) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id, email, full_name, avatar_url, created_at')
+        .eq('id', userId)
+        .single();
+      submissionUser = userData;
+    }
+
+    if (submission.reviewed_by) {
+      const { data: reviewerData } = await supabase
+        .from('users')
+        .select('id, email, full_name')
+        .eq('id', submission.reviewed_by)
+        .single();
+      reviewer = reviewerData;
+    }
+
+    // Add user data to submission response
+    const submissionWithUser = {
+      ...submission,
+      user: submissionUser,
+      reviewer,
+    };
     if (userId) {
       // Get learner profile
       const { data: learnerProfile } = await supabase
@@ -83,7 +96,7 @@ export async function GET(
         .eq('user_id', userId);
 
       return NextResponse.json({
-        submission,
+        submission: submissionWithUser,
         userStats: {
           learnerProfile,
           akusCompleted: akusCompleted || 0,
@@ -92,7 +105,7 @@ export async function GET(
       });
     }
 
-    return NextResponse.json({ submission, userStats: null });
+    return NextResponse.json({ submission: submissionWithUser, userStats: null });
   } catch (error) {
     console.error('Admin submission GET error:', error);
     return NextResponse.json(
