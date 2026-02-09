@@ -16,31 +16,34 @@ type PathType = 'student' | 'employee' | 'owner' | null;
 
 const PATHS = {
   student: {
-    title: 'The Student',
-    subtitle: 'Portfolio Builder',
+    title: 'Starter',
+    subtitle: 'Student Path',
     description: 'Build a live, AI-enhanced portfolio from the terminal.',
     credential: 'Certified AI Associate',
-    price: '$49',
+    price: '$29/mo',
+    planId: 'starter',
     time: '2-4 weeks',
     color: 'purple',
     icon: '🎓',
   },
   employee: {
-    title: 'The Employee',
-    subtitle: 'Efficiency Mastery',
-    description: 'Work 10 hours less per week with AI automation.',
+    title: 'Professional',
+    subtitle: 'Student + Employee Paths',
+    description: 'Unlimited AI coaching and 100 agent executions per month.',
     credential: 'Workflow Efficiency Lead',
-    price: '$199',
+    price: '$79/mo',
+    planId: 'professional',
     time: '3-5 weeks',
     color: 'blue',
     icon: '💼',
   },
   owner: {
-    title: 'The Owner',
-    subtitle: 'Operations Scaling',
-    description: 'Scale without scaling headcount using AI systems.',
+    title: 'Enterprise',
+    subtitle: 'All Paths Included',
+    description: 'Unlimited access to all features and team collaboration.',
     credential: 'AI Operations Master',
-    price: '$499',
+    price: '$199/mo',
+    planId: 'enterprise',
     time: '4-6 weeks',
     color: 'emerald',
     icon: '🚀',
@@ -248,7 +251,7 @@ export default function OnboardingPage() {
                   <span className="text-emerald-400 font-medium">{PATHS[selectedPath].credential}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-slate-400">Pay when certified</span>
+                  <span className="text-slate-400">Subscription</span>
                   <span className="text-white font-medium">{PATHS[selectedPath].price}</span>
                 </div>
               </div>
