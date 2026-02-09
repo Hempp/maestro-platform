@@ -1049,17 +1049,50 @@ export default function Home() {
               <p className="text-center text-slate-600 text-xs uppercase tracking-wider mb-8">Powered by industry-leading technology</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { value: '3 Views', sub: 'Chat | Terminal | Sandbox', icon: '🖥️' },
-                  { value: 'Claude AI', sub: 'Powered by Anthropic', icon: '🤖' },
-                  { value: 'Polygon', sub: 'On-chain credentials', icon: '⬡' },
-                  { value: '1:1 Mentors', sub: 'Human support', icon: '👥' },
+                  {
+                    value: '3 Views',
+                    sub: 'Chat | Terminal | Sandbox',
+                    icon: (
+                      <svg className="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    )
+                  },
+                  {
+                    value: 'Claude AI',
+                    sub: 'Powered by Anthropic',
+                    icon: (
+                      <svg className="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                      </svg>
+                    )
+                  },
+                  {
+                    value: 'Polygon',
+                    sub: 'On-chain credentials',
+                    icon: (
+                      <svg className="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 019 14.437V9.564z" />
+                      </svg>
+                    )
+                  },
+                  {
+                    value: '1:1 Mentors',
+                    sub: 'Human support',
+                    icon: (
+                      <svg className="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                      </svg>
+                    )
+                  },
                 ].map((item) => (
                   <motion.div
                     key={item.value}
                     className="text-center py-5 px-4 bg-slate-800/20 rounded-xl border border-slate-700/30 hover:border-slate-600/50 transition-colors"
                     whileHover={{ y: -2 }}
                   >
-                    <div className="text-2xl mb-2">{item.icon}</div>
+                    <div className="flex justify-center mb-2">{item.icon}</div>
                     <div className="text-lg font-semibold text-white">{item.value}</div>
                     <div className="text-xs text-slate-500 mt-1">{item.sub}</div>
                   </motion.div>
