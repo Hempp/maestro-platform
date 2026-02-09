@@ -72,6 +72,40 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      // ═══════════════════════════════════════════════════════════════════════
+      // SUBSCRIPTION EVENTS
+      // ═══════════════════════════════════════════════════════════════════════
+
+      case 'customer.subscription.created': {
+        const subscription = event.data.object as Stripe.Subscription;
+        await handleSubscriptionCreated(supabase, subscription);
+        break;
+      }
+
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        await handleSubscriptionUpdated(supabase, subscription);
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        await handleSubscriptionDeleted(supabase, subscription);
+        break;
+      }
+
+      case 'invoice.paid': {
+        const invoice = event.data.object as Stripe.Invoice;
+        await handleInvoicePaid(supabase, invoice);
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        await handleInvoicePaymentFailed(supabase, invoice);
+        break;
+      }
+
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
@@ -445,4 +479,268 @@ async function handlePaymentFailed(
     });
 
   console.log('Payment failed for user:', userId);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUBSCRIPTION HANDLERS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Handle new subscription creation
+ */
+async function handleSubscriptionCreated(
+  supabase: ReturnType<typeof createAdminClient>,
+  subscription: Stripe.Subscription
+) {
+  // Use type assertion for Stripe API compatibility
+  const sub = subscription as unknown as {
+    id: string;
+    customer: string;
+    status: Stripe.Subscription.Status;
+    currency: string;
+    current_period_start: number;
+    current_period_end: number;
+    cancel_at_period_end: boolean;
+    canceled_at: number | null;
+    metadata: Record<string, string>;
+    items: { data: Array<{ price: { id: string; unit_amount: number | null; recurring?: { interval: string } } }> };
+  };
+
+  const customerId = sub.customer;
+  const priceId = sub.items.data[0]?.price.id;
+  const planId = sub.metadata?.plan_id || 'starter';
+
+  console.log('Subscription created:', { customerId, planId, subscriptionId: sub.id });
+
+  // Find user by stripe_customer_id
+  const { data: profile } = await (supabase as any)
+    .from('profiles')
+    .select('id')
+    .eq('stripe_customer_id', customerId)
+    .single();
+
+  if (!profile) {
+    console.error('No user found for Stripe customer:', customerId);
+    return;
+  }
+
+  // Create subscription record
+  const { error } = await (supabase as any)
+    .from('subscriptions')
+    .upsert({
+      user_id: profile.id,
+      plan_id: planId,
+      status: mapStripeStatus(sub.status),
+      billing_cycle: sub.items.data[0]?.price.recurring?.interval === 'year' ? 'yearly' : 'monthly',
+      stripe_customer_id: customerId,
+      stripe_subscription_id: sub.id,
+      stripe_price_id: priceId,
+      amount: sub.items.data[0]?.price.unit_amount || 0,
+      currency: sub.currency,
+      current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
+      current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+      cancel_at_period_end: sub.cancel_at_period_end,
+    }, {
+      onConflict: 'stripe_subscription_id',
+    });
+
+  if (error) {
+    console.error('Failed to create subscription:', error);
+  }
+
+  // Send welcome notification
+  await (supabase as any)
+    .from('notifications')
+    .insert({
+      user_id: profile.id,
+      type: 'subscription_created',
+      title: 'Welcome to your new plan!',
+      message: `Your ${planId} subscription is now active.`,
+      action_url: '/dashboard/subscription',
+    });
+
+  console.log('Subscription created for user:', profile.id);
+}
+
+/**
+ * Handle subscription updates (upgrades, downgrades, cancellations)
+ */
+async function handleSubscriptionUpdated(
+  supabase: ReturnType<typeof createAdminClient>,
+  subscription: Stripe.Subscription
+) {
+  // Use type assertion for Stripe API compatibility
+  const sub = subscription as unknown as {
+    id: string;
+    status: Stripe.Subscription.Status;
+    current_period_start: number;
+    current_period_end: number;
+    cancel_at_period_end: boolean;
+    canceled_at: number | null;
+    metadata: Record<string, string>;
+    items: { data: Array<{ price: { unit_amount: number | null } }> };
+  };
+
+  const subscriptionId = sub.id;
+  const newStatus = mapStripeStatus(sub.status);
+  const planId = sub.metadata?.plan_id;
+
+  console.log('Subscription updated:', { subscriptionId, status: newStatus, planId });
+
+  const updateData: Record<string, unknown> = {
+    status: newStatus,
+    current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
+    current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+    cancel_at_period_end: sub.cancel_at_period_end,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (planId) {
+    updateData.plan_id = planId;
+    updateData.amount = sub.items.data[0]?.price.unit_amount || 0;
+  }
+
+  if (sub.canceled_at) {
+    updateData.cancelled_at = new Date(sub.canceled_at * 1000).toISOString();
+  }
+
+  const { error } = await (supabase as any)
+    .from('subscriptions')
+    .update(updateData)
+    .eq('stripe_subscription_id', subscriptionId);
+
+  if (error) {
+    console.error('Failed to update subscription:', error);
+  }
+}
+
+/**
+ * Handle subscription deletion/cancellation
+ */
+async function handleSubscriptionDeleted(
+  supabase: ReturnType<typeof createAdminClient>,
+  subscription: Stripe.Subscription
+) {
+  const subscriptionId = subscription.id;
+
+  console.log('Subscription deleted:', subscriptionId);
+
+  // Get the subscription to find the user
+  const { data: sub } = await (supabase as any)
+    .from('subscriptions')
+    .select('user_id')
+    .eq('stripe_subscription_id', subscriptionId)
+    .single();
+
+  // Update status to cancelled
+  const { error } = await (supabase as any)
+    .from('subscriptions')
+    .update({
+      status: 'cancelled',
+      cancelled_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('stripe_subscription_id', subscriptionId);
+
+  if (error) {
+    console.error('Failed to cancel subscription:', error);
+  }
+
+  // Notify user
+  if (sub?.user_id) {
+    await (supabase as any)
+      .from('notifications')
+      .insert({
+        user_id: sub.user_id,
+        type: 'subscription_cancelled',
+        title: 'Subscription Cancelled',
+        message: 'Your subscription has been cancelled. You can resubscribe anytime.',
+        action_url: '/pricing',
+      });
+  }
+}
+
+/**
+ * Handle successful invoice payment (subscription renewal)
+ */
+async function handleInvoicePaid(
+  supabase: ReturnType<typeof createAdminClient>,
+  invoice: Stripe.Invoice
+) {
+  // Use type assertion for Stripe API compatibility
+  const inv = invoice as unknown as { subscription: string | null };
+  const subscriptionId = inv.subscription;
+  if (!subscriptionId) return; // One-time payment, not subscription
+
+  console.log('Invoice paid for subscription:', subscriptionId);
+
+  // Update subscription status to active
+  await (supabase as any)
+    .from('subscriptions')
+    .update({
+      status: 'active',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('stripe_subscription_id', subscriptionId);
+}
+
+/**
+ * Handle failed invoice payment
+ */
+async function handleInvoicePaymentFailed(
+  supabase: ReturnType<typeof createAdminClient>,
+  invoice: Stripe.Invoice
+) {
+  // Use type assertion for Stripe API compatibility
+  const inv = invoice as unknown as { subscription: string | null };
+  const subscriptionId = inv.subscription;
+  if (!subscriptionId) return;
+
+  console.log('Invoice payment failed for subscription:', subscriptionId);
+
+  // Get user from subscription
+  const { data: sub } = await (supabase as any)
+    .from('subscriptions')
+    .select('user_id')
+    .eq('stripe_subscription_id', subscriptionId)
+    .single();
+
+  // Update status to past_due
+  await (supabase as any)
+    .from('subscriptions')
+    .update({
+      status: 'past_due',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('stripe_subscription_id', subscriptionId);
+
+  // Notify user
+  if (sub?.user_id) {
+    await (supabase as any)
+      .from('notifications')
+      .insert({
+        user_id: sub.user_id,
+        type: 'payment_failed',
+        title: 'Payment Failed',
+        message: 'We couldn\'t process your subscription payment. Please update your payment method.',
+        action_url: '/dashboard/subscription/billing',
+      });
+  }
+}
+
+/**
+ * Map Stripe subscription status to our status
+ */
+function mapStripeStatus(stripeStatus: Stripe.Subscription.Status): string {
+  const statusMap: Record<Stripe.Subscription.Status, string> = {
+    active: 'active',
+    canceled: 'cancelled',
+    incomplete: 'incomplete',
+    incomplete_expired: 'cancelled',
+    past_due: 'past_due',
+    paused: 'cancelled',
+    trialing: 'trialing',
+    unpaid: 'past_due',
+  };
+  return statusMap[stripeStatus] || 'pending';
 }
