@@ -294,14 +294,14 @@ function PathCard({
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              Free to Learn
+              Free Trial
             </span>
             <span className="text-slate-700">|</span>
-            <span className="text-slate-500 text-sm">Pay when certified</span>
+            <span className="text-slate-500 text-sm">Cancel anytime</span>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold text-white">{price}</span>
-            <span className="text-slate-600 text-sm">for certification</span>
+            <span className="text-slate-600 text-sm">/month</span>
           </div>
         </div>
 
@@ -443,7 +443,7 @@ export default function Home() {
             {[
               { label: 'About', href: '#about' },
               { label: 'Paths', href: '#paths' },
-              { label: 'Teams', href: '#teams' },
+              { label: 'Pricing', href: '/pricing' },
             ].map((item) => (
               <a
                 key={item.label}
@@ -545,7 +545,7 @@ export default function Home() {
             >
               <TrustBadge
                 icon={<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>}
-                text="Free until certified"
+                text="14-day free trial"
               />
               <TrustBadge
                 icon={<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>}
@@ -591,9 +591,9 @@ export default function Home() {
               animate="visible"
               className="mt-16 sm:mt-24 pt-8 border-t border-slate-800/50 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 max-w-3xl mx-auto"
             >
-              <StatItem value={12847} suffix="+" label="Learners Enrolled" />
+              <StatItem value={12847} suffix="+" label="Active Subscribers" />
               <StatItem value={3} label="Learning Paths" />
-              <StatItem value="$0" label="Until Certified" />
+              <StatItem value="$29" label="Starting Price" />
               <StatItem value={100} suffix="%" label="Project-Based" />
             </motion.div>
           </motion.div>
@@ -727,8 +727,8 @@ export default function Home() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
                       </svg>
                     ),
-                    title: 'Pay After You Ship',
-                    desc: 'No upfront cost. Complete your capstone project, then pay. We only win when you do.',
+                    title: 'Flexible Subscriptions',
+                    desc: 'Start with a 14-day free trial. Cancel anytime. Upgrade or downgrade as your needs change.',
                     color: 'text-amber-400',
                   },
                 ].map((item, i) => (
@@ -774,8 +774,8 @@ export default function Home() {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               <PathCard
-                path="PATH A"
-                title="The Student"
+                path="STARTER"
+                title="Student Path"
                 subtitle="Build a Job-Ready Portfolio"
                 description={
                   <>
@@ -784,56 +784,59 @@ export default function Home() {
                   </>
                 }
                 features={[
-                  'Build a live, AI-enhanced portfolio from the terminal',
-                  'Master Claude Code to scaffold apps in minutes',
-                  <>Earn <span className="text-purple-400 font-semibold">Certified AI Associate</span> SBT</>,
+                  'Access to Student learning path',
+                  '10 AI tutor sessions/month',
+                  'Basic sandbox challenges',
+                  'Community access',
                 ]}
-                price="$49"
+                price="$29"
                 color="purple"
-                cta="Start Learning Free"
+                cta="Start Free Trial"
                 delay={0}
               />
 
               <PathCard
-                path="PATH B"
-                title="The Employee"
+                path="PROFESSIONAL"
+                title="Student + Employee"
                 subtitle="Efficiency Mastery"
                 description={
                   <>
                     Work <span className="text-white font-medium">10 hours less per week.</span> Build &quot;Digital Clones&quot; of your
-                    routine tasks.
+                    routine tasks with unlimited AI coaching.
                   </>
                 }
                 features={[
-                  'Create a custom Internal Knowledge GPT',
-                  'Build automated email & workflow systems',
-                  <>Earn <span className="text-cyan-400 font-semibold">Workflow Efficiency Lead</span> SBT</>,
+                  'Student + Employee paths',
+                  'Unlimited AI tutor sessions',
+                  '100 agent executions/month',
+                  'Custom skill creation',
                 ]}
-                price="$199"
+                price="$79"
                 color="blue"
-                cta="Start Learning Free"
+                cta="Start Free Trial"
                 popular
                 delay={0.1}
               />
 
               <PathCard
-                path="PATH C"
-                title="The Owner"
-                subtitle="Operations Scaling"
+                path="ENTERPRISE"
+                title="All Paths Included"
+                subtitle="Full AI Operations"
                 description={
                   <>
-                    <span className="text-white font-medium">Scale without scaling headcount.</span> Replace entire departments with AI
-                    chains.
+                    <span className="text-white font-medium">Scale without scaling headcount.</span> Access all paths and deploy
+                    unlimited AI agents.
                   </>
                 }
                 features={[
-                  'Deploy Autonomous Sales & Research Chains',
-                  'Orchestrate multi-agent systems for full-scale ops',
-                  <>Earn <span className="text-emerald-400 font-semibold">AI Operations Master</span> SBT</>,
+                  'ALL paths (Student, Employee, Owner)',
+                  'Unlimited agent executions',
+                  'Team collaboration (up to 5)',
+                  'API access & custom agents',
                 ]}
-                price="$499"
+                price="$199"
                 color="emerald"
-                cta="Start Learning Free"
+                cta="Start Free Trial"
                 delay={0.2}
               />
             </div>
@@ -1018,8 +1021,8 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
                   </svg>
                 }
-                title="Pay After You Ship"
-                desc="No credit card upfront. Complete your project, prove your skills, then pay. We only succeed when you do."
+                title="Try Free for 14 Days"
+                desc="Start with a full-access trial. No credit card required. Cancel anytime if it's not for you."
                 color="text-emerald-400"
                 delay={0.4}
               />
@@ -1150,32 +1153,32 @@ export default function Home() {
                 </div>
               </form>
 
-              {/* Team Certification Bundles */}
+              {/* Team Subscription Plans */}
               <div className="mt-10 pt-8 border-t border-slate-800/60">
-                <p className="text-center text-slate-400 text-sm font-medium mb-6">Popular certification bundles</p>
+                <p className="text-center text-slate-400 text-sm font-medium mb-6">Team subscription plans</p>
                 <div className="grid sm:grid-cols-3 gap-4">
                   {[
                     {
-                      name: 'Starter Team',
-                      seats: '5 certifications',
-                      price: '$1,199',
-                      savings: 'Save 20%',
+                      name: 'Team Starter',
+                      seats: 'Up to 10 members',
+                      price: '$499',
+                      period: '/month',
                       color: 'text-purple-400',
                       borderColor: 'border-purple-500/20 hover:border-purple-500/40'
                     },
                     {
-                      name: 'Growth Team',
-                      seats: '15 certifications',
-                      price: '$2,999',
-                      savings: 'Save 33%',
+                      name: 'Team Growth',
+                      seats: 'Up to 50 members',
+                      price: '$1,499',
+                      period: '/month',
                       color: 'text-cyan-400',
                       borderColor: 'border-cyan-500/20 hover:border-cyan-500/40'
                     },
                     {
                       name: 'Enterprise',
-                      seats: 'Unlimited',
-                      price: 'Custom',
-                      savings: 'Best value',
+                      seats: 'Unlimited members',
+                      price: '$4,999',
+                      period: '/month',
                       color: 'text-emerald-400',
                       borderColor: 'border-emerald-500/20 hover:border-emerald-500/40'
                     },
@@ -1186,9 +1189,9 @@ export default function Home() {
                       whileHover={{ y: -4, scale: 1.02 }}
                     >
                       <div className={`text-xs font-semibold uppercase tracking-wider ${item.color} mb-2`}>{item.name}</div>
-                      <div className="text-2xl font-bold text-white">{item.price}</div>
+                      <div className="text-2xl font-bold text-white">{item.price}<span className="text-sm text-slate-500 font-normal">{item.period}</span></div>
                       <div className="text-xs text-slate-500 mt-1">{item.seats}</div>
-                      <div className="text-xs text-emerald-400 mt-3 font-medium">{item.savings}</div>
+                      <div className="text-xs text-emerald-400 mt-3 font-medium">All features included</div>
                     </motion.div>
                   ))}
                 </div>
@@ -1203,9 +1206,9 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-center text-slate-500 text-sm mt-8"
             >
-              Learning individually? Start free today. Certifications from <span className="text-white font-semibold">$49</span>.{' '}
-              <Link href="#paths" className="text-cyan-400 hover:text-cyan-300 font-medium underline underline-offset-4">
-                See all paths
+              Learning individually? Plans start at <span className="text-white font-semibold">$29/month</span>.{' '}
+              <Link href="/pricing" className="text-cyan-400 hover:text-cyan-300 font-medium underline underline-offset-4">
+                View all plans
               </Link>
             </motion.p>
           </div>
@@ -1240,8 +1243,8 @@ export default function Home() {
               Ready to Command AI?
             </h2>
             <p className="text-slate-400 text-lg md:text-xl mb-10 max-w-2xl mx-auto">
-              Join <span className="text-white font-semibold">12,847+ learners</span> who are building real AI skills.
-              Start free. Pay only after you ship real work.
+              Join <span className="text-white font-semibold">12,847+ subscribers</span> who are building real AI skills.
+              Start your 14-day free trial today. Cancel anytime.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -1276,8 +1279,8 @@ export default function Home() {
             </div>
             <div className="flex flex-wrap gap-6 sm:gap-8 text-sm text-slate-500">
               <Link href="/signup" className="hover:text-white transition-colors font-medium">Get Started</Link>
+              <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
               <a href="#paths" className="hover:text-white transition-colors">Paths</a>
-              <a href="#teams" className="hover:text-white transition-colors">Teams</a>
               <span className="text-slate-700">Docs (coming soon)</span>
             </div>
           </div>
