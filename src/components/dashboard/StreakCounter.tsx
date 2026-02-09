@@ -2,19 +2,28 @@
 
 /**
  * STREAK COUNTER COMPONENT
- * Displays user's activity streak with visual feedback
+ * Enhanced gamification with visual feedback:
  * - Fire icon that grows with streak
  * - Glow effect for active streaks
  * - Encouraging messages
+ * - Milestone celebration effects
+ * - Daily goal tracking
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface StreakCounterProps {
   currentStreak?: number;
   longestStreak?: number;
+  dailyGoalMinutes?: number;
+  minutesToday?: number;
+  showDailyGoal?: boolean;
+  compact?: boolean;
   className?: string;
 }
+
+// Streak milestones for celebration
+const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 365];
 
 // Streak-based encouragement messages
 const getStreakMessage = (streak: number): string => {
@@ -26,7 +35,21 @@ const getStreakMessage = (streak: number): string => {
   if (streak < 14) return "One week warrior!";
   if (streak < 30) return "Unstoppable!";
   if (streak < 60) return "Legend in the making!";
-  return "AI Mastery Unlocked!";
+  if (streak < 100) return "Elite learner!";
+  if (streak < 365) return "Mastery unlocked!";
+  return "AI Grandmaster!";
+};
+
+// Get bonus XP for streak milestones
+const getStreakBonus = (streak: number): number => {
+  if (streak >= 365) return 500;
+  if (streak >= 100) return 200;
+  if (streak >= 60) return 100;
+  if (streak >= 30) return 50;
+  if (streak >= 14) return 25;
+  if (streak >= 7) return 15;
+  if (streak >= 3) return 10;
+  return 0;
 };
 
 // Get fire size based on streak
@@ -89,12 +112,24 @@ function FireIcon({ streak }: { streak: number }) {
   );
 }
 
-export function StreakCounter({ currentStreak = 0, longestStreak = 0, className = '' }: StreakCounterProps) {
+export function StreakCounter({
+  currentStreak = 0,
+  longestStreak = 0,
+  dailyGoalMinutes = 30,
+  minutesToday = 0,
+  showDailyGoal = false,
+  compact = false,
+  className = ''
+}: StreakCounterProps) {
   const [displayStreak, setDisplayStreak] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showMilestone, setShowMilestone] = useState(false);
   const glowClass = getGlowClass(currentStreak);
   const message = getStreakMessage(currentStreak);
   const isActive = currentStreak > 0;
+  const streakBonus = getStreakBonus(currentStreak);
+  const dailyProgress = Math.min((minutesToday / dailyGoalMinutes) * 100, 100);
+  const isMilestone = STREAK_MILESTONES.includes(currentStreak);
 
   // Animate streak number on change
   useEffect(() => {
@@ -103,15 +138,47 @@ export function StreakCounter({ currentStreak = 0, longestStreak = 0, className 
       const timeout = setTimeout(() => {
         setDisplayStreak(currentStreak);
         setIsAnimating(false);
+        // Show milestone celebration
+        if (STREAK_MILESTONES.includes(currentStreak)) {
+          setShowMilestone(true);
+          setTimeout(() => setShowMilestone(false), 3000);
+        }
       }, 300);
       return () => clearTimeout(timeout);
     }
   }, [currentStreak, displayStreak]);
 
+  // Compact version for header
+  if (compact) {
+    return (
+      <div
+        className={`
+          flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all duration-300
+          ${isActive
+            ? 'bg-orange-500/5 border-orange-500/20'
+            : 'bg-slate-800/30 border-slate-800/60'
+          }
+          ${className}
+        `}
+      >
+        <FireIcon streak={currentStreak} />
+        <span
+          className={`
+            text-sm font-semibold transition-all duration-300
+            ${isAnimating ? 'scale-110' : 'scale-100'}
+            ${isActive ? 'text-orange-400' : 'text-slate-500'}
+          `}
+        >
+          {displayStreak}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`
-        flex items-center gap-3 px-4 py-3 rounded-lg border transition-all duration-300
+        relative flex items-center gap-3 px-4 py-3 rounded-lg border transition-all duration-300
         ${isActive
           ? 'bg-orange-500/5 border-orange-500/20 shadow-lg ' + glowClass
           : 'bg-slate-800/30 border-slate-800/60'
@@ -119,9 +186,20 @@ export function StreakCounter({ currentStreak = 0, longestStreak = 0, className 
         ${className}
       `}
     >
+      {/* Milestone Celebration Overlay */}
+      {showMilestone && (
+        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-orange-500/20 to-amber-500/20 animate-pulse pointer-events-none" />
+      )}
+
       {/* Fire Icon */}
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 relative">
         <FireIcon streak={currentStreak} />
+        {/* Bonus XP indicator */}
+        {streakBonus > 0 && (
+          <div className="absolute -top-1 -right-1 px-1 py-0.5 bg-amber-500 text-white text-[8px] font-bold rounded-full">
+            +{streakBonus}
+          </div>
+        )}
       </div>
 
       {/* Streak Info */}
@@ -139,10 +217,33 @@ export function StreakCounter({ currentStreak = 0, longestStreak = 0, className 
           <span className={`text-xs ${isActive ? 'text-orange-400/70' : 'text-slate-600'}`}>
             day{currentStreak !== 1 ? 's' : ''}
           </span>
+          {isMilestone && (
+            <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[9px] font-medium rounded">
+              MILESTONE
+            </span>
+          )}
         </div>
         <p className={`text-xs truncate ${isActive ? 'text-orange-300/60' : 'text-slate-600'}`}>
           {message}
         </p>
+
+        {/* Daily Goal Progress */}
+        {showDailyGoal && (
+          <div className="mt-2">
+            <div className="flex items-center justify-between text-[10px] text-slate-600 mb-1">
+              <span>Today's goal</span>
+              <span>{minutesToday}/{dailyGoalMinutes} min</span>
+            </div>
+            <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  dailyProgress >= 100 ? 'bg-emerald-500' : 'bg-orange-500'
+                }`}
+                style={{ width: `${dailyProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Best Streak Badge */}
@@ -150,6 +251,14 @@ export function StreakCounter({ currentStreak = 0, longestStreak = 0, className 
         <div className="flex-shrink-0 text-right">
           <p className="text-[10px] text-slate-600 uppercase tracking-wider">Best</p>
           <p className="text-xs text-slate-500 font-medium">{longestStreak}</p>
+        </div>
+      )}
+
+      {/* At milestone, show best badge differently */}
+      {isMilestone && longestStreak === currentStreak && longestStreak > 0 && (
+        <div className="flex-shrink-0 text-right">
+          <p className="text-[10px] text-amber-500 uppercase tracking-wider font-medium">New Best!</p>
+          <p className="text-xs text-amber-400 font-medium">{longestStreak}</p>
         </div>
       )}
     </div>

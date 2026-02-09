@@ -72,6 +72,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
 
 /**
  * Send welcome email to new users
+ * Enhanced with professional dark theme, cyan accents, and mobile-responsive table layout
  */
 export async function sendWelcomeEmail(
   email: string,
@@ -88,57 +89,201 @@ export async function sendWelcomeEmail(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; background-color: #0f1115; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-    <!-- Header -->
-    <div style="text-align: center; margin-bottom: 40px;">
-      <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 0;">PHAZUR</h1>
-      <p style="color: #64748b; font-size: 14px; margin: 8px 0 0;">AI Learning Lab</p>
-    </div>
+<body style="margin: 0; padding: 0; background-color: #0a0a0f; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #0a0a0f;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px;">
 
-    <!-- Main Content -->
-    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 40px; border: 1px solid #334155;">
-      <h2 style="color: #ffffff; font-size: 24px; margin: 0 0 16px;">Hey ${firstName}! 👋</h2>
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding-bottom: 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td>
+                    <h1 style="color: #06b6d4; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin: 0;">PHAZUR</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <p style="color: #64748b; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin: 8px 0 0;">AI Learning Lab</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-      <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
-        Welcome to Phazur. You've just taken the first step toward mastering AI skills that actually matter for your career.
-      </p>
+          <!-- Main Content Card -->
+          <tr>
+            <td>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #111827 0%, #0f172a 100%); border-radius: 20px; border: 1px solid #1e293b; overflow: hidden;">
 
-      <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
-        Unlike other courses, we focus on <strong style="color: #22d3ee;">real projects</strong> and <strong style="color: #22d3ee;">hands-on challenges</strong> - no boring quizzes, just skills you can use immediately.
-      </p>
+                <!-- Welcome Banner -->
+                <tr>
+                  <td style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.04) 100%); padding: 40px 40px 24px; border-bottom: 1px solid rgba(6, 182, 212, 0.1);">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td>
+                          <h2 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.5px;">Hey ${firstName}!</h2>
+                          <p style="color: #22d3ee; font-size: 16px; font-weight: 500; margin: 0;">Welcome to the future of AI learning.</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
 
-      <!-- CTA Button -->
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="https://pla-ten-eosin.vercel.app/learn"
-           style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-          Start Learning Now
-        </a>
-      </div>
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 32px 40px 40px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td>
+                          <p style="color: #94a3b8; font-size: 17px; line-height: 1.7; margin: 0 0 20px;">
+                            You've just taken the first step toward mastering AI skills that actually matter for your career.
+                          </p>
+                          <p style="color: #94a3b8; font-size: 17px; line-height: 1.7; margin: 0 0 32px;">
+                            Unlike other courses, we focus on <strong style="color: #22d3ee;">real projects</strong> and <strong style="color: #22d3ee;">hands-on challenges</strong> - no boring quizzes, just skills you can use immediately.
+                          </p>
+                        </td>
+                      </tr>
 
-      <!-- What's Next -->
-      <div style="background: rgba(6, 182, 212, 0.1); border-radius: 12px; padding: 24px; margin-top: 24px;">
-        <h3 style="color: #22d3ee; font-size: 16px; margin: 0 0 16px;">Here's what to do next:</h3>
-        <ul style="color: #94a3b8; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
-          <li>Choose your learning path (Student, Employee, or Owner)</li>
-          <li>Complete your first module with real AI tools</li>
-          <li>Build your portfolio with verified projects</li>
-          <li>Earn blockchain-verified credentials</li>
-        </ul>
-      </div>
-    </div>
+                      <!-- CTA Button -->
+                      <tr>
+                        <td align="center" style="padding: 8px 0 32px;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td>
+                                <a href="https://pla-ten-eosin.vercel.app/learn"
+                                   style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: #ffffff; text-decoration: none; padding: 18px 40px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35); letter-spacing: 0.3px;">
+                                  Start Learning Now
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
 
-    <!-- Footer -->
-    <div style="text-align: center; margin-top: 40px;">
-      <p style="color: #64748b; font-size: 12px; margin: 0;">
-        Questions? Reply to this email or reach us at ${SUPPORT_EMAIL}
-      </p>
-      <p style="color: #475569; font-size: 11px; margin: 16px 0 0;">
-        © ${new Date().getFullYear()} Phazur. All rights reserved.
-      </p>
-    </div>
-  </div>
+                      <!-- What's Next Box -->
+                      <tr>
+                        <td>
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(6, 182, 212, 0.08); border-radius: 16px; border: 1px solid rgba(6, 182, 212, 0.15);">
+                            <tr>
+                              <td style="padding: 28px 28px 24px;">
+                                <h3 style="color: #22d3ee; font-size: 15px; font-weight: 600; margin: 0 0 20px; text-transform: uppercase; letter-spacing: 1px;">Your Learning Path</h3>
+
+                                <!-- Step 1 -->
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 16px;">
+                                  <tr>
+                                    <td width="36" valign="top">
+                                      <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                        <tr>
+                                          <td style="width: 28px; height: 28px; background: rgba(6, 182, 212, 0.2); border-radius: 50%; text-align: center; vertical-align: middle;">
+                                            <span style="color: #22d3ee; font-size: 13px; font-weight: 600; line-height: 28px;">1</span>
+                                          </td>
+                                        </tr>
+                                      </table>
+                                    </td>
+                                    <td style="padding-left: 12px;">
+                                      <p style="color: #e2e8f0; font-size: 15px; font-weight: 500; margin: 0 0 2px;">Choose your track</p>
+                                      <p style="color: #64748b; font-size: 13px; margin: 0;">Student, Employee, or Business Owner</p>
+                                    </td>
+                                  </tr>
+                                </table>
+
+                                <!-- Step 2 -->
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 16px;">
+                                  <tr>
+                                    <td width="36" valign="top">
+                                      <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                        <tr>
+                                          <td style="width: 28px; height: 28px; background: rgba(6, 182, 212, 0.2); border-radius: 50%; text-align: center; vertical-align: middle;">
+                                            <span style="color: #22d3ee; font-size: 13px; font-weight: 600; line-height: 28px;">2</span>
+                                          </td>
+                                        </tr>
+                                      </table>
+                                    </td>
+                                    <td style="padding-left: 12px;">
+                                      <p style="color: #e2e8f0; font-size: 15px; font-weight: 500; margin: 0 0 2px;">Build real projects</p>
+                                      <p style="color: #64748b; font-size: 13px; margin: 0;">Hands-on work with actual AI tools</p>
+                                    </td>
+                                  </tr>
+                                </table>
+
+                                <!-- Step 3 -->
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 16px;">
+                                  <tr>
+                                    <td width="36" valign="top">
+                                      <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                        <tr>
+                                          <td style="width: 28px; height: 28px; background: rgba(6, 182, 212, 0.2); border-radius: 50%; text-align: center; vertical-align: middle;">
+                                            <span style="color: #22d3ee; font-size: 13px; font-weight: 600; line-height: 28px;">3</span>
+                                          </td>
+                                        </tr>
+                                      </table>
+                                    </td>
+                                    <td style="padding-left: 12px;">
+                                      <p style="color: #e2e8f0; font-size: 15px; font-weight: 500; margin: 0 0 2px;">Grow your portfolio</p>
+                                      <p style="color: #64748b; font-size: 13px; margin: 0;">Verified projects you can show employers</p>
+                                    </td>
+                                  </tr>
+                                </table>
+
+                                <!-- Step 4 -->
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                  <tr>
+                                    <td width="36" valign="top">
+                                      <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                        <tr>
+                                          <td style="width: 28px; height: 28px; background: rgba(16, 185, 129, 0.2); border-radius: 50%; text-align: center; vertical-align: middle;">
+                                            <span style="color: #10b981; font-size: 13px; font-weight: 600; line-height: 28px;">&#10003;</span>
+                                          </td>
+                                        </tr>
+                                      </table>
+                                    </td>
+                                    <td style="padding-left: 12px;">
+                                      <p style="color: #e2e8f0; font-size: 15px; font-weight: 500; margin: 0 0 2px;">Get certified</p>
+                                      <p style="color: #64748b; font-size: 13px; margin: 0;">Blockchain-verified credentials</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 40px 20px; text-align: center;">
+              <p style="color: #64748b; font-size: 13px; margin: 0 0 8px;">
+                Questions? Reply to this email or reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color: #22d3ee; text-decoration: none;">${SUPPORT_EMAIL}</a>
+              </p>
+              <p style="color: #475569; font-size: 12px; margin: 0;">
+                &copy; ${new Date().getFullYear()} Phazur. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
     `,
@@ -148,6 +293,7 @@ export async function sendWelcomeEmail(
 
 /**
  * Send certificate issued email
+ * Enhanced with professional dark theme, tier-specific colors, and mobile-responsive layout
  */
 export async function sendCertificateEmail(
   email: string,
@@ -158,74 +304,222 @@ export async function sendCertificateEmail(
   const firstName = name?.split(' ')[0] || 'there';
 
   const tierInfo = {
-    student: { title: 'Certified AI Associate', color: '#a855f7' },
-    employee: { title: 'Workflow Efficiency Lead', color: '#22d3ee' },
-    owner: { title: 'AI Operations Master', color: '#10b981' },
+    student: { title: 'Certified AI Associate', color: '#a855f7', gradient: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)' },
+    employee: { title: 'Workflow Efficiency Lead', color: '#22d3ee', gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' },
+    owner: { title: 'AI Operations Master', color: '#10b981', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
   };
 
-  const { title, color } = tierInfo[certificateType];
+  const { title, color, gradient } = tierInfo[certificateType];
+  const verifyUrl = `https://pla-ten-eosin.vercel.app/api/certificates/verify?id=${certificateId}`;
+  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(verifyUrl)}`;
+  const twitterText = `I just earned my ${title} certification from @PhazurAI! ${verifyUrl}`;
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}`;
+  const currentYear = new Date().getFullYear();
 
   return sendEmail({
     to: email,
-    subject: `🎉 Congratulations! You've earned your ${title} certificate`,
+    subject: `Congratulations! You've earned your ${title} certificate`,
     html: `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; background-color: #0f1115; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-    <!-- Header -->
-    <div style="text-align: center; margin-bottom: 40px;">
-      <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 0;">PHAZUR</h1>
-    </div>
+<body style="margin: 0; padding: 0; background-color: #0a0a0f; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #0a0a0f;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px;">
 
-    <!-- Certificate Card -->
-    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 40px; border: 1px solid ${color}40; text-align: center;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding-bottom: 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td>
+                    <h1 style="color: #06b6d4; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin: 0;">PHAZUR</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <p style="color: #64748b; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin: 8px 0 0;">Certificate Issued</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-      <!-- Trophy Icon -->
-      <div style="width: 80px; height: 80px; margin: 0 auto 24px; background: ${color}20; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-        <span style="font-size: 40px;">🏆</span>
-      </div>
+          <!-- Main Content Card -->
+          <tr>
+            <td>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #111827 0%, #0f172a 100%); border-radius: 20px; border: 2px solid ${color}40; overflow: hidden;">
 
-      <h2 style="color: #ffffff; font-size: 28px; margin: 0 0 8px;">Congratulations, ${firstName}!</h2>
+                <!-- Celebration Banner -->
+                <tr>
+                  <td style="background: linear-gradient(135deg, ${color}15 0%, ${color}05 100%); padding: 48px 40px 32px; text-align: center;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td align="center">
+                          <!-- Trophy Icon Circle -->
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td style="width: 100px; height: 100px; background: ${color}20; border-radius: 50%; border: 3px solid ${color}50; text-align: center; vertical-align: middle;">
+                                <span style="font-size: 48px; line-height: 100px;">&#127942;</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding-top: 24px;">
+                          <h2 style="color: #ffffff; font-size: 32px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">Congratulations, ${firstName}!</h2>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding-top: 12px;">
+                          <p style="color: #94a3b8; font-size: 17px; line-height: 1.6; margin: 0;">
+                            You've successfully completed all requirements and earned your certificate.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
 
-      <p style="color: #94a3b8; font-size: 16px; margin: 0 0 32px;">
-        You've successfully completed all requirements and earned your certificate.
-      </p>
+                <!-- Certificate Badge -->
+                <tr>
+                  <td style="padding: 32px 40px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: #0a0a0f; border-radius: 16px; border: 2px solid ${color}; overflow: hidden;">
+                      <!-- Certificate Header -->
+                      <tr>
+                        <td style="background: ${gradient}; padding: 16px; text-align: center;">
+                          <p style="color: rgba(255,255,255,0.9); font-size: 11px; text-transform: uppercase; letter-spacing: 3px; margin: 0;">Certificate of Completion</p>
+                        </td>
+                      </tr>
+                      <!-- Certificate Body -->
+                      <tr>
+                        <td style="padding: 32px; text-align: center;">
+                          <p style="color: #64748b; font-size: 13px; margin: 0 0 12px;">This certifies that</p>
+                          <h3 style="color: #ffffff; font-size: 24px; font-weight: 600; margin: 0 0 16px;">${firstName}</h3>
+                          <p style="color: #64748b; font-size: 13px; margin: 0 0 20px;">has successfully completed the requirements for</p>
+                          <h4 style="color: ${color}; font-size: 22px; font-weight: 700; margin: 0 0 8px;">${title}</h4>
+                          <p style="color: #475569; font-size: 12px; font-family: 'SF Mono', Monaco, monospace; margin: 16px 0 0;">ID: ${certificateId}</p>
+                        </td>
+                      </tr>
+                      <!-- Blockchain Verified Badge -->
+                      <tr>
+                        <td style="background: rgba(16, 185, 129, 0.1); padding: 12px 24px; border-top: 1px solid #1e293b;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                            <tr>
+                              <td style="text-align: center;">
+                                <span style="color: #10b981; font-size: 12px; font-weight: 500;">&#x2713; Blockchain Verified</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
 
-      <!-- Certificate Badge -->
-      <div style="background: ${color}15; border: 2px solid ${color}; border-radius: 12px; padding: 24px; margin: 0 0 32px;">
-        <p style="color: ${color}; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 8px;">Certificate Earned</p>
-        <h3 style="color: #ffffff; font-size: 22px; margin: 0;">${title}</h3>
-      </div>
+                <!-- CTA Buttons -->
+                <tr>
+                  <td style="padding: 0 40px 32px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td align="center">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td style="padding: 0 6px 12px;">
+                                <a href="${verifyUrl}"
+                                   style="display: inline-block; background: ${gradient}; color: #ffffff; text-decoration: none; padding: 16px 28px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 14px ${color}40;">
+                                  View Certificate
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
 
-      <!-- CTA Buttons -->
-      <div style="margin: 32px 0;">
-        <a href="https://pla-ten-eosin.vercel.app/api/certificates/verify?id=${certificateId}"
-           style="display: inline-block; background: ${color}; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 0 8px 12px;">
-          View Certificate
-        </a>
-        <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://pla-ten-eosin.vercel.app/api/certificates/verify?id=${certificateId}"
-           style="display: inline-block; background: #0077b5; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 0 8px 12px;">
-          Share on LinkedIn
-        </a>
-      </div>
+                <!-- Share Section -->
+                <tr>
+                  <td style="padding: 0 40px 40px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; border: 1px solid #1e293b;">
+                      <tr>
+                        <td style="padding: 24px; text-align: center;">
+                          <p style="color: #94a3b8; font-size: 14px; margin: 0 0 16px;">Share your achievement with the world</p>
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td style="padding: 0 6px;">
+                                <a href="${linkedInUrl}"
+                                   style="display: inline-block; background: #0077b5; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                                  LinkedIn
+                                </a>
+                              </td>
+                              <td style="padding: 0 6px;">
+                                <a href="${twitterUrl}"
+                                   style="display: inline-block; background: #1da1f2; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                                  X / Twitter
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
 
-      <p style="color: #64748b; font-size: 14px; margin: 0;">
-        Your credential is blockchain-verified and can be shared with employers.
-      </p>
-    </div>
+                <!-- What's Next -->
+                <tr>
+                  <td style="padding: 0 40px 40px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(6, 182, 212, 0.06); border-left: 4px solid #22d3ee; border-radius: 0 12px 12px 0;">
+                      <tr>
+                        <td style="padding: 20px 24px;">
+                          <p style="color: #22d3ee; font-size: 14px; font-weight: 600; margin: 0 0 8px;">What's Next?</p>
+                          <ul style="color: #94a3b8; font-size: 14px; line-height: 1.7; margin: 0; padding-left: 20px;">
+                            <li>Add this credential to your LinkedIn profile</li>
+                            <li>Update your resume with your certification</li>
+                            <li>Join our certified professionals community</li>
+                          </ul>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    <!-- Footer -->
-    <div style="text-align: center; margin-top: 40px;">
-      <p style="color: #475569; font-size: 11px; margin: 0;">
-        © ${new Date().getFullYear()} Phazur. All rights reserved.
-      </p>
-    </div>
-  </div>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 40px 20px; text-align: center;">
+              <p style="color: #64748b; font-size: 13px; margin: 0 0 8px;">
+                Your credential can be verified anytime at phazur.com/verify
+              </p>
+              <p style="color: #475569; font-size: 12px; margin: 0;">
+                &copy; ${currentYear} Phazur. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
     `,
@@ -238,6 +532,7 @@ export async function sendCertificateEmail(
 
 /**
  * Send password reset email
+ * Enhanced with professional dark theme, security messaging, and mobile-responsive layout
  */
 export async function sendPasswordResetEmail(
   email: string,
@@ -254,42 +549,180 @@ export async function sendPasswordResetEmail(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; background-color: #0f1115; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-    <!-- Header -->
-    <div style="text-align: center; margin-bottom: 40px;">
-      <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 0;">PHAZUR</h1>
-    </div>
+<body style="margin: 0; padding: 0; background-color: #0a0a0f; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #0a0a0f;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px;">
 
-    <!-- Main Content -->
-    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 40px; border: 1px solid #334155;">
-      <h2 style="color: #ffffff; font-size: 24px; margin: 0 0 16px;">Reset Your Password</h2>
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding-bottom: 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td>
+                    <h1 style="color: #06b6d4; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin: 0;">PHAZUR</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <p style="color: #64748b; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin: 8px 0 0;">Password Reset</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-      <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
-        We received a request to reset your password. Click the button below to choose a new password.
-      </p>
+          <!-- Main Content Card -->
+          <tr>
+            <td>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #111827 0%, #0f172a 100%); border-radius: 20px; border: 1px solid #1e293b; overflow: hidden;">
 
-      <!-- CTA Button -->
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="${resetUrl}"
-           style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-          Reset Password
-        </a>
-      </div>
+                <!-- Icon Header -->
+                <tr>
+                  <td style="padding: 40px 40px 24px; text-align: center;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td align="center">
+                          <!-- Lock Icon Circle -->
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td style="width: 80px; height: 80px; background: rgba(6, 182, 212, 0.1); border-radius: 50%; border: 2px solid rgba(6, 182, 212, 0.2); text-align: center; vertical-align: middle;">
+                                <span style="font-size: 36px; line-height: 80px;">&#128274;</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding-top: 24px;">
+                          <h2 style="color: #ffffff; font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">Reset Your Password</h2>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
 
-      <p style="color: #64748b; font-size: 14px; margin: 24px 0 0; text-align: center;">
-        This link expires in 1 hour. If you didn't request this, you can safely ignore this email.
-      </p>
-    </div>
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 0 40px 40px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td>
+                          <p style="color: #94a3b8; font-size: 16px; line-height: 1.7; margin: 0 0 8px; text-align: center;">
+                            We received a request to reset your password.
+                          </p>
+                          <p style="color: #94a3b8; font-size: 16px; line-height: 1.7; margin: 0 0 32px; text-align: center;">
+                            Click the button below to choose a new password.
+                          </p>
+                        </td>
+                      </tr>
 
-    <!-- Footer -->
-    <div style="text-align: center; margin-top: 40px;">
-      <p style="color: #475569; font-size: 11px; margin: 0;">
-        © ${new Date().getFullYear()} Phazur. All rights reserved.
-      </p>
-    </div>
-  </div>
+                      <!-- CTA Button -->
+                      <tr>
+                        <td align="center" style="padding: 8px 0 32px;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td>
+                                <a href="${resetUrl}"
+                                   style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: #ffffff; text-decoration: none; padding: 18px 48px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35); letter-spacing: 0.3px;">
+                                  Reset Password
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Expiry Warning -->
+                      <tr>
+                        <td>
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(245, 158, 11, 0.08); border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                            <tr>
+                              <td style="padding: 16px 20px;">
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                  <tr>
+                                    <td width="24" valign="top">
+                                      <span style="font-size: 16px;">&#9203;</span>
+                                    </td>
+                                    <td style="padding-left: 12px;">
+                                      <p style="color: #f59e0b; font-size: 14px; font-weight: 600; margin: 0 0 4px;">Link expires in 1 hour</p>
+                                      <p style="color: #94a3b8; font-size: 13px; margin: 0;">For security reasons, this password reset link will expire. Request a new one if needed.</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Security Note -->
+                      <tr>
+                        <td style="padding-top: 24px;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(100, 116, 139, 0.08); border-radius: 12px;">
+                            <tr>
+                              <td style="padding: 20px;">
+                                <p style="color: #64748b; font-size: 13px; line-height: 1.6; margin: 0; text-align: center;">
+                                  <strong style="color: #94a3b8;">Didn't request this?</strong><br>
+                                  You can safely ignore this email. Your password won't change unless you click the button above.
+                                </p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Link Fallback -->
+                      <tr>
+                        <td style="padding-top: 24px;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border-top: 1px solid #1e293b;">
+                            <tr>
+                              <td style="padding-top: 24px; text-align: center;">
+                                <p style="color: #64748b; font-size: 12px; margin: 0 0 8px;">
+                                  Button not working? Copy and paste this link:
+                                </p>
+                                <p style="color: #22d3ee; font-size: 12px; word-break: break-all; margin: 0; font-family: 'SF Mono', Monaco, monospace;">
+                                  ${resetUrl}
+                                </p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 40px 20px; text-align: center;">
+              <p style="color: #64748b; font-size: 13px; margin: 0 0 8px;">
+                Need help? Contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color: #22d3ee; text-decoration: none;">${SUPPORT_EMAIL}</a>
+              </p>
+              <p style="color: #475569; font-size: 12px; margin: 0;">
+                &copy; ${new Date().getFullYear()} Phazur. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
     `,
@@ -1407,6 +1840,560 @@ export async function sendCertificationCompleteEmail(
       { name: 'type', value: 'certification' },
       { name: 'event', value: 'complete' },
       { name: 'tier', value: tier.id },
+    ],
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COURSE COMPLETION EMAIL
+// Celebrates when a user completes an entire course/learning path
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface CourseCompletionInfo {
+  courseTitle: string;
+  courseDescription?: string;
+  completionDate: Date;
+  totalModules: number;
+  totalHoursSpent: string;
+  projectsCompleted: number;
+  nextCourseTitle?: string;
+  nextCourseUrl?: string;
+  certificateEligible?: boolean;
+}
+
+/**
+ * Send course completion congratulations email
+ * Celebrates the achievement and guides user to next steps
+ */
+export async function sendCourseCompletionEmail(
+  email: string,
+  name: string | undefined,
+  course: CourseCompletionInfo
+): Promise<EmailResult> {
+  const firstName = name?.split(' ')[0] || 'there';
+  const formattedDate = course.completionDate.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  return sendEmail({
+    to: email,
+    subject: `Congratulations! You've Completed "${course.courseTitle}"`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+</head>
+<body style="margin: 0; padding: 0; background-color: #0a0a0f; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #0a0a0f;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px;">
+
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding-bottom: 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); -webkit-background-clip: text; background-clip: text;">
+                    <h1 style="color: #06b6d4; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin: 0;">PHAZUR</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <p style="color: #64748b; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin: 8px 0 0;">AI Learning Lab</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Main Content Card -->
+          <tr>
+            <td>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #111827 0%, #0f172a 100%); border-radius: 20px; border: 1px solid #1e293b; overflow: hidden;">
+
+                <!-- Celebration Banner -->
+                <tr>
+                  <td style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%); padding: 40px 40px 24px; text-align: center;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td align="center">
+                          <!-- Trophy Icon Circle -->
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td style="width: 100px; height: 100px; background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%); border-radius: 50%; border: 2px solid rgba(6, 182, 212, 0.3); text-align: center; vertical-align: middle;">
+                                <span style="font-size: 48px; line-height: 100px;">&#127942;</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding-top: 20px;">
+                          <h2 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">Course Complete!</h2>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 32px 40px 40px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td>
+                          <p style="color: #94a3b8; font-size: 17px; line-height: 1.7; margin: 0 0 24px;">
+                            ${firstName}, you've done something amazing. You just completed <strong style="color: #22d3ee;">"${course.courseTitle}"</strong> - and that's worth celebrating.
+                          </p>
+
+                          ${course.courseDescription ? `
+                          <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin: 0 0 24px; font-style: italic;">
+                            "${course.courseDescription}"
+                          </p>
+                          ` : ''}
+                        </td>
+                      </tr>
+
+                      <!-- Stats Grid -->
+                      <tr>
+                        <td style="padding: 24px 0;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                            <tr>
+                              <td width="33%" style="padding: 0 6px 0 0;">
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(6, 182, 212, 0.1); border-radius: 12px; border: 1px solid rgba(6, 182, 212, 0.2);">
+                                  <tr>
+                                    <td style="padding: 20px; text-align: center;">
+                                      <p style="color: #22d3ee; font-size: 28px; font-weight: 700; margin: 0;">${course.totalModules}</p>
+                                      <p style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 6px 0 0;">Modules</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td width="33%" style="padding: 0 3px;">
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(16, 185, 129, 0.1); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                                  <tr>
+                                    <td style="padding: 20px; text-align: center;">
+                                      <p style="color: #10b981; font-size: 28px; font-weight: 700; margin: 0;">${course.projectsCompleted}</p>
+                                      <p style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 6px 0 0;">Projects</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td width="33%" style="padding: 0 0 0 6px;">
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(168, 85, 247, 0.1); border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.2);">
+                                  <tr>
+                                    <td style="padding: 20px; text-align: center;">
+                                      <p style="color: #a855f7; font-size: 28px; font-weight: 700; margin: 0;">${course.totalHoursSpent}</p>
+                                      <p style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 6px 0 0;">Hours</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Completion Badge -->
+                      <tr>
+                        <td style="padding: 8px 0 24px;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); border-radius: 16px; border: 1px solid rgba(6, 182, 212, 0.2);">
+                            <tr>
+                              <td style="padding: 24px; text-align: center;">
+                                <p style="color: #22d3ee; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 8px;">Course Completed</p>
+                                <h3 style="color: #ffffff; font-size: 20px; font-weight: 600; margin: 0 0 4px;">${course.courseTitle}</h3>
+                                <p style="color: #64748b; font-size: 13px; margin: 0;">${formattedDate}</p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      ${course.certificateEligible ? `
+                      <!-- Certificate CTA -->
+                      <tr>
+                        <td style="padding: 0 0 24px;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; border-radius: 0 12px 12px 0;">
+                            <tr>
+                              <td style="padding: 20px 24px;">
+                                <p style="color: #10b981; font-size: 14px; font-weight: 600; margin: 0 0 4px;">You're eligible for certification!</p>
+                                <p style="color: #94a3b8; font-size: 14px; margin: 0;">Claim your blockchain-verified credential and share it with employers.</p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+
+                      <!-- CTA Buttons -->
+                      <tr>
+                        <td align="center" style="padding: 8px 0;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td style="padding: 0 8px 12px 0;">
+                                <a href="https://pla-ten-eosin.vercel.app/dashboard"
+                                   style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);">
+                                  View Your Progress
+                                </a>
+                              </td>
+                              ${course.certificateEligible ? `
+                              <td style="padding: 0 0 12px 8px;">
+                                <a href="https://pla-ten-eosin.vercel.app/certification/checkout"
+                                   style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);">
+                                  Get Certified
+                                </a>
+                              </td>
+                              ` : ''}
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      ${course.nextCourseTitle && course.nextCourseUrl ? `
+                      <!-- Next Course Suggestion -->
+                      <tr>
+                        <td style="padding: 24px 0 0;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border-top: 1px solid #1e293b;">
+                            <tr>
+                              <td style="padding: 24px 0 0; text-align: center;">
+                                <p style="color: #64748b; font-size: 13px; margin: 0 0 12px;">Ready for your next challenge?</p>
+                                <a href="${course.nextCourseUrl}" style="color: #22d3ee; font-size: 16px; font-weight: 600; text-decoration: none;">
+                                  ${course.nextCourseTitle} &rarr;
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 40px 20px; text-align: center;">
+              <p style="color: #64748b; font-size: 13px; margin: 0 0 8px;">
+                Share your achievement and inspire others!
+              </p>
+              <p style="color: #475569; font-size: 12px; margin: 0;">
+                &copy; ${new Date().getFullYear()} Phazur. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `,
+    tags: [
+      { name: 'type', value: 'course-completion' },
+      { name: 'course', value: course.courseTitle },
+    ],
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PAYMENT CONFIRMATION EMAIL
+// Sent after successful payment for certification or subscription
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface PaymentInfo {
+  transactionId: string;
+  amount: number;
+  currency: string;
+  productName: string;
+  productDescription?: string;
+  paymentDate: Date;
+  paymentMethod: string;
+  receiptUrl?: string;
+  billingEmail: string;
+}
+
+/**
+ * Send payment confirmation email
+ * Professional receipt with all necessary transaction details
+ */
+export async function sendPaymentConfirmationEmail(
+  email: string,
+  name: string | undefined,
+  payment: PaymentInfo
+): Promise<EmailResult> {
+  const firstName = name?.split(' ')[0] || 'there';
+  const formattedDate = payment.paymentDate.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  const formattedTime = payment.paymentDate.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+  const formattedAmount = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: payment.currency,
+  }).format(payment.amount);
+
+  return sendEmail({
+    to: email,
+    subject: `Payment Confirmed - ${payment.productName}`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+</head>
+<body style="margin: 0; padding: 0; background-color: #0a0a0f; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #0a0a0f;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px;">
+
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding-bottom: 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td>
+                    <h1 style="color: #06b6d4; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin: 0;">PHAZUR</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <p style="color: #64748b; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin: 8px 0 0;">Payment Receipt</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Main Content Card -->
+          <tr>
+            <td>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #111827 0%, #0f172a 100%); border-radius: 20px; border: 1px solid #1e293b; overflow: hidden;">
+
+                <!-- Success Banner -->
+                <tr>
+                  <td style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%); padding: 32px 40px; text-align: center;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td align="center">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td style="width: 64px; height: 64px; background: rgba(16, 185, 129, 0.2); border-radius: 50%; border: 2px solid rgba(16, 185, 129, 0.4); text-align: center; vertical-align: middle;">
+                                <span style="font-size: 28px; line-height: 64px; color: #10b981;">&#10003;</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding-top: 16px;">
+                          <h2 style="color: #10b981; font-size: 20px; font-weight: 600; margin: 0;">Payment Successful</h2>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 32px 40px 40px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td>
+                          <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin: 0 0 32px;">
+                            Thank you, ${firstName}! Your payment has been processed successfully. Here's your receipt for your records.
+                          </p>
+                        </td>
+                      </tr>
+
+                      <!-- Receipt Card -->
+                      <tr>
+                        <td>
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: #0a0a0f; border-radius: 16px; border: 1px solid #1e293b;">
+                            <!-- Product Info -->
+                            <tr>
+                              <td style="padding: 24px 24px 20px; border-bottom: 1px solid #1e293b;">
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                  <tr>
+                                    <td>
+                                      <p style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px;">Product</p>
+                                      <h3 style="color: #ffffff; font-size: 18px; font-weight: 600; margin: 0;">${payment.productName}</h3>
+                                      ${payment.productDescription ? `
+                                      <p style="color: #94a3b8; font-size: 14px; margin: 8px 0 0;">${payment.productDescription}</p>
+                                      ` : ''}
+                                    </td>
+                                    <td style="text-align: right; vertical-align: top;">
+                                      <p style="color: #22d3ee; font-size: 24px; font-weight: 700; margin: 0;">${formattedAmount}</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+
+                            <!-- Transaction Details -->
+                            <tr>
+                              <td style="padding: 20px 24px;">
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                  <tr>
+                                    <td style="padding: 8px 0;">
+                                      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                        <tr>
+                                          <td style="color: #64748b; font-size: 14px;">Transaction ID</td>
+                                          <td style="color: #94a3b8; font-size: 14px; text-align: right; font-family: 'SF Mono', Monaco, monospace;">${payment.transactionId}</td>
+                                        </tr>
+                                      </table>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td style="padding: 8px 0;">
+                                      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                        <tr>
+                                          <td style="color: #64748b; font-size: 14px;">Date</td>
+                                          <td style="color: #94a3b8; font-size: 14px; text-align: right;">${formattedDate} at ${formattedTime}</td>
+                                        </tr>
+                                      </table>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td style="padding: 8px 0;">
+                                      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                        <tr>
+                                          <td style="color: #64748b; font-size: 14px;">Payment Method</td>
+                                          <td style="color: #94a3b8; font-size: 14px; text-align: right;">${payment.paymentMethod}</td>
+                                        </tr>
+                                      </table>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td style="padding: 8px 0;">
+                                      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                        <tr>
+                                          <td style="color: #64748b; font-size: 14px;">Billed To</td>
+                                          <td style="color: #94a3b8; font-size: 14px; text-align: right;">${payment.billingEmail}</td>
+                                        </tr>
+                                      </table>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+
+                            <!-- Total -->
+                            <tr>
+                              <td style="padding: 20px 24px; background: rgba(6, 182, 212, 0.05); border-top: 1px solid #1e293b;">
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                  <tr>
+                                    <td style="color: #ffffff; font-size: 16px; font-weight: 600;">Total Paid</td>
+                                    <td style="color: #22d3ee; font-size: 20px; font-weight: 700; text-align: right;">${formattedAmount}</td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- CTA Button -->
+                      <tr>
+                        <td align="center" style="padding: 32px 0 0;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              ${payment.receiptUrl ? `
+                              <td style="padding: 0 8px;">
+                                <a href="${payment.receiptUrl}"
+                                   style="display: inline-block; background: transparent; color: #22d3ee; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: 600; font-size: 14px; border: 2px solid #22d3ee;">
+                                  Download Receipt
+                                </a>
+                              </td>
+                              ` : ''}
+                              <td style="padding: 0 8px;">
+                                <a href="https://pla-ten-eosin.vercel.app/dashboard"
+                                   style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 10px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);">
+                                  Go to Dashboard
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Support Note -->
+                      <tr>
+                        <td style="padding: 32px 0 0;">
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: rgba(168, 85, 247, 0.08); border-left: 3px solid #a855f7; border-radius: 0 8px 8px 0;">
+                            <tr>
+                              <td style="padding: 16px 20px;">
+                                <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0;">
+                                  <strong style="color: #a855f7;">Questions about your purchase?</strong><br>
+                                  Reply to this email or contact us at ${SUPPORT_EMAIL}
+                                </p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 40px 20px; text-align: center;">
+              <p style="color: #64748b; font-size: 12px; margin: 0 0 8px;">
+                This receipt was sent to ${payment.billingEmail}
+              </p>
+              <p style="color: #475569; font-size: 11px; margin: 0;">
+                &copy; ${new Date().getFullYear()} Phazur. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `,
+    tags: [
+      { name: 'type', value: 'payment-confirmation' },
+      { name: 'product', value: payment.productName },
+      { name: 'transaction_id', value: payment.transactionId },
     ],
   });
 }

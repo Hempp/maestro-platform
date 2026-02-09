@@ -21,6 +21,16 @@ import {
   useLearningProgress,
   useSelectedPath,
 } from '@/components/dashboard/LearningProgress';
+import {
+  WeeklyActivityChart,
+  MilestoneProgressChart,
+  QuickActionCards,
+  RecentActivityFeed,
+  XPLevelDisplay,
+  AchievementBadges,
+  StatsOverview,
+  EnhancedEmptyState,
+} from '@/components/dashboard/DashboardWidgets';
 
 type PathType = 'student' | 'employee' | 'owner' | null;
 type ViewType = 'home' | 'live-courses';
@@ -1509,21 +1519,67 @@ function DashboardContent() {
                 /* Chat View */
                 <div className="px-3 sm:px-6 py-4">
                   <div className="max-w-2xl mx-auto">
-                    {/* Continue Learning Card - Show at top if user has a path */}
+                    {/* Enhanced Dashboard Overview - Show when user has a path and few messages */}
                     {(learningProgress?.path || selectedPath) && messages.length <= 2 && (
-                      <div className="mb-6">
-                        <DashboardLearningSection />
+                      <div className="mb-6 space-y-4">
+                        {/* Stats Overview Row */}
+                        <StatsOverview
+                          totalMinutes={Math.round((stats?.totalTimeSpent || 0) / 60)}
+                          completedLessons={stats?.completed || 0}
+                          currentStreak={currentStreak}
+                          certificatesEarned={certificates.length}
+                        />
+
+                        {/* XP and Level Display - Calculate from completed lessons */}
+                        <XPLevelDisplay
+                          currentXP={((stats?.completed || 0) * 25) % 100}
+                          level={Math.floor((stats?.completed || 0) / 4) + 1}
+                          xpToNextLevel={100}
+                        />
+
+                        {/* Main Grid: Learning + Activity Chart */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          <DashboardLearningSection />
+                          <WeeklyActivityChart />
+                        </div>
+
+                        {/* Secondary Grid: Quick Actions + Recent Activity */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          <QuickActionCards selectedPath={selectedPath} />
+                          <RecentActivityFeed />
+                        </div>
+
+                        {/* Achievements */}
+                        <AchievementBadges />
+
+                        {/* Milestone Progress Visualization */}
+                        <MilestoneProgressChart
+                          pathColor={
+                            selectedPath === 'student' ? 'purple' :
+                            selectedPath === 'owner' ? 'emerald' : 'cyan'
+                          }
+                          milestones={learningProgress?.milestones?.map(m => ({
+                            number: m.number,
+                            title: m.title,
+                            status: m.status === 'approved' ? 'completed' as const :
+                                   m.status === 'active' ? 'active' as const : 'locked' as const
+                          }))}
+                        />
                       </div>
                     )}
 
                     {/* Path Selection - Show if no path selected and no messages */}
                     {!learningProgress?.path && !selectedPath && messages.length === 0 && (
                       <div className="mb-6">
-                        <div className="text-center mb-6">
-                          <h2 className="text-xl font-semibold text-white mb-2">Welcome to Phazur</h2>
-                          <p className="text-slate-400 text-sm">Choose a learning path to get started</p>
+                        <EnhancedEmptyState
+                          type="no-path"
+                          onAction={() => {
+                            // Scroll to path selection or trigger path selection flow
+                          }}
+                        />
+                        <div className="mt-6">
+                          <DashboardLearningSection />
                         </div>
-                        <DashboardLearningSection />
                       </div>
                     )}
 
