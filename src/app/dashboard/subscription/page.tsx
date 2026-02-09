@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { UsageStats } from '@/components/dashboard/UsageStats';
 
 interface Subscription {
   id: string;
@@ -173,6 +174,11 @@ export default function SubscriptionPage() {
                   {formatDate(subscription.current_period_end)}
                 </p>
               </div>
+            </div>
+
+            {/* Usage Stats */}
+            <div className="mb-8 bg-slate-900/50 rounded-xl p-6">
+              <UsageStats />
             </div>
 
             {/* Actions */}
