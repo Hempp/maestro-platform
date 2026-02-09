@@ -33,6 +33,23 @@ export interface PlanFeatures {
   ssoIntegration: boolean;
 }
 
+// Base features shared by all team plans
+const TEAM_BASE_FEATURES: Omit<PlanFeatures, 'teamMembers'> = {
+  studentPath: true,
+  employeePath: true,
+  ownerPath: true,
+  tutorSessionsPerMonth: -1,
+  agentExecutionsPerMonth: -1,
+  skillUsesPerMonth: -1,
+  customSkillCreation: true,
+  teamAnalytics: true,
+  sharedSkillLibrary: true,
+  apiAccess: true,
+  customAgents: true,
+  prioritySupport: true,
+  ssoIntegration: true,
+};
+
 export const PLAN_FEATURES: Record<PlanId, PlanFeatures> = {
   free: {
     studentPath: true,
@@ -98,54 +115,10 @@ export const PLAN_FEATURES: Record<PlanId, PlanFeatures> = {
     prioritySupport: true,
     ssoIntegration: false,
   },
-  team_starter: {
-    studentPath: true,
-    employeePath: true,
-    ownerPath: true,
-    tutorSessionsPerMonth: -1,
-    agentExecutionsPerMonth: -1,
-    skillUsesPerMonth: -1,
-    customSkillCreation: true,
-    teamMembers: 10,
-    teamAnalytics: true,
-    sharedSkillLibrary: true,
-    apiAccess: true,
-    customAgents: true,
-    prioritySupport: true,
-    ssoIntegration: true,
-  },
-  team_growth: {
-    studentPath: true,
-    employeePath: true,
-    ownerPath: true,
-    tutorSessionsPerMonth: -1,
-    agentExecutionsPerMonth: -1,
-    skillUsesPerMonth: -1,
-    customSkillCreation: true,
-    teamMembers: 50,
-    teamAnalytics: true,
-    sharedSkillLibrary: true,
-    apiAccess: true,
-    customAgents: true,
-    prioritySupport: true,
-    ssoIntegration: true,
-  },
-  team_enterprise: {
-    studentPath: true,
-    employeePath: true,
-    ownerPath: true,
-    tutorSessionsPerMonth: -1,
-    agentExecutionsPerMonth: -1,
-    skillUsesPerMonth: -1,
-    customSkillCreation: true,
-    teamMembers: -1,
-    teamAnalytics: true,
-    sharedSkillLibrary: true,
-    apiAccess: true,
-    customAgents: true,
-    prioritySupport: true,
-    ssoIntegration: true,
-  },
+  // Team plans share base features, only differ in teamMembers
+  team_starter: { ...TEAM_BASE_FEATURES, teamMembers: 10 },
+  team_growth: { ...TEAM_BASE_FEATURES, teamMembers: 50 },
+  team_enterprise: { ...TEAM_BASE_FEATURES, teamMembers: -1 },
 };
 
 export function getPlanFeatures(planId: string | null): PlanFeatures {
@@ -173,4 +146,8 @@ export function isUnlimited(value: number): boolean {
 
 export function formatLimit(value: number): string {
   return value === -1 ? 'Unlimited' : value.toString();
+}
+
+export function toDisplayLimit(value: number): number | 'unlimited' {
+  return value === -1 ? 'unlimited' : value;
 }

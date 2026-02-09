@@ -98,30 +98,25 @@ export function useUsageTracking(): UseUsageTrackingReturn {
   };
 
   // Calculate usage vs limits
-  const calculateUsage = (
-    used: number,
-    limit: number
-  ): { used: number; limit: number | 'unlimited'; remaining: number | 'unlimited' } => {
-    if (limit === -1) {
-      return { used, limit: 'unlimited', remaining: 'unlimited' };
-    }
-    return { used, limit, remaining: Math.max(0, limit - used) };
+  const calculateUsage = (used: number, limit: number) => {
+    const isUnlimited = limit === -1;
+    return {
+      used,
+      limit: isUnlimited ? 'unlimited' as const : limit,
+      remaining: isUnlimited ? 'unlimited' as const : Math.max(0, limit - used),
+    };
   };
 
-  const tutorUsage = calculateUsage(
-    usage?.tutor_sessions || 0,
-    features.tutorSessionsPerMonth
-  );
-  const agentUsage = calculateUsage(
-    usage?.agent_executions || 0,
-    features.agentExecutionsPerMonth
-  );
+  const hasRemaining = (remaining: number | 'unlimited') =>
+    remaining === 'unlimited' || remaining > 0;
+
+  const tutorUsage = calculateUsage(usage?.tutor_sessions || 0, features.tutorSessionsPerMonth);
+  const agentUsage = calculateUsage(usage?.agent_executions || 0, features.agentExecutionsPerMonth);
   const skillUsage = calculateUsage(usage?.skill_uses || 0, features.skillUsesPerMonth);
 
-  // Check if can use (has remaining)
-  const canUseTutor = tutorUsage.remaining === 'unlimited' || tutorUsage.remaining > 0;
-  const canUseAgent = agentUsage.remaining === 'unlimited' || agentUsage.remaining > 0;
-  const canUseSkill = skillUsage.remaining === 'unlimited' || skillUsage.remaining > 0;
+  const canUseTutor = hasRemaining(tutorUsage.remaining);
+  const canUseAgent = hasRemaining(agentUsage.remaining);
+  const canUseSkill = hasRemaining(skillUsage.remaining);
 
   // Period dates
   const periodStart = usage?.period_start ? new Date(usage.period_start) : null;

@@ -7,6 +7,19 @@
 
 import Link from 'next/link';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
+import { useUsageTracking } from '@/hooks/useUsageTracking';
+
+// Shared icon paths
+const LOCK_ICON_PATH = 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z';
+const WARNING_ICON_PATH = 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z';
+
+function Icon({ path, className }: { path: string; className: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={path} />
+    </svg>
+  );
+}
 
 interface UpgradePromptProps {
   feature: string;
@@ -31,9 +44,7 @@ export function UpgradePrompt({ feature, description, requiredPlan, compact = fa
     return (
       <div className="flex items-center gap-3 p-3 bg-violet-500/10 border border-violet-500/20 rounded-lg">
         <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
-          <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
+          <Icon path={LOCK_ICON_PATH} className="w-4 h-4 text-violet-400" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm text-white font-medium truncate">{feature}</p>
@@ -52,9 +63,7 @@ export function UpgradePrompt({ feature, description, requiredPlan, compact = fa
   return (
     <div className="p-6 bg-gradient-to-br from-violet-500/10 to-purple-500/10 border border-violet-500/20 rounded-xl text-center">
       <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-violet-500/20 flex items-center justify-center">
-        <svg className="w-6 h-6 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-        </svg>
+        <Icon path={LOCK_ICON_PATH} className="w-6 h-6 text-violet-400" />
       </div>
       <h3 className="text-lg font-semibold text-white mb-2">{feature}</h3>
       <p className="text-slate-400 text-sm mb-4">
@@ -86,9 +95,7 @@ export function LimitReachedPrompt({
     <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-          <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+          <Icon path={WARNING_ICON_PATH} className="w-5 h-5 text-amber-400" />
         </div>
         <div className="flex-1">
           <h4 className="text-white font-medium mb-1">{feature} Limit Reached</h4>
@@ -153,8 +160,6 @@ export function UsageGate({
   children: React.ReactNode;
   onLimitReached?: () => void;
 }) {
-  // Import dynamically to avoid circular deps
-  const { useUsageTracking } = require('@/hooks/useUsageTracking');
   const { canUseTutor, canUseAgent, canUseSkill, tutorUsage, agentUsage, skillUsage, periodEnd, loading } = useUsageTracking();
 
   if (loading) {

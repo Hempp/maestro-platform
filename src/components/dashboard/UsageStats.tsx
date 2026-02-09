@@ -9,6 +9,23 @@ import Link from 'next/link';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
 
+// Shared icon paths
+const ICON_PATHS = {
+  tutor: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z',
+  agent: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+  skill: 'M13 10V3L4 14h7v7l9-11h-7z',
+} as const;
+
+type IconType = keyof typeof ICON_PATHS;
+
+function UsageIcon({ type, className }: { type: IconType; className: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={ICON_PATHS[type]} />
+    </svg>
+  );
+}
+
 interface UsageBarProps {
   label: string;
   used: number;
@@ -101,11 +118,7 @@ export function UsageStats() {
         used={tutorUsage.used}
         limit={tutorUsage.limit}
         color="violet"
-        icon={
-          <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-        }
+        icon={<UsageIcon type="tutor" className="w-4 h-4 text-violet-400" />}
       />
 
       <UsageBar
@@ -113,11 +126,7 @@ export function UsageStats() {
         used={agentUsage.used}
         limit={agentUsage.limit}
         color="blue"
-        icon={
-          <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        }
+        icon={<UsageIcon type="agent" className="w-4 h-4 text-blue-400" />}
       />
 
       <UsageBar
@@ -125,11 +134,7 @@ export function UsageStats() {
         used={skillUsage.used}
         limit={skillUsage.limit}
         color="emerald"
-        icon={
-          <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        }
+        icon={<UsageIcon type="skill" className="w-4 h-4 text-emerald-400" />}
       />
 
       <div className="pt-2 border-t border-slate-700/50">
@@ -166,21 +171,15 @@ export function UsageStatsCompact() {
   return (
     <div className="flex items-center gap-4 text-xs text-slate-400">
       <span title="Tutor Sessions">
-        <svg className="w-3 h-3 inline mr-1 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
+        <UsageIcon type="tutor" className="w-3 h-3 inline mr-1 text-violet-400" />
         {formatUsage(tutorUsage.used, tutorUsage.limit)}
       </span>
       <span title="Agent Executions">
-        <svg className="w-3 h-3 inline mr-1 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
+        <UsageIcon type="agent" className="w-3 h-3 inline mr-1 text-blue-400" />
         {formatUsage(agentUsage.used, agentUsage.limit)}
       </span>
       <span title="Skill Uses">
-        <svg className="w-3 h-3 inline mr-1 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
+        <UsageIcon type="skill" className="w-3 h-3 inline mr-1 text-emerald-400" />
         {formatUsage(skillUsage.used, skillUsage.limit)}
       </span>
     </div>

@@ -7,14 +7,23 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
+type FeatureType = 'tutor' | 'agent' | 'skill';
+
+const FEATURE_FUNCTIONS: Record<FeatureType, string> = {
+  tutor: 'increment_tutor_sessions',
+  agent: 'increment_agent_executions',
+  skill: 'increment_skill_uses',
+};
+
+async function getAuthenticatedUser() {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  return { user, supabase, error };
+}
+
 export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, supabase, error: authError } = await getAuthenticatedUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -46,39 +55,24 @@ export async function GET() {
   }
 }
 
-type FeatureType = 'tutor' | 'agent' | 'skill';
-
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, supabase, error: authError } = await getAuthenticatedUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const feature = body.feature as FeatureType;
+    const { feature } = await request.json() as { feature: FeatureType };
 
-    if (!feature || !['tutor', 'agent', 'skill'].includes(feature)) {
+    if (!feature || !FEATURE_FUNCTIONS[feature]) {
       return NextResponse.json(
         { error: 'Invalid feature. Must be one of: tutor, agent, skill' },
         { status: 400 }
       );
     }
 
-    // Map feature to increment function
-    const functionMap: Record<FeatureType, string> = {
-      tutor: 'increment_tutor_sessions',
-      agent: 'increment_agent_executions',
-      skill: 'increment_skill_uses',
-    };
-
-    const { data, error } = await (supabase as any).rpc(functionMap[feature], {
+    const { data, error } = await (supabase as any).rpc(FEATURE_FUNCTIONS[feature], {
       p_user_id: user.id,
     });
 

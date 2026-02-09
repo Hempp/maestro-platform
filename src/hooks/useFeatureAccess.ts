@@ -5,7 +5,7 @@
 
 import { useMemo } from 'react';
 import { useSubscription } from './useSubscription';
-import { getPlanFeatures, hasPathAccess, PlanFeatures } from '@/lib/subscription/features';
+import { getPlanFeatures, hasPathAccess, toDisplayLimit, PlanFeatures } from '@/lib/subscription/features';
 
 interface UseFeatureAccessReturn {
   // Subscription state
@@ -76,8 +76,8 @@ export function useFeatureAccess(): UseFeatureAccessReturn {
     canCreateCustomSkills: features.customSkillCreation,
     canAccessApi: features.apiAccess,
     hasTeamAccess: features.teamMembers !== 0,
-    tutorSessionsRemaining: features.tutorSessionsPerMonth === -1 ? 'unlimited' : features.tutorSessionsPerMonth,
-    agentExecutionsRemaining: features.agentExecutionsPerMonth === -1 ? 'unlimited' : features.agentExecutionsPerMonth,
+    tutorSessionsRemaining: toDisplayLimit(features.tutorSessionsPerMonth),
+    agentExecutionsRemaining: toDisplayLimit(features.agentExecutionsPerMonth),
     needsUpgradeFor,
     getUpgradePlan,
   };
