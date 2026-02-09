@@ -336,4 +336,22 @@ Speak directly to the learner. Be encouraging but don't be patronizing.`;
   }
 }
 
-export const adaptationModel = new AdaptationModelService();
+// Lazy initialization to avoid build-time errors when OPENAI_API_KEY is not set
+let _adaptationModel: AdaptationModelService | null = null;
+
+export function getAdaptationModel(): AdaptationModelService {
+  if (!_adaptationModel) {
+    _adaptationModel = new AdaptationModelService();
+  }
+  return _adaptationModel;
+}
+
+// For backwards compatibility - but prefer using getAdaptationModel()
+export const adaptationModel = {
+  makeDecision: (...args: Parameters<AdaptationModelService['makeDecision']>) =>
+    getAdaptationModel().makeDecision(...args),
+  observeSandbox: (...args: Parameters<AdaptationModelService['observeSandbox']>) =>
+    getAdaptationModel().observeSandbox(...args),
+  detectLearningStyle: (...args: Parameters<AdaptationModelService['detectLearningStyle']>) =>
+    getAdaptationModel().detectLearningStyle(...args),
+};
