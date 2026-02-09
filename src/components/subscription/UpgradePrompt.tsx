@@ -108,7 +108,7 @@ export function LimitReachedPrompt({
   );
 }
 
-// Feature gate wrapper
+// Feature gate wrapper - gates based on plan features
 export function FeatureGate({
   feature,
   requiredPlan,
@@ -120,13 +120,65 @@ export function FeatureGate({
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }) {
-  const { needsUpgradeFor, loading } = useFeatureAccess();
+  const { needsUpgradeFor, loading, features } = useFeatureAccess();
 
   if (loading) {
     return <div className="animate-pulse bg-slate-800 rounded-xl h-32" />;
   }
 
-  // For now, just render children - proper gating would check needsUpgradeFor
-  // This is a placeholder for when usage tracking is implemented
+  // Check if user has access to this feature based on their plan
+  const featureKey = feature.toLowerCase().replace(/\s+/g, '') as keyof typeof features;
+  const hasAccess = !needsUpgradeFor(featureKey as keyof import('@/lib/subscription/features').PlanFeatures);
+
+  if (!hasAccess) {
+    return fallback ? (
+      <>{fallback}</>
+    ) : (
+      <UpgradePrompt feature={feature} requiredPlan={requiredPlan} />
+    );
+  }
+
+  return <>{children}</>;
+}
+
+// Usage gate wrapper - gates based on usage limits
+export function UsageGate({
+  featureType,
+  featureName,
+  children,
+  onLimitReached,
+}: {
+  featureType: 'tutor' | 'agent' | 'skill';
+  featureName: string;
+  children: React.ReactNode;
+  onLimitReached?: () => void;
+}) {
+  // Import dynamically to avoid circular deps
+  const { useUsageTracking } = require('@/hooks/useUsageTracking');
+  const { canUseTutor, canUseAgent, canUseSkill, tutorUsage, agentUsage, skillUsage, periodEnd, loading } = useUsageTracking();
+
+  if (loading) {
+    return <div className="animate-pulse bg-slate-800 rounded-xl h-32" />;
+  }
+
+  const canUseMap = { tutor: canUseTutor, agent: canUseAgent, skill: canUseSkill };
+  const usageMap = { tutor: tutorUsage, agent: agentUsage, skill: skillUsage };
+
+  const canUse = canUseMap[featureType];
+  const usage = usageMap[featureType];
+
+  if (!canUse && usage.limit !== 'unlimited') {
+    if (onLimitReached) onLimitReached();
+    const resetDate = periodEnd ? periodEnd.toLocaleDateString() : undefined;
+    return (
+      <LimitReachedPrompt
+        feature={featureName}
+        current={usage.used}
+        limit={usage.limit as number}
+        resetDate={resetDate}
+      />
+    );
+  }
+
   return <>{children}</>;
 }
