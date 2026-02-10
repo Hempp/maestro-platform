@@ -1,9 +1,9 @@
 /**
- * STRIPE WEBHOOK HANDLER
+ * STRIPE WEBHOOK HANDLER (Firebase)
  * Handles Stripe webhook events for payment confirmation
  *
  * This endpoint receives events from Stripe and updates:
- * - Payment status in the payments table
+ * - Payment status in the payments collection
  * - Certification submission status (submitted -> passed)
  * - Certificate verification and SBT minting
  * - User tier upgrade
@@ -12,7 +12,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe/config';
-import { createAdminClient } from '@/lib/supabase/server';
+import { getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import type Stripe from 'stripe';
 import { sbtMinter } from '@/lib/blockchain/sbt-minter';
 
@@ -49,14 +50,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use admin client to bypass RLS for webhook operations
-    const supabase = createAdminClient();
+    const db = getAdminDb();
 
     // Handle the event
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        await handleCheckoutCompleted(supabase, session);
+        await handleCheckoutCompleted(db, session);
         break;
       }
 
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        await handlePaymentFailed(supabase, paymentIntent);
+        await handlePaymentFailed(db, paymentIntent);
         break;
       }
 
@@ -78,31 +78,31 @@ export async function POST(request: NextRequest) {
 
       case 'customer.subscription.created': {
         const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionCreated(supabase, subscription);
+        await handleSubscriptionCreated(db, subscription);
         break;
       }
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionUpdated(supabase, subscription);
+        await handleSubscriptionUpdated(db, subscription);
         break;
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionDeleted(supabase, subscription);
+        await handleSubscriptionDeleted(db, subscription);
         break;
       }
 
       case 'invoice.paid': {
         const invoice = event.data.object as Stripe.Invoice;
-        await handleInvoicePaid(supabase, invoice);
+        await handleInvoicePaid(db, invoice);
         break;
       }
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        await handleInvoicePaymentFailed(supabase, invoice);
+        await handleInvoicePaymentFailed(db, invoice);
         break;
       }
 
@@ -125,14 +125,14 @@ export async function POST(request: NextRequest) {
  * Supports both legacy certificate flow and new certification_submissions flow
  */
 async function handleCheckoutCompleted(
-  supabase: ReturnType<typeof createAdminClient>,
+  db: FirebaseFirestore.Firestore,
   session: Stripe.Checkout.Session
 ) {
   const { userId, courseId, certificateId, tier, path, submissionId } = session.metadata || {};
 
   // Check if this is a certification submission flow (new milestone-based system)
   if (userId && path && submissionId) {
-    await handleCertificationPayment(supabase, session, {
+    await handleCertificationPayment(db, session, {
       userId,
       path: path as 'student' | 'employee' | 'owner',
       submissionId,
@@ -148,64 +148,63 @@ async function handleCheckoutCompleted(
 
   console.log('Processing payment for:', { userId, courseId, certificateId, tier });
 
-  // Update payment status
-  const { error: paymentError } = await (supabase as any)
-    .from('payments')
-    .update({
-      status: 'completed',
-      stripe_payment_intent_id: session.payment_intent as string,
-      completed_at: new Date().toISOString(),
-    })
-    .eq('stripe_payment_intent_id', session.id)
-    .eq('user_id', userId);
+  // Update payment status - find by session ID
+  const paymentsQuery = await db
+    .collection('payments')
+    .where('stripePaymentIntentId', '==', session.id)
+    .where('userId', '==', userId)
+    .limit(1)
+    .get();
 
-  if (paymentError) {
-    console.error('Failed to update payment:', paymentError);
+  if (!paymentsQuery.empty) {
+    await paymentsQuery.docs[0].ref.update({
+      status: 'completed',
+      stripePaymentIntentId: session.payment_intent as string,
+      completedAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
   }
 
   // Update certificate verification status
-  const { error: certError } = await (supabase as any)
-    .from('certificates')
-    .update({
-      verified_at: new Date().toISOString(),
-      metadata: {
-        payment_session_id: session.id,
-        payment_intent_id: session.payment_intent,
-        amount_paid: session.amount_total,
-        currency: session.currency,
-        paid_at: new Date().toISOString(),
-      },
-    })
-    .eq('id', certificateId)
-    .eq('user_id', userId);
+  const certRef = db.collection('certificates').doc(certificateId);
+  const certDoc = await certRef.get();
 
-  if (certError) {
-    console.error('Failed to update certificate:', certError);
+  if (certDoc.exists && certDoc.data()?.userId === userId) {
+    await certRef.update({
+      verifiedAt: Timestamp.now(),
+      metadata: {
+        ...certDoc.data()?.metadata,
+        paymentSessionId: session.id,
+        paymentIntentId: session.payment_intent,
+        amountPaid: session.amount_total,
+        currency: session.currency,
+        paidAt: new Date().toISOString(),
+      },
+      updatedAt: Timestamp.now(),
+    });
   }
 
   // Update user tier in learner_profiles
-  const { error: tierError } = await (supabase as any)
-    .from('learner_profiles')
-    .update({
-      tier: tier,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('user_id', userId);
+  const learnerRef = db.collection('learnerProfiles').doc(userId);
+  const learnerDoc = await learnerRef.get();
 
-  if (tierError) {
-    console.error('Failed to update user tier:', tierError);
+  if (learnerDoc.exists) {
+    await learnerRef.update({
+      tier: tier,
+      updatedAt: Timestamp.now(),
+    });
   }
 
   // Create notification for the user
-  await (supabase as any)
-    .from('notifications')
-    .insert({
-      user_id: userId,
-      type: 'certificate_issued',
-      title: 'Payment Successful!',
-      message: `Your ${tier} certification has been verified and is now active.`,
-      action_url: `/certificates/${certificateId}`,
-    });
+  await db.collection('notifications').add({
+    userId,
+    type: 'certificate_issued',
+    title: 'Payment Successful!',
+    message: `Your ${tier} certification has been verified and is now active.`,
+    actionUrl: `/certificates/${certificateId}`,
+    read: false,
+    createdAt: Timestamp.now(),
+  });
 
   console.log('Payment processed successfully for user:', userId);
 }
@@ -215,7 +214,7 @@ async function handleCheckoutCompleted(
  * Flow: Complete M10 -> Submit -> Pay -> Certificate Generated -> SBT Minted
  */
 async function handleCertificationPayment(
-  supabase: ReturnType<typeof createAdminClient>,
+  db: FirebaseFirestore.Firestore,
   session: Stripe.Checkout.Session,
   metadata: {
     userId: string;
@@ -229,107 +228,125 @@ async function handleCertificationPayment(
 
   try {
     // 1. Update certification_submission status from 'submitted' to 'passed'
-    const { data: submission, error: submissionError } = await (supabase as any)
-      .from('certification_submissions')
-      .update({
-        status: 'passed',
-        reviewed_at: new Date().toISOString(),
-        reviewer_notes: 'Payment verified - auto-approved',
-      })
-      .eq('id', submissionId)
-      .eq('user_id', userId)
-      .select()
-      .single();
+    const submissionRef = db.collection('certificationSubmissions').doc(submissionId);
+    const submissionDoc = await submissionRef.get();
 
-    if (submissionError) {
-      console.error('Failed to update certification submission:', submissionError);
-      throw submissionError;
+    if (!submissionDoc.exists || submissionDoc.data()?.userId !== userId) {
+      console.error('Submission not found or user mismatch:', submissionId);
+      return;
     }
+
+    const submissionData = submissionDoc.data();
+    await submissionRef.update({
+      status: 'passed',
+      reviewedAt: Timestamp.now(),
+      reviewerNotes: 'Payment verified - auto-approved',
+      updatedAt: Timestamp.now(),
+    });
 
     // 2. Create payment record
-    const { error: paymentError } = await (supabase as any)
-      .from('payments')
-      .upsert({
-        user_id: userId,
-        course_id: path, // Use path as course identifier
-        amount: (session.amount_total || 0) / 100,
-        currency: session.currency || 'usd',
-        status: 'completed',
-        stripe_payment_intent_id: session.payment_intent as string,
-        payment_method: 'stripe',
-        completed_at: new Date().toISOString(),
-        metadata: {
-          checkout_session_id: session.id,
-          submission_id: submissionId,
-          path,
-        },
-      });
-
-    if (paymentError) {
-      console.error('Failed to create payment record:', paymentError);
-    }
+    await db.collection('payments').add({
+      userId,
+      courseId: path, // Use path as course identifier
+      amount: (session.amount_total || 0) / 100,
+      currency: session.currency || 'usd',
+      status: 'completed',
+      stripePaymentIntentId: session.payment_intent as string,
+      metadata: {
+        checkoutSessionId: session.id,
+        submissionId,
+        path,
+      },
+      completedAt: Timestamp.now(),
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
 
     // 3. Create or update certificate record
     const certificateData = {
-      user_id: userId,
-      certificate_type: path,
-      issued_at: new Date().toISOString(),
-      verified_at: new Date().toISOString(),
+      userId,
+      certificateType: path,
+      issuedAt: Timestamp.now(),
+      verifiedAt: Timestamp.now(),
       metadata: {
-        submission_id: submissionId,
-        payment_session_id: session.id,
-        payment_intent_id: session.payment_intent,
-        amount_paid: session.amount_total,
+        submissionId,
+        paymentSessionId: session.id,
+        paymentIntentId: session.payment_intent,
+        amountPaid: session.amount_total,
         currency: session.currency,
-        total_score: submission?.total_score || null,
+        totalScore: submissionData?.totalScore || null,
         path,
       },
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     };
 
-    const { data: certificate, error: certError } = await (supabase as any)
-      .from('certificates')
-      .upsert(certificateData, {
-        onConflict: 'user_id,certificate_type',
-      })
-      .select()
-      .single();
+    // Check for existing certificate by userId and type
+    const existingCertQuery = await db
+      .collection('certificates')
+      .where('userId', '==', userId)
+      .where('certificateType', '==', path)
+      .limit(1)
+      .get();
 
-    if (certError) {
-      console.error('Failed to create certificate:', certError);
+    let certificateId: string;
+    if (existingCertQuery.empty) {
+      const newCert = await db.collection('certificates').add(certificateData);
+      certificateId = newCert.id;
+    } else {
+      certificateId = existingCertQuery.docs[0].id;
+      await existingCertQuery.docs[0].ref.update({
+        ...certificateData,
+        createdAt: existingCertQuery.docs[0].data().createdAt, // Keep original
+      });
     }
 
     // 4. Update user tier in learner_profiles
-    const tierMap = {
+    const tierMap: Record<string, string> = {
       student: 'certified_student',
       employee: 'certified_employee',
       owner: 'certified_owner',
     };
 
-    await (supabase as any)
-      .from('learner_profiles')
-      .upsert({
-        user_id: userId,
+    const learnerRef = db.collection('learnerProfiles').doc(userId);
+    const learnerDoc = await learnerRef.get();
+
+    if (learnerDoc.exists) {
+      await learnerRef.update({
         tier: tierMap[path],
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id',
+        updatedAt: Timestamp.now(),
       });
+    } else {
+      await learnerRef.set({
+        userId,
+        tier: tierMap[path],
+        currentPath: path,
+        interactionDna: {},
+        struggleScore: 50,
+        totalLearningTime: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        lastActivityAt: null,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+    }
 
     // 5. Queue SBT minting (async, non-blocking)
-    await queueSBTMinting(supabase, userId, path, certificate?.id || submissionId);
+    await queueSBTMinting(db, userId, path, certificateId);
 
     // 6. Create success notification
-    await (supabase as any)
-      .from('notifications')
-      .insert({
-        user_id: userId,
-        type: 'certificate_issued',
-        title: 'Congratulations! You are now certified!',
-        message: `Your ${path.charAt(0).toUpperCase() + path.slice(1)} Path certification is complete. Your Soulbound Token is being minted.`,
-        action_url: `/certification/success?path=${path}`,
-      });
+    await db.collection('notifications').add({
+      userId,
+      type: 'certificate_issued',
+      title: 'Congratulations! You are now certified!',
+      message: `Your ${path.charAt(0).toUpperCase() + path.slice(1)} Path certification is complete. Your Soulbound Token is being minted.`,
+      actionUrl: `/certification/success?path=${path}`,
+      read: false,
+      createdAt: Timestamp.now(),
+    });
 
-    console.log('Certification payment processed successfully:', { userId, path, certificateId: certificate?.id });
+    console.log('Certification payment processed successfully:', { userId, path, certificateId });
   } catch (error) {
     console.error('Certification payment processing failed:', error);
     throw error;
@@ -342,50 +359,45 @@ async function handleCertificationPayment(
  * For now, we'll attempt minting directly with error handling
  */
 async function queueSBTMinting(
-  supabase: ReturnType<typeof createAdminClient>,
+  db: FirebaseFirestore.Firestore,
   userId: string,
   path: 'student' | 'employee' | 'owner',
   certificateId: string
 ) {
   try {
     // Get user's wallet address if they have one
-    const { data: profile } = await (supabase as any)
-      .from('profiles')
-      .select('wallet_address')
-      .eq('id', userId)
-      .single();
+    const userDoc = await db.collection('users').doc(userId).get();
+    const walletAddress = userDoc.data()?.walletAddress;
 
-    if (!profile?.wallet_address) {
+    if (!walletAddress) {
       console.log('No wallet address for user, SBT minting deferred:', userId);
 
       // Create a pending mint record
-      await (supabase as any)
-        .from('pending_mints')
-        .upsert({
-          user_id: userId,
-          certificate_id: certificateId,
-          path,
-          status: 'pending_wallet',
-          created_at: new Date().toISOString(),
-        });
+      await db.collection('pendingMints').add({
+        userId,
+        certificateId,
+        path,
+        status: 'pending_wallet',
+        createdAt: Timestamp.now(),
+      });
 
       return;
     }
 
     // Attempt to mint SBT
-    console.log('Attempting SBT mint for:', { userId, path, walletAddress: profile.wallet_address });
+    console.log('Attempting SBT mint for:', { userId, path, walletAddress });
 
     // Get milestone data for verification
-    const { data: milestones } = await (supabase as any)
-      .from('user_milestones')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('path', path)
-      .eq('status', 'approved');
+    const milestonesSnapshot = await db
+      .collection('userMilestones')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .where('status', '==', 'approved')
+      .get();
 
-    const completedAKUs = milestones?.map((m: { milestone_number: number }) =>
-      `${path}-milestone-${m.milestone_number}`
-    ) || [];
+    const completedAKUs = milestonesSnapshot.docs.map(doc =>
+      `${path}-milestone-${doc.data().milestoneNumber}`
+    );
 
     // Create a mock verification result for minting
     const verificationResult = {
@@ -402,7 +414,7 @@ async function queueSBTMinting(
     };
 
     const mintResult = await sbtMinter.mintCertificate(
-      profile.wallet_address,
+      walletAddress,
       verificationResult,
       `${path.charAt(0).toUpperCase() + path.slice(1)} Path`,
       completedAKUs
@@ -410,30 +422,25 @@ async function queueSBTMinting(
 
     if (mintResult.success) {
       // Update certificate with SBT info
-      await (supabase as any)
-        .from('certificates')
-        .update({
-          sbt_token_id: mintResult.tokenId,
-          sbt_transaction_hash: mintResult.transactionHash,
-          sbt_minted_at: new Date().toISOString(),
-        })
-        .eq('id', certificateId);
+      await db.collection('certificates').doc(certificateId).update({
+        tokenId: mintResult.tokenId,
+        transactionHash: mintResult.transactionHash,
+        updatedAt: Timestamp.now(),
+      });
 
       console.log('SBT minted successfully:', mintResult);
     } else {
       console.error('SBT minting failed:', mintResult.error);
 
       // Record failed mint attempt
-      await (supabase as any)
-        .from('pending_mints')
-        .upsert({
-          user_id: userId,
-          certificate_id: certificateId,
-          path,
-          status: 'failed',
-          error: mintResult.error,
-          created_at: new Date().toISOString(),
-        });
+      await db.collection('pendingMints').add({
+        userId,
+        certificateId,
+        path,
+        status: 'failed',
+        error: mintResult.error,
+        createdAt: Timestamp.now(),
+      });
     }
   } catch (error) {
     console.error('SBT minting queue error:', error);
@@ -444,7 +451,7 @@ async function queueSBTMinting(
  * Handle failed payment
  */
 async function handlePaymentFailed(
-  supabase: ReturnType<typeof createAdminClient>,
+  db: FirebaseFirestore.Firestore,
   paymentIntent: Stripe.PaymentIntent
 ) {
   const { userId, courseId } = paymentIntent.metadata || {};
@@ -455,28 +462,30 @@ async function handlePaymentFailed(
   }
 
   // Update payment status to failed
-  const { error } = await (supabase as any)
-    .from('payments')
-    .update({
-      status: 'failed',
-    })
-    .eq('stripe_payment_intent_id', paymentIntent.id)
-    .eq('user_id', userId);
+  const paymentsQuery = await db
+    .collection('payments')
+    .where('stripePaymentIntentId', '==', paymentIntent.id)
+    .where('userId', '==', userId)
+    .limit(1)
+    .get();
 
-  if (error) {
-    console.error('Failed to update payment status:', error);
+  if (!paymentsQuery.empty) {
+    await paymentsQuery.docs[0].ref.update({
+      status: 'failed',
+      updatedAt: Timestamp.now(),
+    });
   }
 
   // Notify user of failed payment
-  await (supabase as any)
-    .from('notifications')
-    .insert({
-      user_id: userId,
-      type: 'reminder',
-      title: 'Payment Failed',
-      message: 'Your certification payment could not be processed. Please try again.',
-      action_url: `/dashboard/certificates`,
-    });
+  await db.collection('notifications').add({
+    userId,
+    type: 'reminder',
+    title: 'Payment Failed',
+    message: 'Your certification payment could not be processed. Please try again.',
+    actionUrl: `/dashboard/certificates`,
+    read: false,
+    createdAt: Timestamp.now(),
+  });
 
   console.log('Payment failed for user:', userId);
 }
@@ -489,7 +498,7 @@ async function handlePaymentFailed(
  * Handle new subscription creation
  */
 async function handleSubscriptionCreated(
-  supabase: ReturnType<typeof createAdminClient>,
+  db: FirebaseFirestore.Firestore,
   subscription: Stripe.Subscription
 ) {
   // Use type assertion for Stripe API compatibility
@@ -512,61 +521,71 @@ async function handleSubscriptionCreated(
 
   console.log('Subscription created:', { customerId, planId, subscriptionId: sub.id });
 
-  // Find user by stripe_customer_id
-  const { data: profile } = await (supabase as any)
-    .from('profiles')
-    .select('id')
-    .eq('stripe_customer_id', customerId)
-    .single();
+  // Find user by stripeCustomerId
+  const usersQuery = await db
+    .collection('users')
+    .where('stripeCustomerId', '==', customerId)
+    .limit(1)
+    .get();
 
-  if (!profile) {
+  if (usersQuery.empty) {
     console.error('No user found for Stripe customer:', customerId);
     return;
   }
 
-  // Create subscription record
-  const { error } = await (supabase as any)
-    .from('subscriptions')
-    .upsert({
-      user_id: profile.id,
-      plan_id: planId,
-      status: mapStripeStatus(sub.status),
-      billing_cycle: sub.items.data[0]?.price.recurring?.interval === 'year' ? 'yearly' : 'monthly',
-      stripe_customer_id: customerId,
-      stripe_subscription_id: sub.id,
-      stripe_price_id: priceId,
-      amount: sub.items.data[0]?.price.unit_amount || 0,
-      currency: sub.currency,
-      current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-      cancel_at_period_end: sub.cancel_at_period_end,
-    }, {
-      onConflict: 'stripe_subscription_id',
-    });
+  const userId = usersQuery.docs[0].id;
 
-  if (error) {
-    console.error('Failed to create subscription:', error);
+  // Check for existing subscription by stripe ID
+  const existingSubQuery = await db
+    .collection('subscriptions')
+    .where('stripeSubscriptionId', '==', sub.id)
+    .limit(1)
+    .get();
+
+  const subscriptionData = {
+    userId,
+    planId,
+    status: mapStripeStatus(sub.status),
+    billingCycle: sub.items.data[0]?.price.recurring?.interval === 'year' ? 'yearly' : 'monthly',
+    stripeCustomerId: customerId,
+    stripeSubscriptionId: sub.id,
+    stripePriceId: priceId,
+    amount: sub.items.data[0]?.price.unit_amount || 0,
+    currency: sub.currency,
+    currentPeriodStart: Timestamp.fromMillis(sub.current_period_start * 1000),
+    currentPeriodEnd: Timestamp.fromMillis(sub.current_period_end * 1000),
+    cancelAtPeriodEnd: sub.cancel_at_period_end,
+    updatedAt: Timestamp.now(),
+  };
+
+  if (existingSubQuery.empty) {
+    await db.collection('subscriptions').add({
+      ...subscriptionData,
+      createdAt: Timestamp.now(),
+    });
+  } else {
+    await existingSubQuery.docs[0].ref.update(subscriptionData);
   }
 
   // Send welcome notification
-  await (supabase as any)
-    .from('notifications')
-    .insert({
-      user_id: profile.id,
-      type: 'subscription_created',
-      title: 'Welcome to your new plan!',
-      message: `Your ${planId} subscription is now active.`,
-      action_url: '/dashboard/subscription',
-    });
+  await db.collection('notifications').add({
+    userId,
+    type: 'subscription_created',
+    title: 'Welcome to your new plan!',
+    message: `Your ${planId} subscription is now active.`,
+    actionUrl: '/dashboard/subscription',
+    read: false,
+    createdAt: Timestamp.now(),
+  });
 
-  console.log('Subscription created for user:', profile.id);
+  console.log('Subscription created for user:', userId);
 }
 
 /**
  * Handle subscription updates (upgrades, downgrades, cancellations)
  */
 async function handleSubscriptionUpdated(
-  supabase: ReturnType<typeof createAdminClient>,
+  db: FirebaseFirestore.Firestore,
   subscription: Stripe.Subscription
 ) {
   // Use type assertion for Stripe API compatibility
@@ -587,76 +606,82 @@ async function handleSubscriptionUpdated(
 
   console.log('Subscription updated:', { subscriptionId, status: newStatus, planId });
 
+  // Find subscription by stripe ID
+  const subsQuery = await db
+    .collection('subscriptions')
+    .where('stripeSubscriptionId', '==', subscriptionId)
+    .limit(1)
+    .get();
+
+  if (subsQuery.empty) {
+    console.error('Subscription not found:', subscriptionId);
+    return;
+  }
+
   const updateData: Record<string, unknown> = {
     status: newStatus,
-    current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
-    current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-    cancel_at_period_end: sub.cancel_at_period_end,
-    updated_at: new Date().toISOString(),
+    currentPeriodStart: Timestamp.fromMillis(sub.current_period_start * 1000),
+    currentPeriodEnd: Timestamp.fromMillis(sub.current_period_end * 1000),
+    cancelAtPeriodEnd: sub.cancel_at_period_end,
+    updatedAt: Timestamp.now(),
   };
 
   if (planId) {
-    updateData.plan_id = planId;
+    updateData.planId = planId;
     updateData.amount = sub.items.data[0]?.price.unit_amount || 0;
   }
 
   if (sub.canceled_at) {
-    updateData.cancelled_at = new Date(sub.canceled_at * 1000).toISOString();
+    updateData.cancelledAt = Timestamp.fromMillis(sub.canceled_at * 1000);
   }
 
-  const { error } = await (supabase as any)
-    .from('subscriptions')
-    .update(updateData)
-    .eq('stripe_subscription_id', subscriptionId);
-
-  if (error) {
-    console.error('Failed to update subscription:', error);
-  }
+  await subsQuery.docs[0].ref.update(updateData);
 }
 
 /**
  * Handle subscription deletion/cancellation
  */
 async function handleSubscriptionDeleted(
-  supabase: ReturnType<typeof createAdminClient>,
+  db: FirebaseFirestore.Firestore,
   subscription: Stripe.Subscription
 ) {
   const subscriptionId = subscription.id;
 
   console.log('Subscription deleted:', subscriptionId);
 
-  // Get the subscription to find the user
-  const { data: sub } = await (supabase as any)
-    .from('subscriptions')
-    .select('user_id')
-    .eq('stripe_subscription_id', subscriptionId)
-    .single();
+  // Find subscription by stripe ID
+  const subsQuery = await db
+    .collection('subscriptions')
+    .where('stripeSubscriptionId', '==', subscriptionId)
+    .limit(1)
+    .get();
 
-  // Update status to cancelled
-  const { error } = await (supabase as any)
-    .from('subscriptions')
-    .update({
-      status: 'cancelled',
-      cancelled_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('stripe_subscription_id', subscriptionId);
-
-  if (error) {
-    console.error('Failed to cancel subscription:', error);
+  if (subsQuery.empty) {
+    console.error('Subscription not found:', subscriptionId);
+    return;
   }
 
+  const subDoc = subsQuery.docs[0];
+  const userId = subDoc.data().userId;
+
+  // Update status to cancelled
+  await subDoc.ref.update({
+    status: 'cancelled',
+    cancelledAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  });
+
   // Notify user
-  if (sub?.user_id) {
-    await (supabase as any)
-      .from('notifications')
-      .insert({
-        user_id: sub.user_id,
-        type: 'subscription_cancelled',
-        title: 'Subscription Cancelled',
-        message: 'Your subscription has been cancelled. You can resubscribe anytime.',
-        action_url: '/pricing',
-      });
+  if (userId) {
+    await db.collection('notifications').add({
+      userId,
+      type: 'subscription_cancelled',
+      title: 'Subscription Cancelled',
+      message: 'Your subscription has been cancelled. You can resubscribe anytime.',
+      actionUrl: '/pricing',
+      read: false,
+      createdAt: Timestamp.now(),
+    });
   }
 }
 
@@ -664,7 +689,7 @@ async function handleSubscriptionDeleted(
  * Handle successful invoice payment (subscription renewal)
  */
 async function handleInvoicePaid(
-  supabase: ReturnType<typeof createAdminClient>,
+  db: FirebaseFirestore.Firestore,
   invoice: Stripe.Invoice
 ) {
   // Use type assertion for Stripe API compatibility
@@ -674,21 +699,26 @@ async function handleInvoicePaid(
 
   console.log('Invoice paid for subscription:', subscriptionId);
 
-  // Update subscription status to active
-  await (supabase as any)
-    .from('subscriptions')
-    .update({
+  // Find and update subscription
+  const subsQuery = await db
+    .collection('subscriptions')
+    .where('stripeSubscriptionId', '==', subscriptionId)
+    .limit(1)
+    .get();
+
+  if (!subsQuery.empty) {
+    await subsQuery.docs[0].ref.update({
       status: 'active',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('stripe_subscription_id', subscriptionId);
+      updatedAt: Timestamp.now(),
+    });
+  }
 }
 
 /**
  * Handle failed invoice payment
  */
 async function handleInvoicePaymentFailed(
-  supabase: ReturnType<typeof createAdminClient>,
+  db: FirebaseFirestore.Firestore,
   invoice: Stripe.Invoice
 ) {
   // Use type assertion for Stripe API compatibility
@@ -698,33 +728,35 @@ async function handleInvoicePaymentFailed(
 
   console.log('Invoice payment failed for subscription:', subscriptionId);
 
-  // Get user from subscription
-  const { data: sub } = await (supabase as any)
-    .from('subscriptions')
-    .select('user_id')
-    .eq('stripe_subscription_id', subscriptionId)
-    .single();
+  // Find subscription
+  const subsQuery = await db
+    .collection('subscriptions')
+    .where('stripeSubscriptionId', '==', subscriptionId)
+    .limit(1)
+    .get();
+
+  if (subsQuery.empty) return;
+
+  const subDoc = subsQuery.docs[0];
+  const userId = subDoc.data().userId;
 
   // Update status to past_due
-  await (supabase as any)
-    .from('subscriptions')
-    .update({
-      status: 'past_due',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('stripe_subscription_id', subscriptionId);
+  await subDoc.ref.update({
+    status: 'past_due',
+    updatedAt: Timestamp.now(),
+  });
 
   // Notify user
-  if (sub?.user_id) {
-    await (supabase as any)
-      .from('notifications')
-      .insert({
-        user_id: sub.user_id,
-        type: 'payment_failed',
-        title: 'Payment Failed',
-        message: 'We couldn\'t process your subscription payment. Please update your payment method.',
-        action_url: '/dashboard/subscription/billing',
-      });
+  if (userId) {
+    await db.collection('notifications').add({
+      userId,
+      type: 'payment_failed',
+      title: 'Payment Failed',
+      message: 'We couldn\'t process your subscription payment. Please update your payment method.',
+      actionUrl: '/dashboard/subscription/billing',
+      read: false,
+      createdAt: Timestamp.now(),
+    });
   }
 }
 

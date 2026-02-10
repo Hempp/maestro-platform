@@ -1,56 +1,63 @@
 /**
- * USER PROFILE API
+ * USER PROFILE API (Firebase)
  * Manage user profile and learner data
  */
 
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
-import type { Tables } from '@/lib/supabase/types';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 // GET: Fetch user profile
 export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (!user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
-    // Fetch user profile with learner data
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+    const auth = getAdminAuth();
+    const db = getAdminDb();
 
-    if (profileError) {
-      console.error('Profile fetch error:', profileError);
+    // Verify session and get user
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
+    // Fetch user profile
+    const userDoc = await db.collection('users').doc(userId).get();
+
+    if (!userDoc.exists) {
       return NextResponse.json(
-        { error: 'Failed to fetch profile' },
-        { status: 500 }
+        { error: 'Profile not found' },
+        { status: 404 }
       );
     }
 
+    const profile = { id: userDoc.id, ...userDoc.data() };
+
     // Fetch learner profile
-    const { data: learnerProfile } = await supabase
-      .from('learner_profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
+    const learnerDoc = await db.collection('learnerProfiles').doc(userId).get();
+    const learnerProfile = learnerDoc.exists ? learnerDoc.data() : null;
 
     // Fetch progress stats
-    const { data: progressData } = await supabase
-      .from('aku_progress')
-      .select('*')
-      .eq('user_id', user.id);
+    const progressSnapshot = await db
+      .collection('akuProgress')
+      .where('userId', '==', userId)
+      .get();
 
-    const progress = (progressData || []) as Tables<'aku_progress'>[];
-    const completedAkus = progress.filter(p => p.status === 'completed' || p.status === 'verified').length;
-    const totalTimeSpent = progress.reduce((sum, p) => sum + (p.time_spent || 0), 0);
+    const progress = progressSnapshot.docs.map(doc => doc.data());
+    const completedAkus = progress.filter(
+      p => p.status === 'completed' || p.status === 'verified'
+    ).length;
+    const totalTimeSpent = progress.reduce(
+      (sum, p) => sum + (p.timeSpent || 0),
+      0
+    );
 
     return NextResponse.json({
       user: profile,
@@ -73,57 +80,67 @@ export async function GET() {
 // PATCH: Update user profile
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (!user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    // Verify session and get user
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
     const body = await request.json();
     const { fullName, tier, walletAddress, onboardingCompleted } = body;
 
-    // Update user profile
-    const updateData = {
-      full_name: fullName as string | null,
-      tier: tier as 'student' | 'employee' | 'owner' | null,
-      wallet_address: walletAddress as string | null,
-      onboarding_completed: onboardingCompleted as boolean,
-      updated_at: new Date().toISOString(),
+    // Build update data (camelCase for Firestore)
+    const updateData: Record<string, unknown> = {
+      updatedAt: Timestamp.now(),
     };
-    const { data: updatedProfile, error } = await supabase
-      .from('users')
-      .update(updateData as never)
-      .eq('id', user.id)
-      .select()
-      .single();
 
-    if (error) {
-      console.error('Profile update error:', error);
-      return NextResponse.json(
-        { error: 'Failed to update profile' },
-        { status: 500 }
-      );
-    }
+    if (fullName !== undefined) updateData.fullName = fullName;
+    if (tier !== undefined) updateData.tier = tier;
+    if (walletAddress !== undefined) updateData.walletAddress = walletAddress;
+    if (onboardingCompleted !== undefined) updateData.onboardingCompleted = onboardingCompleted;
+
+    // Update user profile
+    await db.collection('users').doc(userId).update(updateData);
+
+    // Fetch updated profile
+    const userDoc = await db.collection('users').doc(userId).get();
+    const updatedProfile = { id: userDoc.id, ...userDoc.data() };
 
     // Create or update learner profile if tier is set
     if (tier) {
-      const learnerData = {
-        user_id: user.id,
-        tier: tier as 'student' | 'employee' | 'owner',
-        updated_at: new Date().toISOString(),
-      };
-      const { error: learnerError } = await supabase
-        .from('learner_profiles')
-        .upsert(learnerData as never, {
-          onConflict: 'user_id',
-        });
+      const learnerRef = db.collection('learnerProfiles').doc(userId);
+      const learnerDoc = await learnerRef.get();
 
-      if (learnerError) {
-        console.error('Learner profile error:', learnerError);
+      if (learnerDoc.exists) {
+        await learnerRef.update({
+          tier,
+          updatedAt: Timestamp.now(),
+        });
+      } else {
+        await learnerRef.set({
+          userId,
+          tier,
+          currentPath: 'foundation',
+          interactionDna: {},
+          struggleScore: 50,
+          totalLearningTime: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          lastActivityAt: null,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        });
       }
     }
 

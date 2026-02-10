@@ -1,108 +1,74 @@
 /**
- * USER SETTINGS API
+ * USER SETTINGS API (Firebase)
  * Manage user preferences, notifications, privacy, and accessibility settings
  */
 
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
+
+// Default settings
+const getDefaultSettings = (email?: string) => ({
+  displayName: email?.split('@')[0] || '',
+  bio: '',
+  emailNotifications: true,
+  learningReminders: true,
+  communityActivity: true,
+  marketingEmails: false,
+  learningPace: 'standard',
+  dailyGoalMinutes: 30,
+  showProgressOnProfile: true,
+  theme: 'dark',
+  twoFactorEnabled: false,
+  profileVisibility: 'public',
+  showActivityStatus: true,
+  allowDataCollection: true,
+  reducedMotion: false,
+  highContrast: false,
+  fontSize: 'medium',
+  screenReaderOptimized: false,
+  walletConnected: false,
+});
 
 // GET: Fetch user settings
 export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (!user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    // Verify session and get user
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
     // Fetch user settings
-    const { data: settings, error } = await supabase
-      .from('user_settings')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
+    const settingsDoc = await db.collection('userSettings').doc(userId).get();
 
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 is "not found" which is OK - we'll create defaults
-      // PGRST205 is "table not found" - return defaults
-      if (error.code === 'PGRST205' || error.message?.includes('Could not find')) {
-        console.warn('user_settings table not found, returning defaults');
-        return NextResponse.json({
-          settings: {
-            display_name: user.email?.split('@')[0] || '',
-            bio: '',
-            email_notifications: true,
-            learning_reminders: true,
-            community_activity: true,
-            marketing_emails: false,
-            learning_pace: 'standard',
-            daily_goal_minutes: 30,
-            show_progress_on_profile: true,
-            theme: 'dark',
-            two_factor_enabled: false,
-            profile_visibility: 'public',
-            show_activity_status: true,
-            allow_data_collection: true,
-            reduced_motion: false,
-            high_contrast: false,
-            font_size: 'medium',
-            screen_reader_optimized: false,
-            wallet_connected: false,
-          }
-        });
-      }
-      console.error('Settings fetch error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch settings' },
-        { status: 500 }
-      );
-    }
-
-    // If no settings exist, create default settings
-    if (!settings) {
+    if (!settingsDoc.exists) {
+      // Create default settings
       const defaultSettings = {
-        user_id: user.id,
-        display_name: user.email?.split('@')[0] || '',
-        bio: '',
-        email_notifications: true,
-        learning_reminders: true,
-        community_activity: true,
-        marketing_emails: false,
-        learning_pace: 'standard',
-        daily_goal_minutes: 30,
-        show_progress_on_profile: true,
-        theme: 'dark',
-        two_factor_enabled: false,
-        profile_visibility: 'public',
-        show_activity_status: true,
-        allow_data_collection: true,
-        reduced_motion: false,
-        high_contrast: false,
-        font_size: 'medium',
-        screen_reader_optimized: false,
-        wallet_connected: false,
+        userId,
+        ...getDefaultSettings(decodedClaims.email),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
       };
 
-      const { data: newSettings, error: insertError } = await supabase
-        .from('user_settings')
-        .insert(defaultSettings as never)
-        .select()
-        .single();
+      await db.collection('userSettings').doc(userId).set(defaultSettings);
 
-      if (insertError) {
-        console.error('Settings creation error:', insertError);
-        // Return defaults even if insert fails
-        return NextResponse.json({ settings: defaultSettings });
-      }
-
-      return NextResponse.json({ settings: newSettings });
+      return NextResponse.json({ settings: defaultSettings });
     }
 
-    return NextResponse.json({ settings });
+    return NextResponse.json({ settings: settingsDoc.data() });
   } catch (error) {
     console.error('Settings API error:', error);
     return NextResponse.json(
@@ -115,83 +81,85 @@ export async function GET() {
 // PUT: Update user settings
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (!user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    // Verify session and get user
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
     const body = await request.json();
 
-    // Map camelCase to snake_case for database
-    const updateData: Record<string, unknown> = {};
+    // Build update data (already camelCase for Firestore)
+    const updateData: Record<string, unknown> = {
+      updatedAt: Timestamp.now(),
+    };
 
     // Profile
-    if (body.displayName !== undefined) updateData.display_name = body.displayName;
+    if (body.displayName !== undefined) updateData.displayName = body.displayName;
     if (body.bio !== undefined) updateData.bio = body.bio;
 
     // Notifications
-    if (body.emailNotifications !== undefined) updateData.email_notifications = body.emailNotifications;
-    if (body.learningReminders !== undefined) updateData.learning_reminders = body.learningReminders;
-    if (body.communityActivity !== undefined) updateData.community_activity = body.communityActivity;
-    if (body.marketingEmails !== undefined) updateData.marketing_emails = body.marketingEmails;
+    if (body.emailNotifications !== undefined) updateData.emailNotifications = body.emailNotifications;
+    if (body.learningReminders !== undefined) updateData.learningReminders = body.learningReminders;
+    if (body.communityActivity !== undefined) updateData.communityActivity = body.communityActivity;
+    if (body.marketingEmails !== undefined) updateData.marketingEmails = body.marketingEmails;
 
     // Learning Preferences
-    if (body.learningPace !== undefined) updateData.learning_pace = body.learningPace;
-    if (body.dailyGoalMinutes !== undefined) updateData.daily_goal_minutes = body.dailyGoalMinutes;
-    if (body.showProgressOnProfile !== undefined) updateData.show_progress_on_profile = body.showProgressOnProfile;
+    if (body.learningPace !== undefined) updateData.learningPace = body.learningPace;
+    if (body.dailyGoalMinutes !== undefined) updateData.dailyGoalMinutes = body.dailyGoalMinutes;
+    if (body.showProgressOnProfile !== undefined) updateData.showProgressOnProfile = body.showProgressOnProfile;
 
     // Appearance
     if (body.theme !== undefined) updateData.theme = body.theme;
 
     // Privacy & Security
-    if (body.twoFactorEnabled !== undefined) updateData.two_factor_enabled = body.twoFactorEnabled;
-    if (body.profileVisibility !== undefined) updateData.profile_visibility = body.profileVisibility;
-    if (body.showActivityStatus !== undefined) updateData.show_activity_status = body.showActivityStatus;
-    if (body.allowDataCollection !== undefined) updateData.allow_data_collection = body.allowDataCollection;
+    if (body.twoFactorEnabled !== undefined) updateData.twoFactorEnabled = body.twoFactorEnabled;
+    if (body.profileVisibility !== undefined) updateData.profileVisibility = body.profileVisibility;
+    if (body.showActivityStatus !== undefined) updateData.showActivityStatus = body.showActivityStatus;
+    if (body.allowDataCollection !== undefined) updateData.allowDataCollection = body.allowDataCollection;
 
     // Accessibility
-    if (body.reducedMotion !== undefined) updateData.reduced_motion = body.reducedMotion;
-    if (body.highContrast !== undefined) updateData.high_contrast = body.highContrast;
-    if (body.fontSize !== undefined) updateData.font_size = body.fontSize;
-    if (body.screenReaderOptimized !== undefined) updateData.screen_reader_optimized = body.screenReaderOptimized;
+    if (body.reducedMotion !== undefined) updateData.reducedMotion = body.reducedMotion;
+    if (body.highContrast !== undefined) updateData.highContrast = body.highContrast;
+    if (body.fontSize !== undefined) updateData.fontSize = body.fontSize;
+    if (body.screenReaderOptimized !== undefined) updateData.screenReaderOptimized = body.screenReaderOptimized;
 
     // Wallet
-    if (body.walletConnected !== undefined) updateData.wallet_connected = body.walletConnected;
+    if (body.walletConnected !== undefined) updateData.walletConnected = body.walletConnected;
 
-    // Upsert settings (create if not exists, update if exists)
-    const { data: updatedSettings, error } = await supabase
-      .from('user_settings')
-      .upsert(
-        { user_id: user.id, ...updateData } as never,
-        { onConflict: 'user_id' }
-      )
-      .select()
-      .single();
+    // Check if settings doc exists
+    const settingsRef = db.collection('userSettings').doc(userId);
+    const settingsDoc = await settingsRef.get();
 
-    if (error) {
-      // Handle missing table gracefully
-      if (error.code === 'PGRST205' || error.message?.includes('Could not find')) {
-        console.warn('user_settings table not found, saving to client only');
-        return NextResponse.json({
-          message: 'Settings saved locally (database table pending)',
-          settings: { user_id: user.id, ...updateData },
-        });
-      }
-      console.error('Settings update error:', error);
-      return NextResponse.json(
-        { error: 'Failed to update settings' },
-        { status: 500 }
-      );
+    if (settingsDoc.exists) {
+      await settingsRef.update(updateData);
+    } else {
+      // Create with defaults merged with updates
+      await settingsRef.set({
+        userId,
+        ...getDefaultSettings(decodedClaims.email),
+        ...updateData,
+        createdAt: Timestamp.now(),
+      });
     }
+
+    // Fetch updated settings
+    const updatedDoc = await settingsRef.get();
 
     return NextResponse.json({
       message: 'Settings updated',
-      settings: updatedSettings,
+      settings: updatedDoc.data(),
     });
   } catch (error) {
     console.error('Settings update API error:', error);

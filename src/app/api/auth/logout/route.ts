@@ -1,23 +1,30 @@
 /**
- * LOGOUT API ROUTE
- * Signs out the current user
+ * LOGOUT API ROUTE (Firebase)
+ * Signs out the current user and clears session cookie
  */
 
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth } from '@/lib/firebase/admin';
 
 export async function POST() {
   try {
-    const supabase = await createServerSupabaseClient();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
+    if (session) {
+      try {
+        // Optionally revoke all sessions for this user
+        const auth = getAdminAuth();
+        const decodedClaims = await auth.verifySessionCookie(session);
+        await auth.revokeRefreshTokens(decodedClaims.uid);
+      } catch {
+        // Session might already be invalid, continue to clear cookie
+      }
     }
+
+    // Clear the session cookie
+    cookieStore.delete('session');
 
     return NextResponse.json({
       message: 'Logged out successfully',
@@ -29,4 +36,11 @@ export async function POST() {
       { status: 500 }
     );
   }
+}
+
+/**
+ * GET - Also support GET for simple logout links
+ */
+export async function GET() {
+  return POST();
 }

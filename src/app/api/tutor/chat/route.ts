@@ -1,13 +1,14 @@
 /**
- * TUTOR CHAT API
+ * TUTOR CHAT API (Firebase)
  * AI-powered tutor for milestone-based learning
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import { getMilestone, getMilestones } from '@/lib/curriculum/milestones';
 import Anthropic from '@anthropic-ai/sdk';
-import type { Json } from '@/types/database.types';
 import { rateLimit, RATE_LIMITS } from '@/lib/security';
 
 // Lazy-init Anthropic client
@@ -35,23 +36,32 @@ interface MilestoneStatus {
   status: 'locked' | 'active' | 'submitted' | 'approved' | 'needs_revision';
 }
 
+interface MilestoneDoc {
+  milestoneNumber: number;
+  status: string;
+  submissionContent?: unknown;
+  feedback?: string;
+}
+
 export async function POST(request: NextRequest) {
   // Rate limit AI endpoints
   const rateLimitResponse = rateLimit(request, RATE_LIMITS.ai);
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    const supabase = await createServerSupabaseClient();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    // Verify session and get user
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
     const body = await request.json();
     const { message, path } = body as { message: string; path: 'owner' | 'employee' | 'student' };
@@ -61,83 +71,89 @@ export async function POST(request: NextRequest) {
     }
 
     // Get or create conversation
-    let { data: conversation, error: convError } = await supabase
-      .from('tutor_conversations')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('path', path)
-      .single();
+    const conversationQuery = await db
+      .collection('tutorConversations')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .limit(1)
+      .get();
 
-    if (convError || !conversation) {
+    let conversationId: string;
+    let conversationData: {
+      messages: ChatMessage[];
+      currentMilestone: number;
+    };
+
+    if (conversationQuery.empty) {
       // Initialize the path for this user - create all 10 milestones
-      const milestonesToInsert = Array.from({ length: 10 }, (_, i) => ({
-        user_id: user.id,
-        path,
-        milestone_number: i + 1,
-        status: i === 0 ? 'active' : 'locked',
-      }));
+      const batch = db.batch();
 
-      await supabase.from('user_milestones').upsert(milestonesToInsert, {
-        onConflict: 'user_id,path,milestone_number',
-        ignoreDuplicates: true,
-      });
-
-      // Create conversation record
-      const { data: newConv, error: createError } = await supabase
-        .from('tutor_conversations')
-        .upsert(
-          {
-            user_id: user.id,
-            path,
-            messages: [],
-            current_milestone: 1,
-          },
-          { onConflict: 'user_id,path' }
-        )
-        .select()
-        .single();
-
-      if (createError) {
-        console.error('Error initializing path:', createError);
-        return NextResponse.json({ error: 'Failed to initialize path' }, { status: 500 });
+      for (let i = 1; i <= 10; i++) {
+        const milestoneRef = db.collection('userMilestones').doc();
+        batch.set(milestoneRef, {
+          userId,
+          path,
+          milestoneNumber: i,
+          status: i === 1 ? 'active' : 'locked',
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        });
       }
 
-      conversation = newConv;
-    }
+      // Create conversation record
+      const convRef = db.collection('tutorConversations').doc();
+      batch.set(convRef, {
+        userId,
+        path,
+        messages: [],
+        currentMilestone: 1,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
 
-    if (!conversation) {
-      return NextResponse.json({ error: 'Failed to get conversation' }, { status: 500 });
+      await batch.commit();
+
+      conversationId = convRef.id;
+      conversationData = {
+        messages: [],
+        currentMilestone: 1,
+      };
+    } else {
+      const doc = conversationQuery.docs[0];
+      conversationId = doc.id;
+      const data = doc.data();
+      conversationData = {
+        messages: (data.messages as ChatMessage[]) || [],
+        currentMilestone: data.currentMilestone || 1,
+      };
     }
 
     // Get user's milestone progress
-    const { data: milestones } = await supabase
-      .from('user_milestones')
-      .select('milestone_number, status, submission_content, feedback')
-      .eq('user_id', user.id)
-      .eq('path', path)
-      .order('milestone_number');
+    const milestonesQuery = await db
+      .collection('userMilestones')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .orderBy('milestoneNumber')
+      .get();
 
-    const milestoneStatuses: MilestoneStatus[] =
-      milestones?.map(m => ({
-        number: m.milestone_number,
-        status: (m.status || 'locked') as MilestoneStatus['status'],
-      })) || [];
+    const milestones: MilestoneDoc[] = milestonesQuery.docs.map(doc => doc.data() as MilestoneDoc);
 
-    const currentMilestoneNum = conversation.current_milestone || 1;
+    const milestoneStatuses: MilestoneStatus[] = milestones.map(m => ({
+      number: m.milestoneNumber,
+      status: (m.status || 'locked') as MilestoneStatus['status'],
+    }));
+
+    const currentMilestoneNum = conversationData.currentMilestone;
     const currentMilestone = getMilestone(path, currentMilestoneNum);
     const allMilestones = getMilestones(path);
 
     // Get user profile for personalization
-    const { data: profile } = await supabase
-      .from('users')
-      .select('full_name, email')
-      .eq('id', user.id)
-      .single();
-
-    const userName = profile?.full_name || user.email?.split('@')[0] || 'there';
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+    const userName = userData?.fullName || decodedClaims.email?.split('@')[0] || 'there';
 
     // Build conversation history
-    const messages: ChatMessage[] = (conversation.messages as unknown as ChatMessage[]) || [];
+    const messages: ChatMessage[] = [...conversationData.messages];
     messages.push({
       role: 'user',
       content: message,
@@ -152,7 +168,7 @@ export async function POST(request: NextRequest) {
       milestoneStatuses,
       allMilestones,
       currentMilestoneData: currentMilestone,
-      previousSubmissions: milestones?.filter((m: { submission_content: unknown }) => m.submission_content) || [],
+      previousSubmissions: milestones.filter(m => m.submissionContent),
     });
 
     // Call Claude
@@ -185,13 +201,10 @@ export async function POST(request: NextRequest) {
       message.toLowerCase().includes("here's my");
 
     // Update conversation
-    await supabase
-      .from('tutor_conversations')
-      .update({
-        messages: messages as unknown as Json,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', conversation.id);
+    await db.collection('tutorConversations').doc(conversationId).update({
+      messages,
+      updatedAt: Timestamp.now(),
+    });
 
     return NextResponse.json({
       message: assistantMessage,
@@ -220,7 +233,7 @@ function buildSystemPrompt({
   milestoneStatuses: MilestoneStatus[];
   allMilestones: ReturnType<typeof getMilestones>;
   currentMilestoneData: ReturnType<typeof getMilestone>;
-  previousSubmissions: Array<{ milestone_number: number; submission_content: unknown; feedback: string | null }>;
+  previousSubmissions: Array<{ milestoneNumber: number; submissionContent?: unknown; feedback?: string }>;
 }) {
   const pathName = path.charAt(0).toUpperCase() + path.slice(1);
   const approvedCount = milestoneStatuses.filter((m) => m.status === 'approved').length;
@@ -296,7 +309,7 @@ When the user is on milestone 10 and submits their final work:
 ${
   previousSubmissions.length > 0
     ? `## Previous Submissions
-${previousSubmissions.map((s) => `Milestone ${s.milestone_number}: ${JSON.stringify(s.submission_content).slice(0, 200)}...`).join('\n')}`
+${previousSubmissions.map((s) => `Milestone ${s.milestoneNumber}: ${JSON.stringify(s.submissionContent).slice(0, 200)}...`).join('\n')}`
     : ''
 }`;
 }
@@ -304,16 +317,19 @@ ${previousSubmissions.map((s) => `Milestone ${s.milestone_number}: ${JSON.string
 // Endpoint to submit a milestone
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    // Verify session and get user
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
     const body = await request.json();
     const { path, milestoneNumber, submission } = body as {
@@ -322,22 +338,26 @@ export async function PUT(request: NextRequest) {
       submission: unknown;
     };
 
-    // Update milestone status
-    const { error: updateError } = await supabase
-      .from('user_milestones')
-      .update({
-        status: 'submitted',
-        submission_content: submission as Json,
-        submitted_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', user.id)
-      .eq('path', path)
-      .eq('milestone_number', milestoneNumber);
+    // Find the milestone document
+    const milestoneQuery = await db
+      .collection('userMilestones')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .where('milestoneNumber', '==', milestoneNumber)
+      .limit(1)
+      .get();
 
-    if (updateError) {
-      return NextResponse.json({ error: 'Failed to submit milestone' }, { status: 500 });
+    if (milestoneQuery.empty) {
+      return NextResponse.json({ error: 'Milestone not found' }, { status: 404 });
     }
+
+    // Update milestone status
+    await milestoneQuery.docs[0].ref.update({
+      status: 'submitted',
+      submissionContent: submission,
+      submittedAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

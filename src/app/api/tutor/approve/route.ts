@@ -1,23 +1,28 @@
 /**
- * MILESTONE APPROVAL API
+ * MILESTONE APPROVAL API (Firebase)
  * Called by the tutor when a milestone is completed
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    // Verify session and get user
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
     const body = await request.json();
     const { path, milestoneNumber, feedback } = body as {
@@ -30,54 +35,69 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Path and milestone number are required' }, { status: 400 });
     }
 
-    // Approve current milestone
-    const { error: approveError } = await supabase
-      .from('user_milestones')
-      .update({
-        status: 'approved',
-        feedback: feedback || null,
-        approved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', user.id)
-      .eq('path', path)
-      .eq('milestone_number', milestoneNumber);
+    // Find and approve current milestone
+    const currentMilestoneQuery = await db
+      .collection('userMilestones')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .where('milestoneNumber', '==', milestoneNumber)
+      .limit(1)
+      .get();
 
-    if (approveError) {
-      console.error('Error approving milestone:', approveError);
-      return NextResponse.json({ error: 'Failed to approve milestone' }, { status: 500 });
+    if (currentMilestoneQuery.empty) {
+      return NextResponse.json({ error: 'Milestone not found' }, { status: 404 });
     }
 
-    // Unlock next milestone
-    await supabase
-      .from('user_milestones')
-      .update({
+    await currentMilestoneQuery.docs[0].ref.update({
+      status: 'approved',
+      feedback: feedback || null,
+      approvedAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
+
+    // Unlock next milestone (if exists and is currently locked)
+    const nextMilestoneQuery = await db
+      .collection('userMilestones')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .where('milestoneNumber', '==', milestoneNumber + 1)
+      .where('status', '==', 'locked')
+      .limit(1)
+      .get();
+
+    if (!nextMilestoneQuery.empty) {
+      await nextMilestoneQuery.docs[0].ref.update({
         status: 'active',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', user.id)
-      .eq('path', path)
-      .eq('milestone_number', milestoneNumber + 1)
-      .eq('status', 'locked');
+        updatedAt: Timestamp.now(),
+      });
+    }
 
     // Update conversation's current milestone
-    await supabase
-      .from('tutor_conversations')
-      .update({
-        current_milestone: Math.min(milestoneNumber + 1, 10),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', user.id)
-      .eq('path', path);
+    const conversationQuery = await db
+      .collection('tutorConversations')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .limit(1)
+      .get();
+
+    if (!conversationQuery.empty) {
+      await conversationQuery.docs[0].ref.update({
+        currentMilestone: Math.min(milestoneNumber + 1, 10),
+        updatedAt: Timestamp.now(),
+      });
+    }
 
     // Get updated progress
-    const { data: milestones } = await supabase
-      .from('user_milestones')
-      .select('status')
-      .eq('user_id', user.id)
-      .eq('path', path);
+    const milestonesQuery = await db
+      .collection('userMilestones')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .get();
 
-    const approvedCount = milestones?.filter(m => m.status === 'approved').length || 0;
+    const approvedCount = milestonesQuery.docs.filter(
+      doc => doc.data().status === 'approved'
+    ).length;
+
     const progress = {
       total_milestones: 10,
       approved_milestones: approvedCount,

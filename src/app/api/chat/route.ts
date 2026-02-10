@@ -1,11 +1,13 @@
 /**
- * PHAZUR CHAT API
+ * PHAZUR CHAT API (Firebase)
  * AI-powered conversational coaching with session persistence
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import { rateLimit, RATE_LIMITS } from '@/lib/security';
 
 // Lazy initialization
@@ -155,22 +157,47 @@ export async function POST(request: NextRequest) {
     const suggestions = generateSuggestions(assistantMessage, tier, currentStep);
 
     // Save to database if user is authenticated
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (user && sessionId) {
-      // Update chat session - cast to bypass strict typing
-      const sessionData = {
-        id: sessionId,
-        user_id: user.id,
-        session_type: 'learning' as const,
-        messages: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: assistantMessage }],
-        current_step: (currentStep || 0) + 1,
-        updated_at: new Date().toISOString(),
-      };
-      await supabase
-        .from('chat_sessions')
-        .upsert(sessionData as never);
+    if (session && sessionId) {
+      try {
+        const auth = getAdminAuth();
+        const db = getAdminDb();
+        const decodedClaims = await auth.verifySessionCookie(session, true);
+        const userId = decodedClaims.uid;
+
+        // Update or create chat session
+        const sessionRef = db.collection('chatSessions').doc(sessionId);
+        const sessionDoc = await sessionRef.get();
+
+        const newMessages = [
+          ...conversationHistory,
+          { role: 'user', content: message },
+          { role: 'assistant', content: assistantMessage },
+        ];
+
+        if (sessionDoc.exists) {
+          await sessionRef.update({
+            messages: newMessages,
+            currentStep: (currentStep || 0) + 1,
+            updatedAt: Timestamp.now(),
+          });
+        } else {
+          await sessionRef.set({
+            userId,
+            sessionType: 'learning',
+            messages: newMessages,
+            currentStep: (currentStep || 0) + 1,
+            metadata: {},
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+          });
+        }
+      } catch (error) {
+        // Log but don't fail the request if session save fails
+        console.error('Failed to save chat session:', error);
+      }
     }
 
     return NextResponse.json({

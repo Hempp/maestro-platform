@@ -54,18 +54,32 @@ export interface FirestoreLearnerProfile {
 
 export interface FirestoreUserSettings {
   userId: string;
+  // Profile
   displayName?: string;
   bio?: string;
-  theme: ThemePreference;
+  // Notifications
+  emailNotifications: boolean;
+  learningReminders: boolean;
+  communityActivity: boolean;
+  marketingEmails: boolean;
+  // Learning Preferences
   learningPace: LearningPace;
-  fontSize: 'small' | 'medium' | 'large';
+  dailyGoalMinutes: number;
+  showProgressOnProfile: boolean;
+  // Appearance
+  theme: ThemePreference;
+  // Privacy & Security
+  twoFactorEnabled: boolean;
+  profileVisibility: 'public' | 'private' | 'friends';
+  showActivityStatus: boolean;
+  allowDataCollection: boolean;
+  // Accessibility
+  reducedMotion: boolean;
   highContrast: boolean;
+  fontSize: 'small' | 'medium' | 'large';
   screenReaderOptimized: boolean;
-  notificationPreferences: {
-    email: boolean;
-    push: boolean;
-    sms: boolean;
-  };
+  // Wallet
+  walletConnected: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
