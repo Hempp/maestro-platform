@@ -15,7 +15,7 @@ import { analytics, ANALYTICS_EVENTS, type EventProperties } from './index';
  * Sends event when component unmounts or page changes
  */
 export function useTimeOnPage(pageName: string) {
-  const startTime = useRef<number>(Date.now());
+  const startTime = useRef<number>(0);
   const pageNameRef = useRef(pageName);
 
   useEffect(() => {
@@ -83,12 +83,13 @@ export function useScrollDepth(pageName: string) {
  */
 export function useEngagement(sectionName: string) {
   const clickCount = useRef(0);
-  const lastActivity = useRef<number>(Date.now());
+  const lastActivity = useRef<number>(0);
   const isEngaged = useRef(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    lastActivity.current = Date.now();
     const ENGAGEMENT_THRESHOLD = 10000; // 10 seconds of activity
 
     const markEngaged = () => {
@@ -149,17 +150,17 @@ interface MilestoneTrackerOptions {
  */
 export function useMilestoneTracking({ milestoneNumber, milestoneName, pathName }: MilestoneTrackerOptions) {
   const completed = useRef(false);
-  const startTime = useRef<number>(Date.now());
+  const startTime = useRef<number>(0);
 
   useEffect(() => {
+    startTime.current = Date.now();
+
     // Track milestone started
     analytics.trackEvent(ANALYTICS_EVENTS.MILESTONE_STARTED, {
       milestone_number: milestoneNumber,
       milestone_name: milestoneName,
       path_name: pathName,
     });
-
-    startTime.current = Date.now();
 
     return () => {
       // Track time spent on milestone
@@ -217,16 +218,16 @@ interface AKUTrackerOptions {
 export function useAKUTracking({ akuId, akuTitle, category }: AKUTrackerOptions) {
   const hintsUsed = useRef(0);
   const attempts = useRef(0);
-  const startTime = useRef<number>(Date.now());
+  const startTime = useRef<number>(0);
 
   useEffect(() => {
+    startTime.current = Date.now();
+
     analytics.trackEvent(ANALYTICS_EVENTS.AKU_STARTED, {
       aku_id: akuId,
       aku_title: akuTitle,
       category,
     });
-
-    startTime.current = Date.now();
   }, [akuId, akuTitle, category]);
 
   const trackHintUsed = useCallback((hintNumber: number) => {
@@ -283,7 +284,7 @@ interface TutorSessionOptions {
  */
 export function useTutorTracking({ sessionId, context }: TutorSessionOptions = {}) {
   const messageCount = useRef(0);
-  const sessionStartTime = useRef<number>(Date.now());
+  const sessionStartTime = useRef<number>(0);
 
   const startSession = useCallback(() => {
     sessionStartTime.current = Date.now();

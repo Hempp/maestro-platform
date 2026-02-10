@@ -57,7 +57,7 @@ export function useSubscription(): UseSubscriptionReturn {
         setSubscription(data.subscription);
         setError(null);
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to fetch subscription');
       setSubscription(null);
     } finally {

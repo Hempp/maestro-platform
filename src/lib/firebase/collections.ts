@@ -10,13 +10,11 @@ import {
   getDocs,
   setDoc,
   updateDoc,
-  deleteDoc,
   query,
   where,
   orderBy,
   limit,
   Timestamp,
-  DocumentReference,
   QueryConstraint,
   writeBatch,
 } from 'firebase/firestore';
@@ -25,7 +23,6 @@ import type {
   FirestoreUser,
   FirestoreLearnerProfile,
   FirestoreAkuProgress,
-  FirestoreChatSession,
   FirestoreCertificate,
   FirestoreSubscription,
 } from '@/types/firestore.types';

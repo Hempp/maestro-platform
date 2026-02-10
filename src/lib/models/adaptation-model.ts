@@ -198,7 +198,7 @@ Speak directly to the learner. Be encouraging but don't be patronizing.`;
    */
   private async generateContextualHelp(
     pauseLocation: PausePattern['location'],
-    currentAKU: AtomicKnowledgeUnit
+    _currentAKU: AtomicKnowledgeUnit
   ): Promise<string> {
     const contextualHints: Record<PausePattern['location'], string> = {
       before_api_config:
@@ -279,7 +279,7 @@ Speak directly to the learner. Be encouraging but don't be patronizing.`;
    */
   private async generateErrorGuidance(
     error: string,
-    learner: LearnerModel
+    _learner: LearnerModel
   ): Promise<string> {
     // Common error patterns and Socratic responses
     const errorPatterns: Record<string, string> = {

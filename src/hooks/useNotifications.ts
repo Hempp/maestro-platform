@@ -463,8 +463,10 @@ export function useUnreadNotificationCount(
 ) {
   const { enabled = true } = options;
 
+  // Initialize loading based on whether we can actually fetch
+  const canFetch = enabled && !!userId;
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(canFetch);
   const [error, setError] = useState<FirestoreError | null>(null);
 
   // Track mounted state
@@ -478,13 +480,10 @@ export function useUnreadNotificationCount(
   }, []);
 
   useEffect(() => {
+    // Skip subscription if disabled or no userId
     if (!enabled || !userId) {
-      setUnreadCount(0);
-      setLoading(false);
       return;
     }
-
-    setLoading(true);
 
     const db = getFirebaseDb();
     const notificationsRef = collection(db, 'users', userId, 'notifications');
@@ -516,7 +515,11 @@ export function useUnreadNotificationCount(
     };
   }, [userId, enabled]);
 
-  return { unreadCount, loading, error, hasUnread: unreadCount > 0 };
+  // When disabled or no userId, return zero count and not loading
+  const effectiveLoading = canFetch ? loading : false;
+  const effectiveCount = canFetch ? unreadCount : 0;
+
+  return { unreadCount: effectiveCount, loading: effectiveLoading, error, hasUnread: effectiveCount > 0 };
 }
 
 // ============================================================================

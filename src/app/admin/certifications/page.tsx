@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface User {
@@ -98,6 +99,7 @@ function StatCard({
 }
 
 export default function AdminCertificationsPage() {
+  const router = useRouter();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -138,7 +140,7 @@ export default function AdminCertificationsPage() {
 
       if (response.ok) {
         // Navigate to review page
-        window.location.href = `/admin/certifications/review/${id}`;
+        router.push(`/admin/certifications/review/${id}`);
       }
     } catch (error) {
       console.error('Failed to start review:', error);

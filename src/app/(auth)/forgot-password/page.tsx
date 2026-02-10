@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
 
           <h1 className="text-2xl font-semibold text-white mb-2">Check Your Email</h1>
           <p className="text-slate-400 mb-6">
-            If an account with that email exists, we've sent instructions to reset your password.
+            If an account with that email exists, we&apos;ve sent instructions to reset your password.
           </p>
 
           <div className="space-y-3">
@@ -96,7 +96,7 @@ export default function ForgotPasswordPage() {
               }}
               className="text-sm text-slate-400 hover:text-white transition-colors"
             >
-              Didn't receive it? Try again
+              Didn&apos;t receive it? Try again
             </button>
           </div>
         </div>
@@ -240,7 +240,7 @@ export default function ForgotPasswordPage() {
             </div>
             <div className="text-sm text-slate-400">
               <p className="font-medium text-slate-300 mb-1">Need help?</p>
-              <p>If you don't receive an email within a few minutes, check your spam folder or contact our support team.</p>
+              <p>If you don&apos;t receive an email within a few minutes, check your spam folder or contact our support team.</p>
             </div>
           </div>
         </div>

@@ -5,7 +5,6 @@
 
 import { create } from 'zustand';
 import type {
-  LearnerModel,
   AtomicKnowledgeUnit,
   SandboxState,
   TutorMessage,

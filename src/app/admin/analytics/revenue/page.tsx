@@ -386,7 +386,7 @@ function SubscriptionFlowCard({ flow }: { flow: SubscriptionFlow }) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-white font-semibold">Subscription Flow</h3>
-          <p className="text-slate-500 text-sm">This period's movement</p>
+          <p className="text-slate-500 text-sm">This period&apos;s movement</p>
         </div>
         <div
           className={`px-3 py-1 rounded-full text-sm font-medium ${

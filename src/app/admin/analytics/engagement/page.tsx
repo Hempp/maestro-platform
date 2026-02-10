@@ -481,6 +481,9 @@ function EngagementHeatmap({ data }: { data: HeatmapCell[] }) {
 // ============================================================================
 
 function AtRiskUsersTable({ data }: { data: AtRiskUser[] }) {
+  // Store current time in state to avoid calling Date.now() during render
+  const [now] = useState(() => Date.now());
+
   if (!data.length) {
     return (
       <div className="bg-slate-800/30 rounded-xl border border-slate-700/50">
@@ -546,7 +549,7 @@ function AtRiskUsersTable({ data }: { data: AtRiskUser[] }) {
                     })}
                   </div>
                   <div className="text-slate-500 text-xs">
-                    {Math.floor((Date.now() - new Date(user.lastActive).getTime()) / (1000 * 60 * 60 * 24))} days ago
+                    {Math.floor((now - new Date(user.lastActive).getTime()) / (1000 * 60 * 60 * 24))} days ago
                   </div>
                 </td>
                 <td className="py-3 px-4 text-center">

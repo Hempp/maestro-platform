@@ -264,8 +264,9 @@ function ModulePerformanceTable({
     }
   };
 
-  const SortHeader = ({ column, label }: { column: keyof ModulePerformance; label: string }) => (
+  const renderSortHeader = (column: keyof ModulePerformance, label: string) => (
     <th
+      key={column}
       className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white transition"
       onClick={() => handleSort(column)}
     >
@@ -291,11 +292,11 @@ function ModulePerformanceTable({
           <thead className="bg-slate-800/50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Module</th>
-              <SortHeader column="completionRate" label="Completion" />
-              <SortHeader column="avgStruggleScore" label="Avg Struggle" />
-              <SortHeader column="dropOffRate" label="Drop-off" />
-              <SortHeader column="avgTimeMinutes" label="Avg Time" />
-              <SortHeader column="hintsUsedAvg" label="Hints Used" />
+              {renderSortHeader('completionRate', 'Completion')}
+              {renderSortHeader('avgStruggleScore', 'Avg Struggle')}
+              {renderSortHeader('dropOffRate', 'Drop-off')}
+              {renderSortHeader('avgTimeMinutes', 'Avg Time')}
+              {renderSortHeader('hintsUsedAvg', 'Hints Used')}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700/50">

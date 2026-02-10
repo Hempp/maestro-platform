@@ -7,8 +7,6 @@
 import type {
   AtomicKnowledgeUnit,
   AKUCategory,
-  SandboxChallenge,
-  VerificationCriteria,
   BusinessTier,
 } from '@/types';
 

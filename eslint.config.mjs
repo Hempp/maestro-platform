@@ -12,7 +12,26 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Build outputs:
+    ".vercel/**",
+    // Migration scripts:
+    "scripts/**",
+    "functions/**",
   ]),
+  // Custom rules
+  {
+    rules: {
+      // Allow underscore-prefixed unused variables (common convention for intentionally unused params)
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;
