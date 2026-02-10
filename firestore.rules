@@ -1,0 +1,256 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================================================
+    // HELPER FUNCTIONS
+    // ========================================================================
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if user has admin role
+    function isAdmin() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'teacher', 'instructor'];
+    }
+
+    // Check if user has specific tier
+    function hasTier(tiers) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tier in tiers;
+    }
+
+    // Validate required fields exist
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // ========================================================================
+    // USER COLLECTIONS
+    // ========================================================================
+
+    // Users - main profile
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if false; // Never allow client deletion
+    }
+
+    // Learner profiles - learning state
+    match /learnerProfiles/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    // User settings
+    match /userSettings/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+
+    // ========================================================================
+    // LEARNING COLLECTIONS
+    // ========================================================================
+
+    // AKU Progress
+    match /akuProgress/{progressId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if false;
+    }
+
+    // Chat sessions
+    match /chatSessions/{sessionId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if false;
+    }
+
+    // Tutor conversations
+    match /tutorConversations/{convId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if false;
+    }
+
+    // User milestones
+    match /userMilestones/{milestoneId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if false;
+    }
+
+    // Sandbox sessions
+    match /sandboxSessions/{sessionId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // Terminal history
+    match /terminalHistory/{historyId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow delete: if false;
+    }
+
+    // ========================================================================
+    // CERTIFICATES & CREDENTIALS
+    // ========================================================================
+
+    // Certificates - public read for verification
+    match /certificates/{certId} {
+      allow read: if true; // Public for verification
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if false; // Only via Admin SDK
+      allow delete: if false;
+    }
+
+    // Certification submissions
+    match /certificationSubmissions/{submissionId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if (isOwner(resource.data.userId) && resource.data.status == 'submitted') || isAdmin();
+      allow delete: if false;
+    }
+
+    // Claimable credentials
+    match /claimableCredentials/{credId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if false; // Only via Admin SDK
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if false;
+    }
+
+    // ========================================================================
+    // SUBSCRIPTIONS & PAYMENTS
+    // ========================================================================
+
+    // Subscriptions - read only, write via webhooks
+    match /subscriptions/{subId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow write: if false; // Only via Admin SDK (webhooks)
+    }
+
+    // Subscription history
+    match /subscriptionHistory/{historyId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow write: if false; // Only via Admin SDK
+    }
+
+    // Payments
+    match /payments/{paymentId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow write: if false; // Only via Admin SDK
+    }
+
+    // Usage tracking
+    match /usageTracking/{usageId} {
+      allow read: if isOwner(resource.data.userId);
+      allow write: if false; // Only via Admin SDK
+    }
+
+    // ========================================================================
+    // COURSES & ENROLLMENT
+    // ========================================================================
+
+    // Courses - public read
+    match /courses/{courseId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      // Modules subcollection
+      match /modules/{moduleId} {
+        allow read: if true;
+        allow write: if isAdmin();
+
+        // Lessons subcollection
+        match /lessons/{lessonId} {
+          allow read: if true;
+          allow write: if isAdmin();
+        }
+      }
+    }
+
+    // Enrollments
+    match /enrollments/{enrollmentId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if false;
+    }
+
+    // Live sessions - public read
+    match /liveSessions/{sessionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Session enrollments
+    match /sessionEnrollments/{enrollmentId} {
+      allow read: if isOwner(resource.data.studentId) || isAdmin();
+      allow create: if isOwner(request.resource.data.studentId);
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ========================================================================
+    // NOTIFICATIONS
+    // ========================================================================
+
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if false; // Only via Admin SDK
+      allow update: if isOwner(resource.data.userId); // Mark as read
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // ========================================================================
+    // ADMIN ONLY
+    // ========================================================================
+
+    // Platform settings
+    match /platformSettings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Webhooks configuration
+    match /webhooks/{webhookId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Analytics - admin only
+    match /analytics/{document=**} {
+      allow read: if isAdmin();
+      allow write: if false; // Only via Cloud Functions
+    }
+
+    // Daily metrics
+    match /dailyMetrics/{date}/users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if false; // Only via Cloud Functions
+    }
+  }
+}
