@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { rateLimit, RATE_LIMITS } from '@/lib/security';
 
 // Lazy initialization
 let openai: OpenAI | null = null;
@@ -56,6 +57,10 @@ interface ChatMessage {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit AI endpoints more strictly
+  const rateLimitResponse = rateLimit(request, RATE_LIMITS.ai);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await request.json();
     const {

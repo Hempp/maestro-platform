@@ -6,6 +6,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, RATE_LIMITS } from '@/lib/security';
 
 type FeatureType = 'tutor' | 'agent' | 'skill';
 
@@ -21,7 +22,11 @@ async function getAuthenticatedUser() {
   return { user, supabase, error };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Rate limit read operations more generously
+  const rateLimitResponse = rateLimit(request, RATE_LIMITS.read);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const { user, supabase, error: authError } = await getAuthenticatedUser();
 
@@ -56,6 +61,10 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit API mutations
+  const rateLimitResponse = rateLimit(request, RATE_LIMITS.api);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const { user, supabase, error: authError } = await getAuthenticatedUser();
 

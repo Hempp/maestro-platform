@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import type { TutorMessage, SandboxState } from '@/types';
+import { rateLimit, RATE_LIMITS } from '@/lib/security';
 
 // Lazy initialization to avoid build-time errors
 let openaiClient: OpenAI | null = null;
@@ -62,6 +63,10 @@ interface ProjectChatMessage {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit AI endpoints
+  const rateLimitResponse = rateLimit(request, RATE_LIMITS.ai);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await request.json();
 

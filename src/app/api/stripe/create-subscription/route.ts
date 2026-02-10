@@ -6,8 +6,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getStripe, SUBSCRIPTION_PLANS, isValidPlan, type SubscriptionPlanId } from '@/lib/stripe/config';
+import { rateLimit, RATE_LIMITS } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
+  // Rate limit payment endpoints strictly
+  const rateLimitResponse = rateLimit(request, RATE_LIMITS.auth);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     // Authenticate user
     const supabase = await createServerSupabaseClient();

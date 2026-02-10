@@ -5,9 +5,14 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendWelcomeEmail } from '@/lib/email/resend';
+import { rateLimit, RATE_LIMITS } from '@/lib/security';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  // Strict rate limit on auth endpoints
+  const rateLimitResponse = rateLimit(request, RATE_LIMITS.auth);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const { email, password, fullName, tier } = await request.json();
 

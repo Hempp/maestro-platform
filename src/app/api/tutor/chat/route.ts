@@ -8,6 +8,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getMilestone, getMilestones } from '@/lib/curriculum/milestones';
 import Anthropic from '@anthropic-ai/sdk';
 import type { Json } from '@/types/database.types';
+import { rateLimit, RATE_LIMITS } from '@/lib/security';
 
 // Lazy-init Anthropic client
 let anthropic: Anthropic | null = null;
@@ -35,6 +36,10 @@ interface MilestoneStatus {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit AI endpoints
+  const rateLimitResponse = rateLimit(request, RATE_LIMITS.ai);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const supabase = await createServerSupabaseClient();
 
