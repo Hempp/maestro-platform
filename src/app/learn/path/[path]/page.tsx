@@ -1,13 +1,14 @@
 'use client';
 
 /**
- * LEARNING PAGE
+ * LEARNING PAGE (Firebase)
  * Main interface for milestone-based learning with AI tutor
  */
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getFirebaseApp } from '@/lib/firebase/config';
 import TutorChat from '@/components/tutor/TutorChat';
 
 type PathType = 'owner' | 'employee' | 'student';
@@ -44,21 +45,20 @@ export default function LearnPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    const app = getFirebaseApp();
+    const auth = getAuth(app);
 
-  const checkAuth = async () => {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      // Redirect to dashboard if not authenticated
-      router.push('/dashboard');
-      return;
-    }
-    setIsLoading(false);
-  };
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // Redirect to dashboard if not authenticated
+        router.push('/dashboard');
+        return;
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router]);
 
   // Validate path
   if (!['owner', 'employee', 'student'].includes(path)) {

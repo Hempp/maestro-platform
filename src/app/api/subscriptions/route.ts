@@ -1,40 +1,41 @@
 /**
- * SUBSCRIPTION API
+ * SUBSCRIPTION API (Firebase)
  * Handles subscription creation, management, and billing
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import { getStripe, SUBSCRIPTION_PLANS, isValidPlan, SubscriptionPlanId } from '@/lib/stripe/config';
 
-// Helper to get supabase client with any type for untyped tables
-async function getSupabase() {
-  const supabase = await createServerSupabaseClient();
-  return supabase as any;
-}
-
 // GET: Get user's subscription status
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const supabase = await getSupabase();
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's subscription from database
-    const { data: subscription, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .single();
+    const auth = getAdminAuth();
+    const db = getAdminDb();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-      console.error('Subscription fetch error:', error);
-      return NextResponse.json({ error: 'Failed to fetch subscription' }, { status: 500 });
-    }
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
+    // Get user's subscription from database
+    const subscriptionQuery = await db
+      .collection('subscriptions')
+      .where('userId', '==', userId)
+      .where('status', '==', 'active')
+      .limit(1)
+      .get();
+
+    const subscription = subscriptionQuery.empty
+      ? null
+      : { id: subscriptionQuery.docs[0].id, ...subscriptionQuery.docs[0].data() };
 
     // Get available plans
     const plans = Object.entries(SUBSCRIPTION_PLANS).map(([id, plan]) => ({
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json({
-      subscription: subscription || null,
+      subscription,
       plans,
       isSubscribed: !!subscription,
     });
@@ -65,12 +66,18 @@ export async function GET(request: NextRequest) {
 // POST: Create or update subscription
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await getSupabase();
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
     const body = await request.json();
     const { planId, billingCycle = 'monthly', successUrl, cancelUrl } = body;
@@ -89,36 +96,33 @@ export async function POST(request: NextRequest) {
     // Get or create Stripe customer
     let customerId: string;
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('stripe_customer_id')
-      .eq('id', user.id)
-      .single();
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
 
-    if (profile?.stripe_customer_id) {
-      customerId = profile.stripe_customer_id;
+    if (userData?.stripeCustomerId) {
+      customerId = userData.stripeCustomerId;
     } else {
       // Create new Stripe customer
       const stripe = getStripe();
       const customer = await stripe.customers.create({
-        email: user.email,
+        email: decodedClaims.email || undefined,
         metadata: {
-          userId: user.id,
+          userId: userId,
         },
       });
       customerId = customer.id;
 
-      // Save to profile
-      await supabase
-        .from('profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', user.id);
+      // Save to user document
+      await db.collection('users').doc(userId).update({
+        stripeCustomerId: customerId,
+        updatedAt: Timestamp.now(),
+      });
     }
 
     // Create Stripe checkout session for subscription
     const stripe = getStripe();
 
-    const session = await stripe.checkout.sessions.create({
+    const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -141,32 +145,33 @@ export async function POST(request: NextRequest) {
       success_url: successUrl || `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?subscription=success`,
       cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL}/pricing?cancelled=true`,
       metadata: {
-        userId: user.id,
+        userId: userId,
         planId,
         billingCycle,
       },
       subscription_data: {
         metadata: {
-          userId: user.id,
+          userId: userId,
           planId,
         },
       },
     });
 
     // Create pending subscription record
-    await supabase.from('subscriptions').insert({
-      user_id: user.id,
-      plan_id: planId,
+    await db.collection('subscriptions').add({
+      userId,
+      planId,
       status: 'pending',
-      billing_cycle: billingCycle,
-      stripe_session_id: session.id,
-      amount: amount,
-      created_at: new Date().toISOString(),
+      billingCycle,
+      stripeSessionId: checkoutSession.id,
+      amount,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     });
 
     return NextResponse.json({
-      checkoutUrl: session.url,
-      sessionId: session.id,
+      checkoutUrl: checkoutSession.url,
+      sessionId: checkoutSession.id,
     });
   } catch (error) {
     console.error('Subscription creation error:', error);
@@ -180,27 +185,36 @@ export async function POST(request: NextRequest) {
 // PATCH: Update subscription (upgrade/downgrade)
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await getSupabase();
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
     const body = await request.json();
     const { action, newPlanId } = body;
 
     // Get current subscription
-    const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .single();
+    const subscriptionQuery = await db
+      .collection('subscriptions')
+      .where('userId', '==', userId)
+      .where('status', '==', 'active')
+      .limit(1)
+      .get();
 
-    if (!subscription) {
+    if (subscriptionQuery.empty) {
       return NextResponse.json({ error: 'No active subscription found' }, { status: 404 });
     }
+
+    const subscriptionDoc = subscriptionQuery.docs[0];
+    const subscription = subscriptionDoc.data();
 
     const stripe = getStripe();
 
@@ -211,8 +225,6 @@ export async function PATCH(request: NextRequest) {
           return NextResponse.json({ error: 'Invalid new plan ID' }, { status: 400 });
         }
 
-        // In real implementation, would update Stripe subscription
-        // For now, return success with note to implement
         return NextResponse.json({
           success: true,
           message: `Plan change to ${newPlanId} scheduled`,
@@ -222,19 +234,16 @@ export async function PATCH(request: NextRequest) {
 
       case 'cancel': {
         // Cancel at period end
-        if (subscription.stripe_subscription_id) {
-          await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+        if (subscription.stripeSubscriptionId) {
+          await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
             cancel_at_period_end: true,
           });
         }
 
-        await supabase
-          .from('subscriptions')
-          .update({
-            cancel_at_period_end: true,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', subscription.id);
+        await subscriptionDoc.ref.update({
+          cancelAtPeriodEnd: true,
+          updatedAt: Timestamp.now(),
+        });
 
         return NextResponse.json({
           success: true,
@@ -244,19 +253,16 @@ export async function PATCH(request: NextRequest) {
 
       case 'reactivate': {
         // Reactivate a cancelled subscription
-        if (subscription.stripe_subscription_id) {
-          await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+        if (subscription.stripeSubscriptionId) {
+          await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
             cancel_at_period_end: false,
           });
         }
 
-        await supabase
-          .from('subscriptions')
-          .update({
-            cancel_at_period_end: false,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', subscription.id);
+        await subscriptionDoc.ref.update({
+          cancelAtPeriodEnd: false,
+          updatedAt: Timestamp.now(),
+        });
 
         return NextResponse.json({
           success: true,
@@ -280,43 +286,49 @@ export async function PATCH(request: NextRequest) {
 }
 
 // DELETE: Cancel subscription immediately
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
-    const supabase = await getSupabase();
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get current subscription
-    const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .single();
+    const auth = getAdminAuth();
+    const db = getAdminDb();
 
-    if (!subscription) {
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
+    // Get current subscription
+    const subscriptionQuery = await db
+      .collection('subscriptions')
+      .where('userId', '==', userId)
+      .where('status', '==', 'active')
+      .limit(1)
+      .get();
+
+    if (subscriptionQuery.empty) {
       return NextResponse.json({ error: 'No active subscription found' }, { status: 404 });
     }
+
+    const subscriptionDoc = subscriptionQuery.docs[0];
+    const subscription = subscriptionDoc.data();
 
     const stripe = getStripe();
 
     // Cancel immediately in Stripe
-    if (subscription.stripe_subscription_id) {
-      await stripe.subscriptions.cancel(subscription.stripe_subscription_id);
+    if (subscription.stripeSubscriptionId) {
+      await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
     }
 
     // Update database
-    await supabase
-      .from('subscriptions')
-      .update({
-        status: 'cancelled',
-        cancelled_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', subscription.id);
+    await subscriptionDoc.ref.update({
+      status: 'cancelled',
+      cancelledAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
 
     return NextResponse.json({
       success: true,

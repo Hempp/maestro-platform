@@ -1,144 +1,118 @@
 /**
- * ADMIN STUDENTS API
+ * ADMIN STUDENTS API (Firebase)
  * Get detailed student information with progress
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
-
-// Valid tier values
-type TierType = 'student' | 'employee' | 'owner';
-
-// Type for student data returned from Supabase query
-// Note: With !inner join, learner_profiles can be either array or single object
-interface StudentQueryResult {
-  id: string;
-  email: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  created_at: string | null;
-  learner_profiles: {
-    id: string;
-    tier: TierType;
-    current_path: string | null;
-    total_learning_time: number | null;
-    current_streak: number | null;
-    longest_streak: number | null;
-    struggle_score: number | null;
-    last_activity_at: string | null;
-  } | Array<{
-    id: string;
-    tier: TierType;
-    current_path: string | null;
-    total_learning_time: number | null;
-    current_streak: number | null;
-    longest_streak: number | null;
-    struggle_score: number | null;
-    last_activity_at: string | null;
-  }>;
-}
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    // Check admin/teacher role
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
+    // Check admin/teacher role
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
 
     if (!userData || !['admin', 'teacher'].includes(userData.role || '')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search') || '';
+    const search = searchParams.get('search')?.toLowerCase() || '';
     const tierFilter = searchParams.get('tier') || '';
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // Get students (role = learner or null)
-    // Note: tier is stored in learner_profiles, not users table
-    let query = supabase
-      .from('users')
-      .select(`
-        id,
-        email,
-        full_name,
-        avatar_url,
-        created_at,
-        learner_profiles!inner (
-          id,
-          tier,
-          current_path,
-          total_learning_time,
-          current_streak,
-          longest_streak,
-          struggle_score,
-          last_activity_at
-        )
-      `, { count: 'exact' })
-      .or('role.is.null,role.eq.learner');
+    // Get all learner profiles
+    let profilesQuery = db.collection('learnerProfiles').orderBy('lastActivityAt', 'desc');
 
-    // Apply filters
-    if (search) {
-      query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`);
-    }
     if (tierFilter && ['student', 'employee', 'owner'].includes(tierFilter)) {
-      // Filter by tier in learner_profiles table
-      query = query.eq('learner_profiles.tier', tierFilter as TierType);
+      profilesQuery = profilesQuery.where('tier', '==', tierFilter);
     }
 
-    // Pagination
-    query = query.range(offset, offset + limit - 1);
+    const profilesSnapshot = await profilesQuery.get();
+    const profiles = profilesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
 
-    const { data: students, error, count } = await query;
+    // Get user data for each profile
+    const studentsWithData = await Promise.all(
+      profiles.map(async (profile: any) => {
+        const profileUserId = profile.userId;
+        const studentDoc = await db.collection('users').doc(profileUserId).get();
+        const studentData = studentDoc.data();
 
-    if (error) throw error;
+        if (!studentData) return null;
 
-    // Get progress stats for each student
-    const studentsWithProgress = await Promise.all(
-      ((students || []) as StudentQueryResult[]).map(async (student) => {
-        // Get AKU progress count (aku_progress uses user_id, not learner_id)
-        const { count: akusCompleted } = await supabase
-          .from('aku_progress')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', student.id)
-          .eq('status', 'verified');
+        // Apply search filter on user data
+        if (search) {
+          const emailMatch = studentData.email?.toLowerCase().includes(search);
+          const nameMatch = studentData.fullName?.toLowerCase().includes(search);
+          if (!emailMatch && !nameMatch) return null;
+        }
+
+        // Filter by role (learner or null)
+        if (studentData.role && studentData.role !== 'learner') return null;
+
+        // Get AKU progress count
+        const akuProgressQuery = await db
+          .collection('akuProgress')
+          .where('userId', '==', profileUserId)
+          .where('status', '==', 'verified')
+          .get();
 
         // Get certificates count
-        const { count: certificatesCount } = await supabase
-          .from('certificates')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', student.id);
+        const certificatesQuery = await db
+          .collection('certificates')
+          .where('userId', '==', profileUserId)
+          .get();
 
-        // Extract tier from learner_profiles for easier frontend consumption
-        // Handle both array and single object formats from Supabase
-        const profiles = student.learner_profiles;
-        const profile = Array.isArray(profiles) ? profiles[0] : profiles;
         return {
-          ...student,
-          // Normalize learner_profiles to always be an array for frontend
-          learner_profiles: Array.isArray(profiles) ? profiles : [profiles],
-          tier: profile?.tier || null,
+          id: profileUserId,
+          email: studentData.email,
+          fullName: studentData.fullName,
+          avatarUrl: studentData.avatarUrl,
+          createdAt: studentData.createdAt,
+          tier: profile.tier,
+          learnerProfiles: [{
+            id: profile.id,
+            tier: profile.tier,
+            currentPath: profile.currentPath,
+            totalLearningTime: profile.totalLearningTime,
+            currentStreak: profile.currentStreak,
+            longestStreak: profile.longestStreak,
+            struggleScore: profile.struggleScore,
+            lastActivityAt: profile.lastActivityAt,
+          }],
           stats: {
-            akusCompleted: akusCompleted || 0,
-            certificatesCount: certificatesCount || 0,
+            akusCompleted: akuProgressQuery.size,
+            certificatesCount: certificatesQuery.size,
           },
         };
       })
     );
 
+    // Filter out nulls and apply pagination
+    const filteredStudents = studentsWithData.filter(Boolean);
+    const paginatedStudents = filteredStudents.slice(offset, offset + limit);
+
     return NextResponse.json({
-      students: studentsWithProgress,
-      total: count,
+      students: paginatedStudents,
+      total: filteredStudents.length,
       limit,
       offset,
     });

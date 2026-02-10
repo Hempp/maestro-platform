@@ -1,5 +1,5 @@
 /**
- * STRIPE CHECKOUT SESSION API
+ * STRIPE CHECKOUT SESSION API (Firebase)
  * Creates a Stripe checkout session for certification payment
  *
  * This is triggered AFTER the user completes their certification
@@ -7,7 +7,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import { stripe, CERTIFICATION_PRICES, isValidTier, type CertificationTier } from '@/lib/stripe/config';
 import { rateLimit, RATE_LIMITS } from '@/lib/security';
 
@@ -17,16 +19,21 @@ export async function POST(request: NextRequest) {
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    // Authenticate user
-    const supabase = await createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (authError || !user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
+
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
     // Parse request body
     const body = await request.json();
@@ -55,22 +62,26 @@ export async function POST(request: NextRequest) {
     const tierConfig = CERTIFICATION_PRICES[tier as CertificationTier];
 
     // Verify the certificate exists and belongs to this user
-    const { data: certificate, error: certError } = await (supabase as any)
-      .from('certificates')
-      .select('id, course_id, user_id, verified_at')
-      .eq('id', certificateId)
-      .eq('user_id', user.id)
-      .single();
+    const certificateDoc = await db.collection('certificates').doc(certificateId).get();
 
-    if (certError || !certificate) {
+    if (!certificateDoc.exists) {
       return NextResponse.json(
-        { error: 'Certificate not found or does not belong to this user' },
+        { error: 'Certificate not found' },
+        { status: 404 }
+      );
+    }
+
+    const certificate = certificateDoc.data();
+
+    if (certificate?.userId !== userId) {
+      return NextResponse.json(
+        { error: 'Certificate does not belong to this user' },
         { status: 404 }
       );
     }
 
     // Check if certificate is already verified (paid)
-    if (certificate.verified_at) {
+    if (certificate?.verifiedAt) {
       return NextResponse.json(
         { error: 'This certificate has already been paid for' },
         { status: 400 }
@@ -78,20 +89,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user details for the checkout session
-    const { data: userData } = await (supabase as any)
-      .from('users')
-      .select('email, full_name')
-      .eq('id', user.id)
-      .single();
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
 
     // Create Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
+    const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
-      customer_email: userData?.email || user.email,
-      client_reference_id: user.id,
+      customer_email: userData?.email || decodedClaims.email,
+      client_reference_id: userId,
       metadata: {
-        userId: user.id,
+        userId: userId,
         courseId: courseId,
         certificateId: certificateId,
         tier: tier,
@@ -118,21 +126,21 @@ export async function POST(request: NextRequest) {
     });
 
     // Create a pending payment record
-    await (supabase as any)
-      .from('payments')
-      .insert({
-        user_id: user.id,
-        course_id: courseId,
-        amount: tierConfig.amount / 100, // Convert cents to dollars for DB
-        currency: 'usd',
-        status: 'pending',
-        stripe_payment_intent_id: session.id, // Store session ID initially
-        payment_method: 'stripe',
-      });
+    await db.collection('payments').add({
+      userId,
+      courseId,
+      amount: tierConfig.amount / 100, // Convert cents to dollars for DB
+      currency: 'usd',
+      status: 'pending',
+      stripePaymentIntentId: checkoutSession.id, // Store session ID initially
+      paymentMethod: 'stripe',
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
 
     return NextResponse.json({
-      sessionId: session.id,
-      url: session.url,
+      sessionId: checkoutSession.id,
+      url: checkoutSession.url,
     });
   } catch (error) {
     console.error('Stripe checkout error:', error);

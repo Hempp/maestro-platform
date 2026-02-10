@@ -1,15 +1,10 @@
 /**
- * CERTIFICATE VERIFICATION API
+ * CERTIFICATE VERIFICATION API (Firebase)
  * Public endpoint for employers to verify certificates
  */
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { getAdminDb } from '@/lib/firebase/admin';
 import { NextRequest, NextResponse } from 'next/server';
-import type { Tables, Json } from '@/lib/supabase/types';
-
-interface CertificateWithUser extends Tables<'certificates'> {
-  users: { full_name: string | null; email: string } | null;
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,58 +19,63 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminClient();
+    const db = getAdminDb();
 
-    let query = supabase
-      .from('certificates')
-      .select(`
-        *,
-        users (
-          full_name,
-          email
-        )
-      `);
+    let certDoc;
 
     if (certificateId) {
-      query = query.eq('id', certificateId);
+      // Direct document lookup by ID
+      certDoc = await db.collection('certificates').doc(certificateId).get();
     } else if (tokenId) {
-      query = query.eq('token_id', tokenId);
+      // Query by tokenId
+      const querySnapshot = await db
+        .collection('certificates')
+        .where('tokenId', '==', tokenId)
+        .limit(1)
+        .get();
+
+      certDoc = querySnapshot.empty ? null : querySnapshot.docs[0];
     }
 
-    const { data, error } = await query.single();
-
-    if (error || !data) {
+    if (!certDoc || !certDoc.exists) {
       return NextResponse.json({
         valid: false,
         message: 'Certificate not found',
       });
     }
 
-    const certificate = data as unknown as CertificateWithUser;
+    const certificate = { id: certDoc.id, ...certDoc.data() } as any;
+
+    // Fetch user details
+    let userData: any = null;
+    if (certificate.userId) {
+      const userDoc = await db.collection('users').doc(certificate.userId).get();
+      userData = userDoc.exists ? userDoc.data() : null;
+    }
 
     // Build verification response
-    const metadata = certificate.metadata as Record<string, unknown>;
+    const metadata = (certificate.metadata || {}) as Record<string, unknown>;
 
     return NextResponse.json({
       valid: true,
       certificate: {
         id: certificate.id,
-        certificationType: certificate.certificate_type,
+        certificationType: certificate.certificateType,
         certificationName: metadata.certificationName,
         designation: metadata.designation,
-        issuedAt: certificate.issued_at,
-        verifiedAt: certificate.verified_at,
-        holderName: certificate.users?.full_name || 'Anonymous',
+        issuedAt: certificate.issuedAt?.toDate?.()?.toISOString() || null,
+        verifiedAt: certificate.verifiedAt?.toDate?.()?.toISOString() || null,
+        holderName: userData?.fullName || 'Anonymous',
         stats: {
           akusCompleted: metadata.akusCompleted,
           totalLearningTime: `${metadata.totalLearningTime} hours`,
           struggleScore: metadata.struggleScore,
         },
-        blockchain: certificate.token_id
+        blockchain: certificate.tokenId
           ? {
-              tokenId: certificate.token_id,
-              contractAddress: certificate.contract_address,
-              transactionHash: certificate.transaction_hash,
+              tokenId: certificate.tokenId,
+              contractAddress: certificate.contractAddress,
+              transactionHash: certificate.transactionHash,
               network: 'Polygon',
             }
           : null,
@@ -85,9 +85,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Verification API error:', error);
-    return NextResponse.json(
-      { error: 'Verification failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Verification failed' }, { status: 500 });
   }
 }

@@ -1,5 +1,5 @@
 /**
- * PUBLIC CERTIFICATE VERIFICATION API
+ * PUBLIC CERTIFICATE VERIFICATION API (Firebase)
  * GET /api/verify/certificate/[id]
  *
  * Public endpoint for employers to verify Phazur certificates by database ID.
@@ -8,9 +8,8 @@
  * For blockchain token verification, see /api/certificates/verify
  */
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { getAdminDb } from '@/lib/firebase/admin';
 import { NextRequest, NextResponse } from 'next/server';
-import type { Json } from '@/types/database.types';
 
 interface CertificateMetadata {
   certificationName?: string;
@@ -21,33 +20,6 @@ interface CertificateMetadata {
   struggleScore?: number;
   issuedBy?: string;
   version?: string;
-}
-
-interface CertificateWithUser {
-  id: string;
-  user_id: string;
-  certificate_number: string;
-  course_id: string;
-  grade: string | null;
-  issued_at: string | null;
-  verified_at: string | null;
-  expires_at: string | null;
-  token_id: string | null;
-  contract_address: string | null;
-  transaction_hash: string | null;
-  ipfs_hash: string | null;
-  metadata: Json | null;
-  pdf_url: string | null;
-  verification_url: string | null;
-  users: {
-    full_name: string;
-    avatar_url: string | null;
-  } | null;
-  courses: {
-    title: string;
-    description: string;
-    level: string | null;
-  } | null;
 }
 
 // Map course/path types to display names
@@ -105,54 +77,54 @@ export async function GET(
       return NextResponse.json(
         {
           valid: false,
-          error: 'Certificate ID is required'
+          error: 'Certificate ID is required',
         },
         { status: 400 }
       );
     }
 
-    const supabase = createAdminClient();
+    const db = getAdminDb();
 
-    // Fetch certificate with user and course details
-    const { data, error } = await supabase
-      .from('certificates')
-      .select(`
-        *,
-        users (
-          full_name,
-          avatar_url
-        ),
-        courses (
-          title,
-          description,
-          level
-        )
-      `)
-      .eq('id', certificateId)
-      .single();
+    // Fetch certificate
+    const certDoc = await db.collection('certificates').doc(certificateId).get();
 
-    if (error || !data) {
+    if (!certDoc.exists) {
       return NextResponse.json({
         valid: false,
         error: 'Certificate not found',
-        message: 'This certificate ID does not exist in our system. It may have been revoked or the ID is incorrect.',
+        message:
+          'This certificate ID does not exist in our system. It may have been revoked or the ID is incorrect.',
       });
     }
 
-    const certificate = data as unknown as CertificateWithUser;
+    const certificate = { id: certDoc.id, ...certDoc.data() } as any;
     const metadata = (certificate.metadata || {}) as CertificateMetadata;
 
+    // Fetch user details
+    let userData: any = null;
+    if (certificate.userId) {
+      const userDoc = await db.collection('users').doc(certificate.userId).get();
+      userData = userDoc.exists ? userDoc.data() : null;
+    }
+
+    // Fetch course details if courseId exists
+    let courseData: any = null;
+    if (certificate.courseId) {
+      const courseDoc = await db.collection('courses').doc(certificate.courseId).get();
+      courseData = courseDoc.exists ? courseDoc.data() : null;
+    }
+
     // Determine path type and certification details
-    const courseTitle = certificate.courses?.title || '';
+    const courseTitle = courseData?.title || certificate.certificateType || '';
     const pathType = getPathType(courseTitle);
-    const certificationName = metadata.certificationName || getCertificationDisplayName(courseTitle);
+    const certificationName =
+      metadata.certificationName || getCertificationDisplayName(courseTitle);
     const designation = metadata.designation || getDesignation(pathType);
     const pathDisplayName = getPathDisplayName(pathType);
 
     // Check if certificate has expired
-    const isExpired = certificate.expires_at
-      ? new Date(certificate.expires_at) < new Date()
-      : false;
+    const expiresAt = certificate.expiresAt?.toDate?.() || null;
+    const isExpired = expiresAt ? expiresAt < new Date() : false;
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://phazur.com';
 
@@ -162,13 +134,13 @@ export async function GET(
       status: isExpired ? 'expired' : 'valid',
       certificate: {
         id: certificate.id,
-        certificateNumber: certificate.certificate_number,
+        certificateNumber: certificate.certificateNumber,
         verificationUrl: `${baseUrl}/verify/certificate/${certificate.id}`,
 
         // Holder information
         holder: {
-          name: certificate.users?.full_name || 'Anonymous',
-          avatarUrl: certificate.users?.avatar_url || null,
+          name: userData?.fullName || 'Anonymous',
+          avatarUrl: userData?.avatarUrl || null,
         },
 
         // Certification details
@@ -177,37 +149,41 @@ export async function GET(
           designation: designation,
           path: pathDisplayName,
           pathType: pathType,
-          level: certificate.courses?.level || 'advanced',
+          level: courseData?.level || 'advanced',
         },
 
         // Dates
         dates: {
-          issuedAt: certificate.issued_at,
-          verifiedAt: certificate.verified_at,
-          expiresAt: certificate.expires_at,
+          issuedAt: certificate.issuedAt?.toDate?.()?.toISOString() || null,
+          verifiedAt: certificate.verifiedAt?.toDate?.()?.toISOString() || null,
+          expiresAt: expiresAt?.toISOString() || null,
         },
 
         // Performance metrics (if available)
-        stats: metadata.akusCompleted ? {
-          akusCompleted: metadata.akusCompleted,
-          totalLearningTime: metadata.totalLearningTime
-            ? `${metadata.totalLearningTime} hours`
-            : null,
-          struggleScore: metadata.struggleScore,
-          grade: certificate.grade,
-        } : null,
+        stats: metadata.akusCompleted
+          ? {
+              akusCompleted: metadata.akusCompleted,
+              totalLearningTime: metadata.totalLearningTime
+                ? `${metadata.totalLearningTime} hours`
+                : null,
+              struggleScore: metadata.struggleScore,
+              grade: certificate.grade,
+            }
+          : null,
 
         // Blockchain proof (if minted)
-        blockchain: certificate.token_id ? {
-          tokenId: certificate.token_id,
-          contractAddress: certificate.contract_address,
-          transactionHash: certificate.transaction_hash,
-          ipfsHash: certificate.ipfs_hash,
-          network: 'Polygon',
-          explorerUrl: certificate.transaction_hash
-            ? `https://polygonscan.com/tx/${certificate.transaction_hash}`
-            : null,
-        } : null,
+        blockchain: certificate.tokenId
+          ? {
+              tokenId: certificate.tokenId,
+              contractAddress: certificate.contractAddress,
+              transactionHash: certificate.transactionHash,
+              ipfsHash: certificate.ipfsHash,
+              network: 'Polygon',
+              explorerUrl: certificate.transactionHash
+                ? `https://polygonscan.com/tx/${certificate.transactionHash}`
+                : null,
+            }
+          : null,
       },
 
       // Verification metadata
@@ -225,7 +201,8 @@ export async function GET(
       {
         valid: false,
         error: 'Verification failed',
-        message: 'An error occurred while verifying this certificate. Please try again later.',
+        message:
+          'An error occurred while verifying this certificate. Please try again later.',
       },
       { status: 500 }
     );

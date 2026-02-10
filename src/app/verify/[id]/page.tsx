@@ -1,5 +1,5 @@
 /**
- * PUBLIC CERTIFICATE VERIFICATION PAGE
+ * PUBLIC CERTIFICATE VERIFICATION PAGE (Firebase)
  * /verify/[id]
  *
  * Professional, shareable verification page for Phazur certificates.
@@ -18,9 +18,8 @@
 import { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { createAdminClient } from '@/lib/supabase/server';
+import { getAdminDb } from '@/lib/firebase/admin';
 import { notFound } from 'next/navigation';
-import type { Json } from '@/types/database.types';
 import CertificateVerificationClient from '@/components/certificate/CertificateVerificationClient';
 import PrintStyles from '@/components/PrintStyles';
 
@@ -35,27 +34,31 @@ interface CertificateMetadata {
   issuerTitle?: string;
 }
 
-interface CertificateWithUser {
+interface CertificateData {
   id: string;
-  certificate_number: string;
+  certificateNumber: string;
   grade: string | null;
-  issued_at: string | null;
-  verified_at: string | null;
-  expires_at: string | null;
-  token_id: string | null;
-  contract_address: string | null;
-  transaction_hash: string | null;
-  ipfs_hash: string | null;
-  metadata: Json | null;
-  users: {
-    full_name: string;
-    avatar_url: string | null;
-  } | null;
-  courses: {
-    title: string;
-    description: string;
-    level: string | null;
-  } | null;
+  issuedAt: string | null;
+  verifiedAt: string | null;
+  expiresAt: string | null;
+  tokenId: string | null;
+  contractAddress: string | null;
+  transactionHash: string | null;
+  ipfsHash: string | null;
+  metadata: CertificateMetadata | null;
+  userId: string;
+  courseId: string;
+}
+
+interface UserData {
+  fullName: string;
+  avatarUrl: string | null;
+}
+
+interface CourseData {
+  title: string;
+  description: string;
+  level: string | null;
 }
 
 // Helper functions
@@ -169,6 +172,82 @@ function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+// Helper to convert Firestore Timestamp to ISO string
+function toISOString(timestamp: unknown): string | null {
+  if (!timestamp) return null;
+  if (typeof timestamp === 'string') return timestamp;
+  if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp) {
+    return (timestamp as { toDate: () => Date }).toDate().toISOString();
+  }
+  return null;
+}
+
+// Fetch certificate data from Firestore
+async function getCertificateData(id: string): Promise<{
+  certificate: CertificateData;
+  user: UserData | null;
+  course: CourseData | null;
+} | null> {
+  try {
+    const db = getAdminDb();
+
+    // Get certificate
+    const certDoc = await db.collection('certificates').doc(id).get();
+    if (!certDoc.exists) return null;
+
+    const certData = certDoc.data();
+    if (!certData) return null;
+
+    const certificate: CertificateData = {
+      id: certDoc.id,
+      certificateNumber: certData.certificateNumber || certData.certificate_number || '',
+      grade: certData.grade || null,
+      issuedAt: toISOString(certData.issuedAt || certData.issued_at),
+      verifiedAt: toISOString(certData.verifiedAt || certData.verified_at),
+      expiresAt: toISOString(certData.expiresAt || certData.expires_at),
+      tokenId: certData.tokenId || certData.token_id || null,
+      contractAddress: certData.contractAddress || certData.contract_address || null,
+      transactionHash: certData.transactionHash || certData.transaction_hash || null,
+      ipfsHash: certData.ipfsHash || certData.ipfs_hash || null,
+      metadata: certData.metadata || null,
+      userId: certData.userId || certData.user_id || '',
+      courseId: certData.courseId || certData.course_id || '',
+    };
+
+    // Get user data
+    let user: UserData | null = null;
+    if (certificate.userId) {
+      const userDoc = await db.collection('users').doc(certificate.userId).get();
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        user = {
+          fullName: userData?.fullName || userData?.full_name || 'Anonymous',
+          avatarUrl: userData?.avatarUrl || userData?.avatar_url || null,
+        };
+      }
+    }
+
+    // Get course data
+    let course: CourseData | null = null;
+    if (certificate.courseId) {
+      const courseDoc = await db.collection('courses').doc(certificate.courseId).get();
+      if (courseDoc.exists) {
+        const courseData = courseDoc.data();
+        course = {
+          title: courseData?.title || '',
+          description: courseData?.description || '',
+          level: courseData?.level || null,
+        };
+      }
+    }
+
+    return { certificate, user, course };
+  } catch (error) {
+    console.error('Error fetching certificate:', error);
+    return null;
+  }
+}
+
 // Dynamic metadata for Open Graph
 export async function generateMetadata({
   params,
@@ -176,17 +255,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const supabase = createAdminClient();
-
-  const { data } = await supabase
-    .from('certificates')
-    .select(`
-      *,
-      users (full_name),
-      courses (title)
-    `)
-    .eq('id', id)
-    .single();
+  const data = await getCertificateData(id);
 
   if (!data) {
     return {
@@ -195,14 +264,14 @@ export async function generateMetadata({
     };
   }
 
-  const certificate = data as unknown as CertificateWithUser;
-  const holderName = certificate.users?.full_name || 'Anonymous';
-  const courseTitle = certificate.courses?.title || '';
+  const { certificate, user, course } = data;
+  const holderName = user?.fullName || 'Anonymous';
+  const courseTitle = course?.title || '';
   const pathType = getPathType(courseTitle);
   const certificationName = getCertificationName(pathType);
 
   const title = `${holderName} - ${certificationName} | Phazur`;
-  const description = `Verified: ${holderName} has earned the ${certificationName} certification from Phazur. Certificate ID: ${certificate.certificate_number}. This credential demonstrates mastery in AI operations and workflow automation.`;
+  const description = `Verified: ${holderName} has earned the ${certificationName} certification from Phazur. Certificate ID: ${certificate.certificateNumber}. This credential demonstrates mastery in AI operations and workflow automation.`;
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://phazur.com';
 
@@ -243,41 +312,24 @@ export default async function CertificateVerificationPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = createAdminClient();
+  const data = await getCertificateData(id);
 
-  const { data, error } = await supabase
-    .from('certificates')
-    .select(`
-      *,
-      users (
-        full_name,
-        avatar_url
-      ),
-      courses (
-        title,
-        description,
-        level
-      )
-    `)
-    .eq('id', id)
-    .single();
-
-  if (error || !data) {
+  if (!data) {
     notFound();
   }
 
-  const certificate = data as unknown as CertificateWithUser;
-  const metadata = (certificate.metadata || {}) as CertificateMetadata;
-  const courseTitle = certificate.courses?.title || '';
+  const { certificate, user, course } = data;
+  const metadata = certificate.metadata || {};
+  const courseTitle = course?.title || '';
   const pathType = getPathType(courseTitle);
   const colors = getPathColor(pathType);
   const certificationName = metadata.certificationName || getCertificationName(pathType);
   const designation = metadata.designation || getDesignation(pathType);
   const pathDisplayName = getPathDisplayName(pathType);
-  const holderName = certificate.users?.full_name || 'Anonymous';
+  const holderName = user?.fullName || 'Anonymous';
 
-  const expirationStatus = getExpirationStatus(certificate.expires_at);
-  const hasBlockchain = !!certificate.token_id;
+  const expirationStatus = getExpirationStatus(certificate.expiresAt);
+  const hasBlockchain = !!certificate.tokenId;
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://phazur.com';
   const verificationUrl = `${baseUrl}/verify/${id}`;
 
@@ -399,7 +451,7 @@ export default async function CertificateVerificationPage({
                 </p>
                 <p className="text-sm text-slate-400 print:text-gray-600">
                   {expirationStatus.isExpired
-                    ? `Expired on ${formatDate(certificate.expires_at)}`
+                    ? `Expired on ${formatDate(certificate.expiresAt)}`
                     : expirationStatus.isExpiringSoon
                     ? expirationStatus.message
                     : 'This certificate is valid and verified by Phazur'}
@@ -408,10 +460,10 @@ export default async function CertificateVerificationPage({
             </div>
 
             {/* Verification Timestamp */}
-            {certificate.verified_at && (
+            {certificate.verifiedAt && (
               <div className="sm:ml-auto text-xs text-slate-500 print:text-gray-500">
                 <span className="hidden sm:inline">Last verified: </span>
-                {formatDate(certificate.verified_at)}
+                {formatDate(certificate.verifiedAt)}
               </div>
             )}
           </div>
@@ -434,7 +486,7 @@ export default async function CertificateVerificationPage({
         {/* Client-side Interactive Features */}
         <CertificateVerificationClient
           certificateId={id}
-          certificateNumber={certificate.certificate_number}
+          certificateNumber={certificate.certificateNumber}
           holderName={holderName}
           certificationName={certificationName}
           verificationUrl={verificationUrl}
@@ -480,9 +532,9 @@ export default async function CertificateVerificationPage({
                 <p className="text-slate-400 text-lg print:text-gray-600">{designation}</p>
               </div>
               <div className="flex-shrink-0">
-                {certificate.users?.avatar_url ? (
+                {user?.avatarUrl ? (
                   <Image
-                    src={certificate.users.avatar_url}
+                    src={user.avatarUrl}
                     alt={holderName}
                     width={96}
                     height={96}
@@ -511,7 +563,7 @@ export default async function CertificateVerificationPage({
                   Issue Date
                 </p>
                 <p className="text-white font-semibold print:text-gray-900">
-                  {formatDate(certificate.issued_at)}
+                  {formatDate(certificate.issuedAt)}
                 </p>
               </div>
               <div className="bg-slate-800/30 rounded-lg p-4 print:bg-gray-50 print:border print:border-gray-200">
@@ -519,10 +571,10 @@ export default async function CertificateVerificationPage({
                   Certificate ID
                 </p>
                 <p className="text-white font-mono text-sm font-semibold print:text-gray-900">
-                  {certificate.certificate_number}
+                  {certificate.certificateNumber}
                 </p>
               </div>
-              {certificate.expires_at && (
+              {certificate.expiresAt && (
                 <div className="bg-slate-800/30 rounded-lg p-4 print:bg-gray-50 print:border print:border-gray-200">
                   <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 print:text-gray-500">
                     Expiration
@@ -531,7 +583,7 @@ export default async function CertificateVerificationPage({
                     expirationStatus.isExpired ? 'text-red-400' :
                     expirationStatus.isExpiringSoon ? 'text-amber-400' : 'text-white'
                   } print:text-gray-900`}>
-                    {formatDate(certificate.expires_at)}
+                    {formatDate(certificate.expiresAt)}
                   </p>
                 </div>
               )}
@@ -599,20 +651,20 @@ export default async function CertificateVerificationPage({
             </div>
 
             {/* Course Information */}
-            {certificate.courses && (
+            {course && (
               <div className="mb-8 pb-8 border-b border-slate-800/60 print:border-gray-200">
                 <p className="text-sm text-slate-500 mb-3 font-medium uppercase tracking-wider print:text-gray-500">Course Completed</p>
                 <h3 className="text-lg font-semibold text-white mb-2 print:text-gray-900">
-                  {certificate.courses.title}
+                  {course.title}
                 </h3>
-                {certificate.courses.description && (
+                {course.description && (
                   <p className="text-sm text-slate-400 leading-relaxed print:text-gray-600">
-                    {certificate.courses.description}
+                    {course.description}
                   </p>
                 )}
-                {certificate.courses.level && (
+                {course.level && (
                   <span className={`inline-block mt-3 px-3 py-1 text-xs font-medium rounded-full ${colors.bg} ${colors.text} ${colors.border} border print:bg-gray-100 print:text-gray-700 print:border-gray-300`}>
-                    {certificate.courses.level} Level
+                    {course.level} Level
                   </span>
                 )}
               </div>
@@ -658,28 +710,28 @@ export default async function CertificateVerificationPage({
                       <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg print:bg-white print:border print:border-gray-200">
                         <span className="text-slate-500 print:text-gray-500">Token ID:</span>
                         <span className="text-white font-mono font-medium print:text-gray-900">
-                          #{certificate.token_id}
+                          #{certificate.tokenId}
                         </span>
                       </div>
-                      {certificate.contract_address && (
+                      {certificate.contractAddress && (
                         <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg print:bg-white print:border print:border-gray-200">
                           <span className="text-slate-500 print:text-gray-500">Contract:</span>
-                          <span className="text-white font-mono text-sm print:text-gray-900" title={certificate.contract_address}>
-                            {truncateAddress(certificate.contract_address)}
+                          <span className="text-white font-mono text-sm print:text-gray-900" title={certificate.contractAddress}>
+                            {truncateAddress(certificate.contractAddress)}
                           </span>
                         </div>
                       )}
-                      {certificate.ipfs_hash && (
+                      {certificate.ipfsHash && (
                         <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg print:bg-white print:border print:border-gray-200">
                           <span className="text-slate-500 print:text-gray-500">IPFS Hash:</span>
-                          <span className="text-white font-mono text-sm print:text-gray-900" title={certificate.ipfs_hash}>
-                            {truncateAddress(certificate.ipfs_hash)}
+                          <span className="text-white font-mono text-sm print:text-gray-900" title={certificate.ipfsHash}>
+                            {truncateAddress(certificate.ipfsHash)}
                           </span>
                         </div>
                       )}
-                      {certificate.transaction_hash && (
+                      {certificate.transactionHash && (
                         <a
-                          href={`https://polygonscan.com/tx/${certificate.transaction_hash}`}
+                          href={`https://polygonscan.com/tx/${certificate.transactionHash}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className={`inline-flex items-center gap-2 px-4 py-2 mt-2 ${colors.bg} ${colors.border} border rounded-lg ${colors.text} hover:opacity-80 transition-opacity font-medium print:text-purple-700 print:border-purple-300`}

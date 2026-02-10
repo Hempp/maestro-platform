@@ -1,10 +1,12 @@
 /**
- * STRIPE SUBSCRIPTION CHECKOUT API
+ * STRIPE SUBSCRIPTION CHECKOUT API (Firebase)
  * Creates a Stripe checkout session for subscription plans
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import { getStripe, SUBSCRIPTION_PLANS, isValidPlan, type SubscriptionPlanId } from '@/lib/stripe/config';
 import { rateLimit, RATE_LIMITS } from '@/lib/security';
 
@@ -14,16 +16,21 @@ export async function POST(request: NextRequest) {
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    // Authenticate user
-    const supabase = await createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (authError || !user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
+
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
     // Parse request body
     const body = await request.json();
@@ -45,14 +52,14 @@ export async function POST(request: NextRequest) {
     const interval = billingCycle === 'yearly' ? 'year' : 'month';
 
     // Check for existing active subscription
-    const { data: existingSub } = await (supabase as any)
-      .from('subscriptions')
-      .select('id, status')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'trialing'])
-      .single();
+    const existingSubQuery = await db
+      .collection('subscriptions')
+      .where('userId', '==', userId)
+      .where('status', 'in', ['active', 'trialing'])
+      .limit(1)
+      .get();
 
-    if (existingSub) {
+    if (!existingSubQuery.empty) {
       return NextResponse.json(
         { error: 'You already have an active subscription. Please manage it from your dashboard.' },
         { status: 400 }
@@ -60,48 +67,45 @@ export async function POST(request: NextRequest) {
     }
 
     // Get or create Stripe customer
-    const { data: profile } = await (supabase as any)
-      .from('profiles')
-      .select('stripe_customer_id, full_name')
-      .eq('id', user.id)
-      .single();
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
 
     const stripe = getStripe();
-    let customerId = profile?.stripe_customer_id;
+    let customerId = userData?.stripeCustomerId;
 
     if (!customerId) {
       // Create new Stripe customer
       const customer = await stripe.customers.create({
-        email: user.email,
-        name: profile?.full_name || undefined,
+        email: decodedClaims.email || undefined,
+        name: userData?.fullName || undefined,
         metadata: {
-          userId: user.id,
+          userId: userId,
         },
       });
       customerId = customer.id;
 
-      // Save customer ID to profile
-      await (supabase as any)
-        .from('profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', user.id);
+      // Save customer ID to user doc
+      await db.collection('users').doc(userId).update({
+        stripeCustomerId: customerId,
+        updatedAt: Timestamp.now(),
+      });
     }
 
     // Create Stripe checkout session for subscription
-    const session = await stripe.checkout.sessions.create({
+    const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
       customer: customerId,
-      client_reference_id: user.id,
+      client_reference_id: userId,
       metadata: {
-        userId: user.id,
-        plan_id: planId,
-        billing_cycle: billingCycle,
+        userId: userId,
+        planId: planId,
+        billingCycle: billingCycle,
       },
       subscription_data: {
         metadata: {
-          userId: user.id,
-          plan_id: planId,
+          userId: userId,
+          planId: planId,
         },
       },
       line_items: [
@@ -129,22 +133,22 @@ export async function POST(request: NextRequest) {
     });
 
     // Create pending subscription record
-    await (supabase as any)
-      .from('subscriptions')
-      .insert({
-        user_id: user.id,
-        plan_id: planId,
-        status: 'pending',
-        billing_cycle: billingCycle,
-        stripe_customer_id: customerId,
-        stripe_session_id: session.id,
-        amount: amount,
-        currency: 'usd',
-      });
+    await db.collection('subscriptions').add({
+      userId,
+      planId,
+      status: 'pending',
+      billingCycle,
+      stripeCustomerId: customerId,
+      stripeSessionId: checkoutSession.id,
+      amount,
+      currency: 'usd',
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
 
     return NextResponse.json({
-      sessionId: session.id,
-      url: session.url,
+      sessionId: checkoutSession.id,
+      url: checkoutSession.url,
     });
   } catch (error) {
     console.error('Subscription checkout error:', error);

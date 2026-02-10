@@ -1,45 +1,51 @@
 /**
- * ADMIN PLATFORM SETTINGS API
+ * ADMIN PLATFORM SETTINGS API (Firebase)
  * Manage platform-wide configuration settings
  * Requires admin privileges
  */
 
-import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 // Helper to check admin access
-async function checkAdminAccess(supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>) {
-  const { data: { user } } = await supabase.auth.getUser();
+async function checkAdminAccess() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get('session')?.value;
 
-  if (!user) {
+  if (!session) {
     return { authorized: false, error: 'Not authenticated', status: 401, user: null, profile: null };
   }
 
-  // Check if user is admin - use admin client to access all columns
-  const adminSupabase = createAdminClient();
-  const { data: profile } = await adminSupabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+  const auth = getAdminAuth();
+  const db = getAdminDb();
 
-  // Cast profile to access role and admin_tier which may exist in DB but not in types
-  const profileData = profile as Record<string, unknown> | null;
-  const role = profileData?.role as string | null;
-  const adminTier = profileData?.admin_tier as string | null;
+  try {
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
-  if (!profileData || (role !== 'admin' && !adminTier)) {
-    return { authorized: false, error: 'Admin access required', status: 403, user: null, profile: null };
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+
+    if (!userData || (userData.role !== 'admin' && !userData.adminTier)) {
+      return { authorized: false, error: 'Admin access required', status: 403, user: null, profile: null };
+    }
+
+    return {
+      authorized: true,
+      user: { id: userId, email: decodedClaims.email },
+      profile: { role: userData.role, adminTier: userData.adminTier },
+    };
+  } catch {
+    return { authorized: false, error: 'Invalid session', status: 401, user: null, profile: null };
   }
-
-  return { authorized: true, user, profile: { role, admin_tier: adminTier } };
 }
 
 // GET: Fetch platform settings
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const authCheck = await checkAdminAccess(supabase);
+    const authCheck = await checkAdminAccess();
 
     if (!authCheck.authorized) {
       return NextResponse.json(
@@ -48,81 +54,74 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const db = getAdminDb();
+
     // Get optional type filter from query params
     const { searchParams } = new URL(request.url);
     const settingType = searchParams.get('type');
 
-    // Use admin client to bypass RLS for secret values
-    const adminSupabase = createAdminClient();
-
-    let query = adminSupabase
-      .from('platform_settings')
-      .select('*');
+    let query = db.collection('platformSettings').orderBy('settingType').orderBy('settingKey');
 
     if (settingType) {
-      query = query.eq('setting_type', settingType);
+      query = query.where('settingType', '==', settingType);
     }
 
-    const { data: settings, error } = await query.order('setting_type').order('setting_key');
+    const settingsSnapshot = await query.get();
 
-    if (error) {
-      // Handle missing table gracefully - return empty defaults
-      if (error.code === 'PGRST205' || error.message?.includes('Could not find')) {
-        console.warn('platform_settings table not found, returning defaults');
-        return NextResponse.json({
-          settings: {
-            platform: {
-              platform_name: 'Phazur',
-              support_email: 'support@phazur.io',
-              maintenance_mode: false,
-            },
-            integration: {
-              blockchain_enabled: false,
-              analytics_enabled: true,
-              payment_gateway_configured: false,
-            },
-            branding: {
-              primary_color: '#06b6d4',
-              secondary_color: '#a855f7',
-            },
+    if (settingsSnapshot.empty) {
+      // Return default settings if none exist
+      return NextResponse.json({
+        settings: {
+          platform: {
+            platformName: 'Phazur',
+            supportEmail: 'support@phazur.io',
+            maintenanceMode: false,
           },
-          raw: [],
-        });
-      }
-      console.error('Platform settings fetch error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch settings' },
-        { status: 500 }
-      );
+          integration: {
+            blockchainEnabled: false,
+            analyticsEnabled: true,
+            paymentGatewayConfigured: false,
+          },
+          branding: {
+            primaryColor: '#06b6d4',
+            secondaryColor: '#a855f7',
+          },
+        },
+        raw: [],
+      });
     }
 
     // Group settings by type
     const groupedSettings: Record<string, Record<string, unknown>> = {};
+    const rawSettings: Array<Record<string, unknown>> = [];
 
-    for (const setting of settings || []) {
-      if (!groupedSettings[setting.setting_type]) {
-        groupedSettings[setting.setting_type] = {};
+    settingsSnapshot.docs.forEach(doc => {
+      const setting = doc.data();
+      rawSettings.push({ id: doc.id, ...setting });
+
+      if (!groupedSettings[setting.settingType]) {
+        groupedSettings[setting.settingType] = {};
       }
 
       // Parse JSON value
-      let value = setting.setting_value;
+      let value = setting.settingValue;
       try {
-        value = JSON.parse(setting.setting_value as string);
+        value = JSON.parse(setting.settingValue);
       } catch {
         // Keep as is if not valid JSON
       }
 
       // Mask secret values for non-super-admins
-      if (setting.is_secret && authCheck.profile?.admin_tier !== 'super_admin') {
+      if (setting.isSecret && authCheck.profile?.adminTier !== 'super_admin') {
         value = '••••••••';
       }
 
-      groupedSettings[setting.setting_type][setting.setting_key] = value;
-    }
+      groupedSettings[setting.settingType][setting.settingKey] = value;
+    });
 
     return NextResponse.json({
       settings: groupedSettings,
-      raw: settings,
+      raw: rawSettings,
     });
   } catch (error) {
     console.error('Platform settings API error:', error);
@@ -136,8 +135,7 @@ export async function GET(request: NextRequest) {
 // PUT: Update platform settings
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const authCheck = await checkAdminAccess(supabase);
+    const authCheck = await checkAdminAccess();
 
     if (!authCheck.authorized) {
       return NextResponse.json(
@@ -146,6 +144,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const db = getAdminDb();
     const body = await request.json();
     const { settings } = body;
 
@@ -155,9 +154,6 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Use admin client to bypass RLS
-    const adminSupabase = createAdminClient();
 
     const updates: Array<{ key: string; value: unknown; type: string }> = [];
 
@@ -173,19 +169,37 @@ export async function PUT(request: NextRequest) {
     // Perform upserts
     const results = await Promise.all(
       updates.map(async ({ key, value, type }) => {
-        const { error } = await adminSupabase
-          .from('platform_settings')
-          .upsert(
-            {
-              setting_key: key,
-              setting_value: JSON.stringify(value),
-              setting_type: type,
-              updated_by: authCheck.user?.id,
-            } as never,
-            { onConflict: 'setting_key' }
-          );
+        try {
+          // Check if setting exists
+          const existingQuery = await db
+            .collection('platformSettings')
+            .where('settingKey', '==', key)
+            .limit(1)
+            .get();
 
-        return { key, success: !error, error };
+          if (existingQuery.empty) {
+            // Create new setting
+            await db.collection('platformSettings').add({
+              settingKey: key,
+              settingValue: JSON.stringify(value),
+              settingType: type,
+              updatedBy: authCheck.user?.id,
+              updatedAt: Timestamp.now(),
+              createdAt: Timestamp.now(),
+            });
+          } else {
+            // Update existing
+            await existingQuery.docs[0].ref.update({
+              settingValue: JSON.stringify(value),
+              updatedBy: authCheck.user?.id,
+              updatedAt: Timestamp.now(),
+            });
+          }
+
+          return { key, success: true };
+        } catch (error) {
+          return { key, success: false, error };
+        }
       })
     );
 
@@ -212,8 +226,7 @@ export async function PUT(request: NextRequest) {
 // POST: Create a new setting
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const authCheck = await checkAdminAccess(supabase);
+    const authCheck = await checkAdminAccess();
 
     if (!authCheck.authorized) {
       return NextResponse.json(
@@ -222,6 +235,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const db = getAdminDb();
     const body = await request.json();
     const { key, value, type, description, isSecret } = body;
 
@@ -232,32 +246,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const adminSupabase = createAdminClient();
+    const settingRef = await db.collection('platformSettings').add({
+      settingKey: key,
+      settingValue: JSON.stringify(value),
+      settingType: type,
+      description: description || null,
+      isSecret: isSecret || false,
+      updatedBy: authCheck.user?.id,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
 
-    const { data, error } = await adminSupabase
-      .from('platform_settings')
-      .insert({
-        setting_key: key,
-        setting_value: JSON.stringify(value),
-        setting_type: type,
-        description: description || null,
-        is_secret: isSecret || false,
-        updated_by: authCheck.user?.id,
-      } as never)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Setting creation error:', error);
-      return NextResponse.json(
-        { error: 'Failed to create setting' },
-        { status: 500 }
-      );
-    }
+    const settingDoc = await settingRef.get();
 
     return NextResponse.json({
       message: 'Setting created',
-      setting: data,
+      setting: { id: settingDoc.id, ...settingDoc.data() },
     });
   } catch (error) {
     console.error('Setting creation API error:', error);

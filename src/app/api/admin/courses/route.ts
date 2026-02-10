@@ -1,85 +1,129 @@
 /**
- * ADMIN COURSES API
+ * ADMIN COURSES API (Firebase)
  * CRUD operations for live courses
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
-async function checkAdminRole(supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { authorized: false, user: null, role: null };
+async function checkAdminRole() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get('session')?.value;
 
-  const { data: userData } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
+  if (!session) {
+    return { authorized: false, user: null, role: null };
+  }
 
-  const role = userData?.role as string | null | undefined;
-  const authorized = role === 'admin' || role === 'teacher';
-  return { authorized, user, role };
+  try {
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+
+    const role = userData?.role as string | null;
+    const authorized = role === 'admin' || role === 'teacher';
+
+    return { authorized, user: { id: userId, email: decodedClaims.email }, role };
+  } catch {
+    return { authorized: false, user: null, role: null };
+  }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { authorized, user, role } = await checkAdminRole(supabase);
+    const { authorized, user, role } = await checkAdminRole();
 
     if (!authorized || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
+    const db = getAdminDb();
     const { searchParams } = new URL(request.url);
     const includeInactive = searchParams.get('includeInactive') === 'true';
 
-    let query = (supabase as any)
-      .from('live_courses')
-      .select(`
-        *,
-        teacher:users!teacher_id (
-          id,
-          full_name,
-          email,
-          avatar_url
-        ),
-        sessions:live_sessions (
-          id,
-          title,
-          scheduled_at,
-          status
-        ),
-        enrollments:course_enrollments (
-          id,
-          student_id
-        )
-      `)
-      .order('created_at', { ascending: false });
+    // Build query
+    let query: FirebaseFirestore.Query = db
+      .collection('liveCourses')
+      .orderBy('createdAt', 'desc');
 
     // Teachers only see their own courses, admins see all
     if (role === 'teacher') {
-      query = query.eq('teacher_id', user.id);
+      query = query.where('teacherId', '==', user.id);
     }
 
     if (!includeInactive) {
-      query = query.eq('is_active', true);
+      query = query.where('isActive', '==', true);
     }
 
-    const { data: courses, error } = await query;
+    const coursesSnapshot = await query.get();
 
-    if (error) throw error;
+    // Get all courses with related data
+    const coursesWithData = await Promise.all(
+      coursesSnapshot.docs.map(async (doc) => {
+        const course = { id: doc.id, ...doc.data() } as any;
 
-    // Add enrollment count
-    const coursesWithCounts = (courses || []).map((course: any) => ({
-      ...course,
-      enrollmentCount: course.enrollments?.length || 0,
-      upcomingSessions: course.sessions?.filter(
-        (s: { status: string; scheduled_at: string }) =>
-          s.status === 'scheduled' && new Date(s.scheduled_at) > new Date()
-      ).length || 0,
-    }));
+        // Get teacher data
+        let teacher = null;
+        if (course.teacherId) {
+          const teacherDoc = await db.collection('users').doc(course.teacherId).get();
+          if (teacherDoc.exists) {
+            const teacherData = teacherDoc.data();
+            teacher = {
+              id: teacherDoc.id,
+              fullName: teacherData?.fullName,
+              email: teacherData?.email,
+              avatarUrl: teacherData?.avatarUrl,
+            };
+          }
+        }
 
-    return NextResponse.json({ courses: coursesWithCounts });
+        // Get sessions
+        const sessionsQuery = await db
+          .collection('liveSessions')
+          .where('courseId', '==', doc.id)
+          .get();
+
+        const sessions = sessionsQuery.docs.map((s) => ({
+          id: s.id,
+          ...s.data(),
+        }));
+
+        // Get enrollments
+        const enrollmentsQuery = await db
+          .collection('courseEnrollments')
+          .where('courseId', '==', doc.id)
+          .get();
+
+        const enrollments = enrollmentsQuery.docs.map((e) => ({
+          id: e.id,
+          ...e.data(),
+        }));
+
+        // Calculate counts
+        const now = new Date();
+        const upcomingSessions = sessions.filter((s: any) => {
+          const scheduledAt = s.scheduledAt?.toDate?.() || new Date(s.scheduledAt);
+          return s.status === 'scheduled' && scheduledAt > now;
+        }).length;
+
+        return {
+          ...course,
+          teacher,
+          sessions,
+          enrollments,
+          enrollmentCount: enrollments.length,
+          upcomingSessions,
+        };
+      })
+    );
+
+    return NextResponse.json({ courses: coursesWithData });
   } catch (error) {
     console.error('Admin courses GET error:', error);
     return NextResponse.json(
@@ -91,13 +135,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { authorized, user } = await checkAdminRole(supabase);
+    const { authorized, user } = await checkAdminRole();
 
     if (!authorized || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
+    const db = getAdminDb();
     const body = await request.json();
     const { title, description, tier, maxStudents, schedule, thumbnailUrl } = body;
 
@@ -105,22 +149,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
 
-    const { data: course, error } = await (supabase as any)
-      .from('live_courses')
-      .insert({
-        title,
-        description,
-        teacher_id: user.id,
-        tier: tier || null,
-        max_students: maxStudents || 30,
-        schedule: schedule || {},
-        thumbnail_url: thumbnailUrl,
-        is_active: true,
-      })
-      .select()
-      .single();
+    const courseRef = await db.collection('liveCourses').add({
+      title,
+      description: description || null,
+      teacherId: user.id,
+      tier: tier || null,
+      maxStudents: maxStudents || 30,
+      schedule: schedule || {},
+      thumbnailUrl: thumbnailUrl || null,
+      isActive: true,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
 
-    if (error) throw error;
+    const courseDoc = await courseRef.get();
+    const course = { id: courseDoc.id, ...courseDoc.data() };
 
     return NextResponse.json({ course }, { status: 201 });
   } catch (error) {
@@ -134,13 +177,13 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { authorized, user, role } = await checkAdminRole(supabase);
+    const { authorized, user, role } = await checkAdminRole();
 
     if (!authorized || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
+    const db = getAdminDb();
     const body = await request.json();
     const { courseId, updates } = body;
 
@@ -150,34 +193,28 @@ export async function PATCH(request: NextRequest) {
 
     // Check ownership (unless admin)
     if (role === 'teacher') {
-      const { data: course } = await (supabase as any)
-        .from('live_courses')
-        .select('teacher_id')
-        .eq('id', courseId)
-        .single();
-
-      if ((course as any)?.teacher_id !== user.id) {
+      const courseDoc = await db.collection('liveCourses').doc(courseId).get();
+      if (courseDoc.data()?.teacherId !== user.id) {
         return NextResponse.json({ error: 'Not your course' }, { status: 403 });
       }
     }
 
-    const allowedUpdates: Record<string, unknown> = {};
+    const allowedUpdates: Record<string, unknown> = {
+      updatedAt: Timestamp.now(),
+    };
+
     if (updates.title) allowedUpdates.title = updates.title;
     if (updates.description !== undefined) allowedUpdates.description = updates.description;
     if (updates.tier !== undefined) allowedUpdates.tier = updates.tier;
-    if (updates.maxStudents) allowedUpdates.max_students = updates.maxStudents;
+    if (updates.maxStudents) allowedUpdates.maxStudents = updates.maxStudents;
     if (updates.schedule) allowedUpdates.schedule = updates.schedule;
-    if (updates.thumbnailUrl !== undefined) allowedUpdates.thumbnail_url = updates.thumbnailUrl;
-    if (updates.isActive !== undefined) allowedUpdates.is_active = updates.isActive;
+    if (updates.thumbnailUrl !== undefined) allowedUpdates.thumbnailUrl = updates.thumbnailUrl;
+    if (updates.isActive !== undefined) allowedUpdates.isActive = updates.isActive;
 
-    const { data: course, error } = await (supabase as any)
-      .from('live_courses')
-      .update(allowedUpdates)
-      .eq('id', courseId)
-      .select()
-      .single();
+    await db.collection('liveCourses').doc(courseId).update(allowedUpdates);
 
-    if (error) throw error;
+    const updatedDoc = await db.collection('liveCourses').doc(courseId).get();
+    const course = { id: updatedDoc.id, ...updatedDoc.data() };
 
     return NextResponse.json({ course });
   } catch (error) {
@@ -191,13 +228,13 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { authorized, user, role } = await checkAdminRole(supabase);
+    const { authorized, user, role } = await checkAdminRole();
 
     if (!authorized || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
+    const db = getAdminDb();
     const { searchParams } = new URL(request.url);
     const courseId = searchParams.get('courseId');
 
@@ -207,23 +244,13 @@ export async function DELETE(request: NextRequest) {
 
     // Check ownership (unless admin)
     if (role === 'teacher') {
-      const { data: course } = await (supabase as any)
-        .from('live_courses')
-        .select('teacher_id')
-        .eq('id', courseId)
-        .single();
-
-      if ((course as any)?.teacher_id !== user.id) {
+      const courseDoc = await db.collection('liveCourses').doc(courseId).get();
+      if (courseDoc.data()?.teacherId !== user.id) {
         return NextResponse.json({ error: 'Not your course' }, { status: 403 });
       }
     }
 
-    const { error } = await (supabase as any)
-      .from('live_courses')
-      .delete()
-      .eq('id', courseId);
-
-    if (error) throw error;
+    await db.collection('liveCourses').doc(courseId).delete();
 
     return NextResponse.json({ success: true });
   } catch (error) {

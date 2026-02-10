@@ -1,26 +1,30 @@
 /**
- * ADMIN ANALYTICS API
+ * ADMIN ANALYTICS API (Firebase)
  * Platform-wide analytics and insights
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    // Check admin/teacher role
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
+    // Check admin/teacher role
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
 
     if (!userData || !['admin', 'teacher'].includes(userData.role || '')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -32,159 +36,178 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - days);
 
     // Total users
-    const { count: totalUsers } = await supabase
-      .from('users')
-      .select('*', { count: 'exact', head: true });
+    const usersSnapshot = await db.collection('users').get();
+    const totalUsers = usersSnapshot.size;
 
     // Users by tier
-    const { data: tierCounts } = await supabase
-      .from('users')
-      .select('tier')
-      .not('tier', 'is', null) as { data: Array<{ tier: string }> | null };
-
     const usersByTier = {
-      student: tierCounts?.filter(u => u.tier === 'student').length || 0,
-      employee: tierCounts?.filter(u => u.tier === 'employee').length || 0,
-      owner: tierCounts?.filter(u => u.tier === 'owner').length || 0,
+      student: 0,
+      employee: 0,
+      owner: 0,
     };
+    usersSnapshot.docs.forEach(doc => {
+      const tier = doc.data().tier;
+      if (tier && tier in usersByTier) {
+        usersByTier[tier as keyof typeof usersByTier]++;
+      }
+    });
 
     // Active users (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const { count: activeUsers } = await supabase
-      .from('learner_profiles')
-      .select('*', { count: 'exact', head: true })
-      .gte('last_activity_at', sevenDaysAgo.toISOString());
+    const activeUsersQuery = await db
+      .collection('learnerProfiles')
+      .where('lastActivityAt', '>=', sevenDaysAgo)
+      .get();
+    const activeUsers = activeUsersQuery.size;
 
     // Total certificates issued
-    const { count: totalCertificates } = await supabase
-      .from('certificates')
-      .select('*', { count: 'exact', head: true });
+    const certificatesSnapshot = await db.collection('certificates').get();
+    const totalCertificates = certificatesSnapshot.size;
 
     // Certificates by type
-    const { data: certCounts } = await supabase
-      .from('certificates')
-      .select('certificate_type') as { data: Array<{ certificate_type: string }> | null };
-
     const certificatesByType = {
-      student: certCounts?.filter(c => c.certificate_type === 'student').length || 0,
-      employee: certCounts?.filter(c => c.certificate_type === 'employee').length || 0,
-      owner: certCounts?.filter(c => c.certificate_type === 'owner').length || 0,
+      student: 0,
+      employee: 0,
+      owner: 0,
     };
+    certificatesSnapshot.docs.forEach(doc => {
+      const type = doc.data().certificateType;
+      if (type && type in certificatesByType) {
+        certificatesByType[type as keyof typeof certificatesByType]++;
+      }
+    });
 
     // Total AKUs completed
-    const { count: totalAkusCompleted } = await supabase
-      .from('aku_progress')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'verified');
+    const akuProgressQuery = await db
+      .collection('akuProgress')
+      .where('status', '==', 'verified')
+      .get();
+    const totalAkusCompleted = akuProgressQuery.size;
 
     // Average struggle score
-    const { data: struggleScores } = await supabase
-      .from('learner_profiles')
-      .select('struggle_score')
-      .not('struggle_score', 'is', null);
+    const learnerProfilesQuery = await db.collection('learnerProfiles').get();
+    let totalStruggleScore = 0;
+    let struggleCount = 0;
+    let totalLearningTime = 0;
 
-    const avgStruggleScore = struggleScores?.length
-      ? Math.round(struggleScores.reduce((sum, p) => sum + (p.struggle_score || 0), 0) / struggleScores.length)
-      : 0;
+    learnerProfilesQuery.docs.forEach(doc => {
+      const data = doc.data();
+      if (data.struggleScore !== null && data.struggleScore !== undefined) {
+        totalStruggleScore += data.struggleScore;
+        struggleCount++;
+      }
+      if (data.totalLearningTime) {
+        totalLearningTime += data.totalLearningTime;
+      }
+    });
 
-    // Total learning time (in hours)
-    const { data: learningTimes } = await supabase
-      .from('learner_profiles')
-      .select('total_learning_time');
+    const avgStruggleScore = struggleCount > 0 ? Math.round(totalStruggleScore / struggleCount) : 0;
+    const totalLearningHours = Math.round(totalLearningTime / 60);
 
-    const totalLearningHours = Math.round(
-      (learningTimes?.reduce((sum, p) => sum + (p.total_learning_time || 0), 0) || 0) / 60
-    );
+    // Live courses stats
+    const coursesQuery = await db
+      .collection('liveCourses')
+      .where('isActive', '==', true)
+      .get();
+    const totalCourses = coursesQuery.size;
 
-    // Live courses stats - using type assertion for new tables
-    const { count: totalCourses } = await (supabase as any)
-      .from('live_courses')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true);
+    const sessionsQuery = await db.collection('liveSessions').get();
+    const totalSessions = sessionsQuery.size;
 
-    const { count: totalSessions } = await (supabase as any)
-      .from('live_sessions')
-      .select('*', { count: 'exact', head: true });
-
-    const { count: upcomingSessions } = await (supabase as any)
-      .from('live_sessions')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'scheduled')
-      .gte('scheduled_at', new Date().toISOString());
+    const upcomingSessionsQuery = await db
+      .collection('liveSessions')
+      .where('status', '==', 'scheduled')
+      .where('scheduledAt', '>=', new Date())
+      .get();
+    const upcomingSessions = upcomingSessionsQuery.size;
 
     // New users in period
-    const { count: newUsersInPeriod } = await supabase
-      .from('users')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', startDate.toISOString());
+    const newUsersQuery = await db
+      .collection('users')
+      .where('createdAt', '>=', startDate)
+      .get();
+    const newUsersInPeriod = newUsersQuery.size;
 
     // Daily signups for chart
-    const { data: dailySignups } = await supabase
-      .from('users')
-      .select('created_at')
-      .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: true });
-
-    // Group by day
     const signupsByDay: Record<string, number> = {};
-    dailySignups?.forEach(u => {
-      if (u.created_at) {
-        const day = u.created_at.split('T')[0];
+    newUsersQuery.docs.forEach(doc => {
+      const createdAt = doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt);
+      if (createdAt) {
+        const day = createdAt.toISOString().split('T')[0];
         signupsByDay[day] = (signupsByDay[day] || 0) + 1;
       }
     });
 
     // Top performers (highest streak)
-    const { data: topPerformers } = await supabase
-      .from('learner_profiles')
-      .select(`
-        current_streak,
-        total_learning_time,
-        user:users!user_id (
-          id,
-          full_name,
-          email,
-          avatar_url,
-          tier
-        )
-      `)
-      .order('current_streak', { ascending: false })
-      .limit(5);
+    const topPerformersQuery = await db
+      .collection('learnerProfiles')
+      .orderBy('currentStreak', 'desc')
+      .limit(5)
+      .get();
+
+    const topPerformers = await Promise.all(
+      topPerformersQuery.docs.map(async doc => {
+        const profile = doc.data();
+        const profileUserId = profile.userId;
+        const userDoc = await db.collection('users').doc(profileUserId).get();
+        const user = userDoc.data();
+        return {
+          currentStreak: profile.currentStreak,
+          totalLearningTime: profile.totalLearningTime,
+          user: {
+            id: profileUserId,
+            fullName: user?.fullName,
+            email: user?.email,
+            avatarUrl: user?.avatarUrl,
+            tier: user?.tier,
+          },
+        };
+      })
+    );
 
     // Struggling students (high struggle score)
-    const { data: strugglingStudents } = await supabase
-      .from('learner_profiles')
-      .select(`
-        struggle_score,
-        last_activity_at,
-        user:users!user_id (
-          id,
-          full_name,
-          email,
-          avatar_url,
-          tier
-        )
-      `)
-      .gte('struggle_score', 70)
-      .order('struggle_score', { ascending: false })
-      .limit(5);
+    const strugglingQuery = await db
+      .collection('learnerProfiles')
+      .where('struggleScore', '>=', 70)
+      .orderBy('struggleScore', 'desc')
+      .limit(5)
+      .get();
+
+    const strugglingStudents = await Promise.all(
+      strugglingQuery.docs.map(async doc => {
+        const profile = doc.data();
+        const profileUserId = profile.userId;
+        const userDoc = await db.collection('users').doc(profileUserId).get();
+        const user = userDoc.data();
+        return {
+          struggleScore: profile.struggleScore,
+          lastActivityAt: profile.lastActivityAt,
+          user: {
+            id: profileUserId,
+            fullName: user?.fullName,
+            email: user?.email,
+            avatarUrl: user?.avatarUrl,
+            tier: user?.tier,
+          },
+        };
+      })
+    );
 
     return NextResponse.json({
       overview: {
-        totalUsers: totalUsers || 0,
-        activeUsers: activeUsers || 0,
-        newUsersInPeriod: newUsersInPeriod || 0,
-        totalCertificates: totalCertificates || 0,
-        totalAkusCompleted: totalAkusCompleted || 0,
+        totalUsers,
+        activeUsers,
+        newUsersInPeriod,
+        totalCertificates,
+        totalAkusCompleted,
         totalLearningHours,
         avgStruggleScore,
       },
       courses: {
-        totalCourses: totalCourses || 0,
-        totalSessions: totalSessions || 0,
-        upcomingSessions: upcomingSessions || 0,
+        totalCourses,
+        totalSessions,
+        upcomingSessions,
       },
       breakdown: {
         usersByTier,
@@ -194,8 +217,8 @@ export async function GET(request: NextRequest) {
         signupsByDay,
       },
       insights: {
-        topPerformers: topPerformers || [],
-        strugglingStudents: strugglingStudents || [],
+        topPerformers,
+        strugglingStudents,
       },
     });
   } catch (error) {

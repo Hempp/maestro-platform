@@ -1,30 +1,32 @@
 /**
- * ADMIN SUBMISSION REVIEW API
+ * ADMIN SUBMISSION REVIEW API (Firebase)
  * POST /api/admin/submissions/[id]/review - Submit review with scores
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 interface ReviewPayload {
-  score_working_system: number;
-  score_problem_fit: number;
-  score_architecture: number;
-  score_production_ready: number;
-  score_roi: number;
-  score_documentation: number;
-  reviewer_notes: string;
+  scoreWorkingSystem: number;
+  scoreProblemFit: number;
+  scoreArchitecture: number;
+  scoreProductionReady: number;
+  scoreRoi: number;
+  scoreDocumentation: number;
+  reviewerNotes: string;
   decision: 'pass' | 'fail';
 }
 
 // Scoring limits for validation
 const SCORE_LIMITS = {
-  score_working_system: { min: 0, max: 30 },
-  score_problem_fit: { min: 0, max: 20 },
-  score_architecture: { min: 0, max: 15 },
-  score_production_ready: { min: 0, max: 15 },
-  score_roi: { min: 0, max: 10 },
-  score_documentation: { min: 0, max: 10 },
+  scoreWorkingSystem: { min: 0, max: 30 },
+  scoreProblemFit: { min: 0, max: 20 },
+  scoreArchitecture: { min: 0, max: 15 },
+  scoreProductionReady: { min: 0, max: 15 },
+  scoreRoi: { min: 0, max: 10 },
+  scoreDocumentation: { min: 0, max: 10 },
 };
 
 const PASSING_SCORE = 70;
@@ -35,19 +37,22 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createServerSupabaseClient();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    // Check admin/teacher role
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role, full_name')
-      .eq('id', user.id)
-      .single();
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    // Verify session and check role
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
 
     if (!userData || !['admin', 'instructor'].includes(userData.role || '')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -68,12 +73,12 @@ export async function POST(
 
     // Calculate total score
     const totalScore =
-      body.score_working_system +
-      body.score_problem_fit +
-      body.score_architecture +
-      body.score_production_ready +
-      body.score_roi +
-      body.score_documentation;
+      body.scoreWorkingSystem +
+      body.scoreProblemFit +
+      body.scoreArchitecture +
+      body.scoreProductionReady +
+      body.scoreRoi +
+      body.scoreDocumentation;
 
     // Determine final status based on decision or auto-calculate
     let finalStatus: 'passed' | 'failed';
@@ -84,15 +89,13 @@ export async function POST(
     }
 
     // Check if submission exists and is reviewable
-    const { data: existingSubmission, error: fetchError } = await supabase
-      .from('certification_submissions')
-      .select('id, status, user_id')
-      .eq('id', id)
-      .single();
+    const submissionDoc = await db.collection('certificationSubmissions').doc(id).get();
 
-    if (fetchError || !existingSubmission) {
+    if (!submissionDoc.exists) {
       return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
     }
+
+    const existingSubmission = submissionDoc.data()!;
 
     if (existingSubmission.status === 'passed' || existingSubmission.status === 'failed') {
       return NextResponse.json(
@@ -102,40 +105,35 @@ export async function POST(
     }
 
     // Update the submission with review data
-    const { data: submission, error: updateError } = await supabase
-      .from('certification_submissions')
-      .update({
-        score_working_system: body.score_working_system,
-        score_problem_fit: body.score_problem_fit,
-        score_architecture: body.score_architecture,
-        score_production_ready: body.score_production_ready,
-        score_roi: body.score_roi,
-        score_documentation: body.score_documentation,
-        reviewer_notes: body.reviewer_notes || null,
-        reviewed_by: user.id,
-        reviewed_at: new Date().toISOString(),
-        status: finalStatus,
-      })
-      .eq('id', id)
-      .select(`
-        *,
-        user:users!certification_submissions_user_id_fkey (
-          id,
-          email,
-          full_name
-        )
-      `)
-      .single();
+    await db.collection('certificationSubmissions').doc(id).update({
+      scoreWorkingSystem: body.scoreWorkingSystem,
+      scoreProblemFit: body.scoreProblemFit,
+      scoreArchitecture: body.scoreArchitecture,
+      scoreProductionReady: body.scoreProductionReady,
+      scoreRoi: body.scoreRoi,
+      scoreDocumentation: body.scoreDocumentation,
+      reviewerNotes: body.reviewerNotes || null,
+      reviewedBy: userId,
+      reviewedAt: Timestamp.now(),
+      status: finalStatus,
+      updatedAt: Timestamp.now(),
+    });
 
-    if (updateError) {
-      console.error('Update error:', updateError);
-      throw updateError;
+    // Fetch the updated submission with user data
+    const updatedDoc = await db.collection('certificationSubmissions').doc(id).get();
+    const submission = { id: updatedDoc.id, ...updatedDoc.data() } as any;
+
+    // Get user data
+    if (submission.userId) {
+      const subUserDoc = await db.collection('users').doc(submission.userId).get();
+      if (subUserDoc.exists) {
+        submission.user = { id: subUserDoc.id, ...subUserDoc.data() };
+      }
     }
 
     // If passed, we could trigger certificate generation here
-    // For now, just log it
     if (finalStatus === 'passed') {
-      console.log(`Certification PASSED for user ${existingSubmission.user_id} with score ${totalScore}`);
+      console.log(`Certification PASSED for user ${existingSubmission.userId} with score ${totalScore}`);
       // TODO: Trigger certificate generation workflow
     }
 
@@ -144,9 +142,10 @@ export async function POST(
       totalScore,
       passed: finalStatus === 'passed',
       passingScore: PASSING_SCORE,
-      message: finalStatus === 'passed'
-        ? `Certification approved with score ${totalScore}/100`
-        : `Certification not approved. Score: ${totalScore}/100 (required: ${PASSING_SCORE})`,
+      message:
+        finalStatus === 'passed'
+          ? `Certification approved with score ${totalScore}/100`
+          : `Certification not approved. Score: ${totalScore}/100 (required: ${PASSING_SCORE})`,
     });
   } catch (error) {
     console.error('Admin submission review error:', error);

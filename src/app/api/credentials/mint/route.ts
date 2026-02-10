@@ -1,5 +1,5 @@
 /**
- * CREDENTIAL MINTING API
+ * CREDENTIAL MINTING API (Firebase)
  * POST /api/credentials/mint
  *
  * Mints a Soulbound Token (SBT) credential on Polygon blockchain
@@ -14,22 +14,17 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import { sbtMinter, type MintResult } from '@/lib/blockchain/sbt-minter';
 import type { SBTMetadata, CertificatePath } from '@/types';
 
 // Types for request body
 interface MintCredentialRequest {
-  // Option 1: Mint for current user
   certificateId?: string;
-
-  // Option 2: Mint by submission ID (admin use)
   submissionId?: string;
-
-  // Wallet address for minting (required if user hasn't connected wallet)
   walletAddress?: string;
-
-  // Create claimable credential instead of direct mint (for users without wallet)
   createClaimable?: boolean;
 }
 
@@ -48,60 +43,74 @@ const CERTIFICATE_PRICES: Record<CertificatePath, number> = {
   owner: 49900,
 };
 
+interface CertificateRecord {
+  id: string;
+  userId: string;
+  certificateType: CertificatePath;
+  tokenId: string | null;
+  contractAddress: string | null;
+  transactionHash: string | null;
+  ipfsHash: string | null;
+  metadata: Record<string, unknown>;
+  issuedAt: FirebaseFirestore.Timestamp;
+  verifiedAt: FirebaseFirestore.Timestamp | null;
+}
+
+interface SubmissionRecord {
+  id: string;
+  userId: string;
+  path: CertificatePath;
+  status: 'submitted' | 'under_review' | 'passed' | 'failed' | 'needs_revision';
+  totalScore: number | null;
+  submittedAt: FirebaseFirestore.Timestamp;
+  reviewedAt: FirebaseFirestore.Timestamp | null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: MintCredentialRequest = await request.json();
     const { certificateId, submissionId, walletAddress, createClaimable } = body;
 
-    // Get authenticated user
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (!user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
 
-    // Use admin client for database operations
-    const adminClient = createAdminClient();
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
     // Step 1: Get certificate record
     let certificate: CertificateRecord | null = null;
     let submission: SubmissionRecord | null = null;
 
     if (certificateId) {
-      const { data, error } = await adminClient
-        .from('certificates')
-        .select('*')
-        .eq('id', certificateId)
-        .eq('user_id', user.id)
-        .single();
+      const certDoc = await db.collection('certificates').doc(certificateId).get();
 
-      if (error || !data) {
+      if (!certDoc.exists || certDoc.data()?.userId !== userId) {
         return NextResponse.json(
           { error: 'Certificate not found' },
           { status: 404 }
         );
       }
-      certificate = data as unknown as CertificateRecord;
+      certificate = { id: certDoc.id, ...certDoc.data() } as CertificateRecord;
     } else if (submissionId) {
-      // Get submission and find/create associated certificate
-      const { data: subData, error: subError } = await adminClient
-        .from('certification_submissions')
-        .select('*')
-        .eq('id', submissionId)
-        .eq('user_id', user.id)
-        .single();
+      const subDoc = await db.collection('certificationSubmissions').doc(submissionId).get();
 
-      if (subError || !subData) {
+      if (!subDoc.exists || subDoc.data()?.userId !== userId) {
         return NextResponse.json(
           { error: 'Certification submission not found' },
           { status: 404 }
         );
       }
-      submission = subData as unknown as SubmissionRecord;
+      submission = { id: subDoc.id, ...subDoc.data() } as SubmissionRecord;
 
       // Check submission status
       if (submission.status !== 'passed') {
@@ -112,14 +121,16 @@ export async function POST(request: NextRequest) {
       }
 
       // Find associated certificate
-      const { data: certData } = await adminClient
-        .from('certificates')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('certificate_type', submission.path)
-        .single();
+      const certQuery = await db
+        .collection('certificates')
+        .where('userId', '==', userId)
+        .where('certificateType', '==', submission.path)
+        .limit(1)
+        .get();
 
-      certificate = certData as CertificateRecord | null;
+      if (!certQuery.empty) {
+        certificate = { id: certQuery.docs[0].id, ...certQuery.docs[0].data() } as CertificateRecord;
+      }
     } else {
       return NextResponse.json(
         { error: 'Either certificateId or submissionId is required' },
@@ -128,28 +139,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 2: Verify payment completed
-    if (!certificate?.verified_at) {
+    if (!certificate?.verifiedAt) {
       return NextResponse.json(
         {
           error: 'Payment not completed',
           message: 'Please complete payment before minting your credential',
           paymentRequired: true,
-          price: CERTIFICATE_PRICES[certificate?.certificate_type || 'student'],
+          price: CERTIFICATE_PRICES[certificate?.certificateType || 'student'],
         },
         { status: 402 }
       );
     }
 
     // Step 3: Check if already minted
-    if (certificate.token_id) {
+    if (certificate.tokenId) {
       return NextResponse.json({
         success: true,
         alreadyMinted: true,
-        tokenId: certificate.token_id,
-        transactionHash: certificate.transaction_hash,
-        contractAddress: certificate.contract_address,
-        verifyUrl: `/verify/${certificate.token_id}`,
-        explorerUrl: `https://polygonscan.com/tx/${certificate.transaction_hash}`,
+        tokenId: certificate.tokenId,
+        transactionHash: certificate.transactionHash,
+        contractAddress: certificate.contractAddress,
+        verifyUrl: `/verify/${certificate.tokenId}`,
+        explorerUrl: `https://polygonscan.com/tx/${certificate.transactionHash}`,
       });
     }
 
@@ -157,25 +168,14 @@ export async function POST(request: NextRequest) {
     let mintWalletAddress = walletAddress;
 
     if (!mintWalletAddress) {
-      // Check user's stored wallet from users table
-      const { data: userData } = await adminClient
-        .from('users')
-        .select('wallet_address')
-        .eq('id', user.id)
-        .single();
-
-      mintWalletAddress = userData?.wallet_address ?? undefined;
+      const userDoc = await db.collection('users').doc(userId).get();
+      mintWalletAddress = userDoc.data()?.walletAddress;
     }
 
     // Step 5: Create claimable or mint directly
     if (!mintWalletAddress) {
       if (createClaimable) {
-        // Create a claimable credential for later
-        const claimable = await createClaimableCredential(
-          adminClient,
-          certificate,
-          user.id
-        );
+        const claimable = await createClaimableCredential(db, certificate, userId);
         return NextResponse.json({
           success: true,
           claimable: true,
@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 6: Get verification data for metadata
-    const verificationData = await getVerificationData(adminClient, user.id, certificate);
+    const verificationData = await getVerificationData(db, userId, certificate);
 
     // Step 7: Mint the SBT
     const mintResult: MintResult = await sbtMinter.mintCertificate(
@@ -224,27 +224,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 8: Update certificate with blockchain data
-    const { error: updateError } = await adminClient
-      .from('certificates')
-      .update({
-        token_id: mintResult.tokenId,
-        transaction_hash: mintResult.transactionHash,
-        contract_address: process.env.SBT_CONTRACT_ADDRESS,
-        ipfs_hash: verificationData.ipfsHash,
-      })
-      .eq('id', certificate.id);
-
-    if (updateError) {
-      console.error('Failed to update certificate:', updateError);
-      // Token was minted, but DB update failed - log for manual fix
-    }
+    await db.collection('certificates').doc(certificate.id).update({
+      tokenId: mintResult.tokenId,
+      transactionHash: mintResult.transactionHash,
+      contractAddress: process.env.SBT_CONTRACT_ADDRESS,
+      ipfsHash: verificationData.ipfsHash,
+      updatedAt: Timestamp.now(),
+    });
 
     // Step 9: Update user's wallet if not stored
     if (walletAddress) {
-      await adminClient
-        .from('users')
-        .update({ wallet_address: walletAddress })
-        .eq('id', user.id);
+      await db.collection('users').doc(userId).update({
+        walletAddress,
+        updatedAt: Timestamp.now(),
+      });
     }
 
     return NextResponse.json({
@@ -269,64 +262,38 @@ export async function POST(request: NextRequest) {
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════
 
-interface CertificateRecord {
-  id: string;
-  user_id: string;
-  certificate_type: CertificatePath;
-  token_id: string | null;
-  contract_address: string | null;
-  transaction_hash: string | null;
-  ipfs_hash: string | null;
-  metadata: Record<string, unknown>;
-  issued_at: string;
-  verified_at: string | null;
-}
-
-interface SubmissionRecord {
-  id: string;
-  user_id: string;
-  path: CertificatePath;
-  status: 'submitted' | 'under_review' | 'passed' | 'failed' | 'needs_revision';
-  total_score: number | null;
-  submitted_at: string;
-  reviewed_at: string | null;
-}
-
 function isValidEthereumAddress(address: string): boolean {
   return /^0x[a-fA-F0-9]{40}$/.test(address);
 }
 
 async function createClaimableCredential(
-  adminClient: ReturnType<typeof createAdminClient>,
+  db: FirebaseFirestore.Firestore,
   certificate: CertificateRecord,
   userId: string
 ): Promise<ClaimableCredential> {
-  // Generate unique claim code
   const claimCode = generateClaimCode();
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
 
-  // Store claimable credential
-  await (adminClient as unknown as { from: (t: string) => { insert: (d: unknown) => Promise<unknown> } })
-    .from('claimable_credentials')
-    .insert({
-      user_id: userId,
-      certificate_id: certificate.id,
-      claim_code: claimCode,
-      expires_at: expiresAt,
-      status: 'pending',
-    });
+  await db.collection('claimableCredentials').add({
+    userId,
+    certificateId: certificate.id,
+    claimCode,
+    expiresAt,
+    status: 'pending',
+    createdAt: Timestamp.now(),
+  });
 
   return {
     id: certificate.id,
     claimCode,
     expiresAt,
-    certificateType: certificate.certificate_type,
+    certificateType: certificate.certificateType,
     metadata: certificate.metadata as unknown as SBTMetadata,
   };
 }
 
 function generateClaimCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Exclude similar-looking chars
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = 'PHZ-';
   for (let i = 0; i < 8; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -335,28 +302,28 @@ function generateClaimCode(): string {
 }
 
 async function getVerificationData(
-  adminClient: ReturnType<typeof createAdminClient>,
+  db: FirebaseFirestore.Firestore,
   userId: string,
   certificate: CertificateRecord
 ) {
   // Get user's completed AKUs
-  const { data: akuProgress } = await adminClient
-    .from('aku_progress')
-    .select('aku_id, struggle_score, time_spent, hints_used')
-    .eq('user_id', userId)
-    .eq('status', 'verified');
+  const akuProgressQuery = await db
+    .collection('akuProgress')
+    .where('userId', '==', userId)
+    .where('status', '==', 'verified')
+    .get();
 
-  const completedAKUs = (akuProgress || []).map(p => p.aku_id);
+  const akuProgress = akuProgressQuery.docs.map(doc => doc.data());
+  const completedAKUs = akuProgress.map(p => p.akuId);
 
   // Calculate aggregate scores
-  const avgStruggleScore = akuProgress?.length
-    ? Math.round(akuProgress.reduce((sum, p) => sum + (p.struggle_score || 50), 0) / akuProgress.length)
+  const avgStruggleScore = akuProgress.length
+    ? Math.round(akuProgress.reduce((sum, p) => sum + (p.struggleScore || 50), 0) / akuProgress.length)
     : 50;
 
-  const totalTimeSpent = akuProgress?.reduce((sum, p) => sum + (p.time_spent || 0), 0) || 0;
-  const totalHintsUsed = akuProgress?.reduce((sum, p) => sum + (p.hints_used || 0), 0) || 0;
+  const totalTimeSpent = akuProgress.reduce((sum, p) => sum + (p.timeSpent || 0), 0);
+  const totalHintsUsed = akuProgress.reduce((sum, p) => sum + (p.hintsUsed || 0), 0);
 
-  // Create verification result structure
   const verificationResult = {
     passed: true,
     akuId: 'certification',
@@ -367,10 +334,9 @@ async function getVerificationData(
     struggleScore: avgStruggleScore,
     hintsUsed: totalHintsUsed,
     timeToComplete: totalTimeSpent,
-    workflowSnapshot: certificate.ipfs_hash || '',
+    workflowSnapshot: certificate.ipfsHash || '',
   };
 
-  // Mastery path name
   const masteryPathNames: Record<CertificatePath, string> = {
     student: 'AI Associate Certification',
     employee: 'Workflow Efficiency Lead',
@@ -379,9 +345,9 @@ async function getVerificationData(
 
   return {
     verificationResult,
-    masteryPath: masteryPathNames[certificate.certificate_type],
+    masteryPath: masteryPathNames[certificate.certificateType],
     completedAKUs,
-    ipfsHash: certificate.ipfs_hash || '',
+    ipfsHash: certificate.ipfsHash || '',
   };
 }
 
@@ -400,43 +366,44 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (!user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
 
-    const adminClient = createAdminClient();
+    const auth = getAdminAuth();
+    const db = getAdminDb();
 
-    const { data: certificate, error } = await adminClient
-      .from('certificates')
-      .select('id, course_id, token_id, contract_address, transaction_hash, verified_at')
-      .eq('id', certificateId)
-      .eq('user_id', user.id)
-      .single();
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
-    if (error || !certificate) {
+    const certDoc = await db.collection('certificates').doc(certificateId).get();
+
+    if (!certDoc.exists || certDoc.data()?.userId !== userId) {
       return NextResponse.json(
         { error: 'Certificate not found' },
         { status: 404 }
       );
     }
 
+    const certificate = certDoc.data();
+
     return NextResponse.json({
-      certificateId: certificate.id,
-      courseId: certificate.course_id,
-      paymentCompleted: !!certificate.verified_at,
-      minted: !!certificate.token_id,
-      tokenId: certificate.token_id,
-      contractAddress: certificate.contract_address,
-      transactionHash: certificate.transaction_hash,
-      verifyUrl: certificate.token_id ? `/verify/${certificate.token_id}` : null,
-      explorerUrl: certificate.transaction_hash
-        ? `https://polygonscan.com/tx/${certificate.transaction_hash}`
+      certificateId: certDoc.id,
+      courseId: certificate?.courseId,
+      paymentCompleted: !!certificate?.verifiedAt,
+      minted: !!certificate?.tokenId,
+      tokenId: certificate?.tokenId,
+      contractAddress: certificate?.contractAddress,
+      transactionHash: certificate?.transactionHash,
+      verifyUrl: certificate?.tokenId ? `/verify/${certificate.tokenId}` : null,
+      explorerUrl: certificate?.transactionHash
+        ? `https://polygonscan.com/tx/${certificate.transactionHash}`
         : null,
     });
   } catch (error) {

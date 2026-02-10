@@ -1,5 +1,5 @@
 /**
- * RETENTION EMAILS CRON JOB
+ * RETENTION EMAILS CRON JOB (Firebase)
  * Sends automated retention emails at Day 1, Day 3, and Day 7 after signup
  *
  * This endpoint should be called by a cron service (Vercel Cron, etc.)
@@ -9,29 +9,23 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import {
   sendDay1Email,
   sendDay3Email,
   sendDay7Email,
 } from '@/lib/email/resend';
 
-// Email type configuration
-const EMAIL_CONFIGS = [
-  { type: 'day_1' as const, daysSinceSignup: 1, handler: handleDay1Emails },
-  { type: 'day_3' as const, daysSinceSignup: 3, handler: handleDay3Emails },
-  { type: 'day_7' as const, daysSinceSignup: 7, handler: handleDay7Emails },
-] as const;
-
 type RetentionEmailType = 'day_1' | 'day_3' | 'day_7';
 
 interface EmailCandidate {
-  user_id: string;
+  userId: string;
   email: string;
-  full_name: string | null;
-  created_at: string;
-  has_activity: boolean;
-  modules_completed: number;
+  fullName: string | null;
+  createdAt: Date;
+  hasActivity: boolean;
+  modulesCompleted: number;
 }
 
 interface EmailResult {
@@ -60,14 +54,19 @@ export async function POST(request: NextRequest) {
 
     console.log('[Retention Emails] Starting retention email job...');
 
-    const supabase = createAdminClient();
     const results: EmailResult[] = [];
     const errors: string[] = [];
 
     // Process each email type
-    for (const config of EMAIL_CONFIGS) {
+    const emailConfigs = [
+      { type: 'day_1' as const, daysSinceSignup: 1, handler: handleDay1Emails },
+      { type: 'day_3' as const, daysSinceSignup: 3, handler: handleDay3Emails },
+      { type: 'day_7' as const, daysSinceSignup: 7, handler: handleDay7Emails },
+    ];
+
+    for (const config of emailConfigs) {
       try {
-        const emailResults = await config.handler(supabase);
+        const emailResults = await config.handler();
         results.push(...emailResults);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
@@ -114,24 +113,19 @@ export async function GET() {
 // EMAIL HANDLERS
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * Handle Day 1 emails - Welcome + First Lesson Nudge
- */
-async function handleDay1Emails(
-  supabase: ReturnType<typeof createAdminClient>
-): Promise<EmailResult[]> {
-  const candidates = await getEmailCandidates(supabase, 'day_1', 1);
+async function handleDay1Emails(): Promise<EmailResult[]> {
+  const candidates = await getEmailCandidates('day_1', 1);
   const results: EmailResult[] = [];
 
   for (const candidate of candidates) {
     const result = await sendDay1Email(
       candidate.email,
-      candidate.full_name ?? undefined,
-      candidate.has_activity
+      candidate.fullName ?? undefined,
+      candidate.hasActivity
     );
 
     const emailResult: EmailResult = {
-      userId: candidate.user_id,
+      userId: candidate.userId,
       email: candidate.email,
       type: 'day_1',
       success: result.success,
@@ -139,9 +133,7 @@ async function handleDay1Emails(
       resendId: result.id,
     };
 
-    // Record the email send attempt
-    await recordEmailSent(supabase, candidate.user_id, 'day_1', result);
-
+    await recordEmailSent(candidate.userId, 'day_1', result);
     results.push(emailResult);
   }
 
@@ -149,32 +141,30 @@ async function handleDay1Emails(
   return results;
 }
 
-/**
- * Handle Day 3 emails - Progress Check + Tips
- */
-async function handleDay3Emails(
-  supabase: ReturnType<typeof createAdminClient>
-): Promise<EmailResult[]> {
-  const candidates = await getEmailCandidates(supabase, 'day_3', 3);
+async function handleDay3Emails(): Promise<EmailResult[]> {
+  const db = getAdminDb();
+  const candidates = await getEmailCandidates('day_3', 3);
   const results: EmailResult[] = [];
 
   for (const candidate of candidates) {
     // Get additional user data for personalization
-    const { data: profile } = await supabase
-      .from('learner_profiles')
-      .select('current_streak')
-      .eq('user_id', candidate.user_id)
-      .single();
+    const profileQuery = await db
+      .collection('learnerProfiles')
+      .where('userId', '==', candidate.userId)
+      .limit(1)
+      .get();
+
+    const profile = profileQuery.empty ? null : profileQuery.docs[0].data();
 
     const result = await sendDay3Email(
       candidate.email,
-      candidate.full_name ?? undefined,
-      candidate.modules_completed,
-      profile?.current_streak ?? 0
+      candidate.fullName ?? undefined,
+      candidate.modulesCompleted,
+      profile?.currentStreak ?? 0
     );
 
     const emailResult: EmailResult = {
-      userId: candidate.user_id,
+      userId: candidate.userId,
       email: candidate.email,
       type: 'day_3',
       success: result.success,
@@ -182,7 +172,7 @@ async function handleDay3Emails(
       resendId: result.id,
     };
 
-    await recordEmailSent(supabase, candidate.user_id, 'day_3', result);
+    await recordEmailSent(candidate.userId, 'day_3', result);
     results.push(emailResult);
   }
 
@@ -190,41 +180,37 @@ async function handleDay3Emails(
   return results;
 }
 
-/**
- * Handle Day 7 emails - Re-engagement
- */
-async function handleDay7Emails(
-  supabase: ReturnType<typeof createAdminClient>
-): Promise<EmailResult[]> {
-  const candidates = await getEmailCandidates(supabase, 'day_7', 7);
+async function handleDay7Emails(): Promise<EmailResult[]> {
+  const db = getAdminDb();
+  const candidates = await getEmailCandidates('day_7', 7);
   const results: EmailResult[] = [];
 
   for (const candidate of candidates) {
     // Calculate days inactive
-    const { data: profile } = await supabase
-      .from('learner_profiles')
-      .select('last_activity_at')
-      .eq('user_id', candidate.user_id)
-      .single();
+    const profileQuery = await db
+      .collection('learnerProfiles')
+      .where('userId', '==', candidate.userId)
+      .limit(1)
+      .get();
+
+    const profile = profileQuery.empty ? null : profileQuery.docs[0].data();
 
     let daysInactive = 7;
-    if (profile?.last_activity_at) {
-      const lastActivity = new Date(profile.last_activity_at);
+    if (profile?.lastActivityAt) {
+      const lastActivity = profile.lastActivityAt.toDate?.() || new Date(profile.lastActivityAt);
       const now = new Date();
-      daysInactive = Math.floor(
-        (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      daysInactive = Math.floor((now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
     }
 
     const result = await sendDay7Email(
       candidate.email,
-      candidate.full_name ?? undefined,
-      candidate.modules_completed,
+      candidate.fullName ?? undefined,
+      candidate.modulesCompleted,
       daysInactive
     );
 
     const emailResult: EmailResult = {
-      userId: candidate.user_id,
+      userId: candidate.userId,
       email: candidate.email,
       type: 'day_7',
       success: result.success,
@@ -232,7 +218,7 @@ async function handleDay7Emails(
       resendId: result.id,
     };
 
-    await recordEmailSent(supabase, candidate.user_id, 'day_7', result);
+    await recordEmailSent(candidate.userId, 'day_7', result);
     results.push(emailResult);
   }
 
@@ -244,14 +230,12 @@ async function handleDay7Emails(
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * Get users eligible for a specific retention email
- */
 async function getEmailCandidates(
-  supabase: ReturnType<typeof createAdminClient>,
   emailType: RetentionEmailType,
   daysSinceSignup: number
 ): Promise<EmailCandidate[]> {
+  const db = getAdminDb();
+
   // Calculate the date range for users who signed up X days ago
   const now = new Date();
   const targetDate = new Date(now);
@@ -264,53 +248,51 @@ async function getEmailCandidates(
   const endOfWindow = new Date(targetDate);
   endOfWindow.setHours(endOfWindow.getHours() + 23);
 
-  // Query users who:
-  // 1. Signed up in the target window
-  // 2. Haven't received this email yet
-  // 3. Have email notifications enabled
-  const { data: users, error: usersError } = await supabase
-    .from('users')
-    .select(`
-      id,
-      email,
-      full_name,
-      created_at
-    `)
-    .gte('created_at', startOfWindow.toISOString())
-    .lt('created_at', endOfWindow.toISOString())
-    .limit(100);
+  // Query users who signed up in the target window
+  const usersQuery = await db
+    .collection('users')
+    .where('createdAt', '>=', Timestamp.fromDate(startOfWindow))
+    .where('createdAt', '<', Timestamp.fromDate(endOfWindow))
+    .limit(100)
+    .get();
 
-  if (usersError) {
-    console.error('[Retention Emails] Error fetching users:', usersError);
+  if (usersQuery.empty) {
     return [];
   }
 
-  if (!users || users.length === 0) {
-    return [];
-  }
+  const users = usersQuery.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as any[];
 
   // Filter out users who already received this email
-  const { data: sentEmails } = await supabase
-    .from('retention_emails')
-    .select('user_id')
-    .eq('email_type', emailType)
-    .in('user_id', users.map(u => u.id));
+  const sentEmailsQuery = await db
+    .collection('retentionEmails')
+    .where('emailType', '==', emailType)
+    .where('userId', 'in', users.map(u => u.id).slice(0, 30)) // Firestore limit
+    .get();
 
-  const sentUserIds = new Set(sentEmails?.map(e => e.user_id) || []);
+  const sentUserIds = new Set(sentEmailsQuery.docs.map(doc => doc.data().userId));
 
   // Filter out users who have disabled email notifications
-  const { data: settings } = await supabase
-    .from('user_settings')
-    .select('user_id, email_notifications, learning_reminders')
-    .in('user_id', users.map(u => u.id));
+  const userIds = users.map(u => u.id).slice(0, 30);
+  const settingsQuery = userIds.length > 0
+    ? await db
+        .collection('userSettings')
+        .where('userId', 'in', userIds)
+        .get()
+    : { docs: [] };
 
   const disabledUserIds = new Set(
-    settings
-      ?.filter(s => s.email_notifications === false || s.learning_reminders === false)
-      .map(s => s.user_id) || []
+    settingsQuery.docs
+      .filter(doc => {
+        const data = doc.data();
+        return data.emailNotifications === false || data.learningReminders === false;
+      })
+      .map(doc => doc.data().userId)
   );
 
-  // Get activity data for eligible users
+  // Get eligible users
   const eligibleUsers = users.filter(
     u => !sentUserIds.has(u.id) && !disabledUserIds.has(u.id)
   );
@@ -320,65 +302,68 @@ async function getEmailCandidates(
   }
 
   // Get learner profiles for activity info
-  const { data: profiles } = await supabase
-    .from('learner_profiles')
-    .select('user_id, last_activity_at')
-    .in('user_id', eligibleUsers.map(u => u.id));
+  const eligibleIds = eligibleUsers.map(u => u.id).slice(0, 30);
+  const profilesQuery = eligibleIds.length > 0
+    ? await db
+        .collection('learnerProfiles')
+        .where('userId', 'in', eligibleIds)
+        .get()
+    : { docs: [] };
 
-  type ProfileData = { user_id: string; last_activity_at: string | null };
-  const profileMap = new Map<string, ProfileData>(
-    profiles?.map(p => [p.user_id, p as ProfileData]) || []
+  const profileMap = new Map(
+    profilesQuery.docs.map(doc => [doc.data().userId, doc.data()])
   );
 
   // Get completed modules count
-  const { data: progress } = await supabase
-    .from('aku_progress')
-    .select('user_id')
-    .in('user_id', eligibleUsers.map(u => u.id))
-    .in('status', ['completed', 'verified']);
+  const progressQuery = eligibleIds.length > 0
+    ? await db
+        .collection('akuProgress')
+        .where('userId', 'in', eligibleIds)
+        .where('status', 'in', ['completed', 'verified'])
+        .get()
+    : { docs: [] };
 
   const modulesCounts = new Map<string, number>();
-  progress?.forEach(p => {
-    modulesCounts.set(p.user_id, (modulesCounts.get(p.user_id) || 0) + 1);
+  progressQuery.docs.forEach(doc => {
+    const userId = doc.data().userId;
+    modulesCounts.set(userId, (modulesCounts.get(userId) || 0) + 1);
   });
 
   // Build candidates list
   return eligibleUsers
-    .filter(user => user.created_at !== null)
+    .filter(user => user.createdAt)
     .map(user => {
       const profile = profileMap.get(user.id);
-      const signupTime = new Date(user.created_at!).getTime();
-      const lastActivityTime = profile?.last_activity_at
-        ? new Date(profile.last_activity_at).getTime()
-        : 0;
+      const createdAt = user.createdAt?.toDate?.() || new Date(user.createdAt);
+      const signupTime = createdAt.getTime();
+      const lastActivityAt = profile?.lastActivityAt?.toDate?.() || null;
+      const lastActivityTime = lastActivityAt?.getTime() || 0;
 
       return {
-        user_id: user.id,
+        userId: user.id,
         email: user.email,
-        full_name: user.full_name,
-        created_at: user.created_at!,
-        has_activity: lastActivityTime > signupTime + 60 * 60 * 1000, // Activity > 1hr after signup
-        modules_completed: modulesCounts.get(user.id) || 0,
+        fullName: user.fullName,
+        createdAt,
+        hasActivity: lastActivityTime > signupTime + 60 * 60 * 1000, // Activity > 1hr after signup
+        modulesCompleted: modulesCounts.get(user.id) || 0,
       };
     });
 }
 
-/**
- * Record that an email was sent (or attempted)
- */
 async function recordEmailSent(
-  supabase: ReturnType<typeof createAdminClient>,
   userId: string,
   emailType: RetentionEmailType,
   result: { success: boolean; id?: string; error?: string }
 ): Promise<void> {
   try {
-    await supabase.from('retention_emails').insert({
-      user_id: userId,
-      email_type: emailType,
-      resend_id: result.id,
+    const db = getAdminDb();
+    await db.collection('retentionEmails').add({
+      userId,
+      emailType,
+      resendId: result.id || null,
       success: result.success,
-      error_message: result.error,
+      errorMessage: result.error || null,
+      createdAt: Timestamp.now(),
     });
   } catch (err) {
     console.error('[Retention Emails] Failed to record email send:', err);

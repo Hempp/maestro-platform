@@ -1,10 +1,12 @@
 /**
- * SEAT PURCHASE API
+ * SEAT PURCHASE API (Firebase)
  * Handles seat purchases for tiered live events
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 // Check if user has free access to a session based on their tier
 function hasFreeTierAccess(userTier: string | null, sessionTier: string): boolean {
@@ -17,11 +19,27 @@ function hasFreeTierAccess(userTier: string | null, sessionTier: string): boolea
   return false;
 }
 
+async function getAuthenticatedUser() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get('session')?.value;
+
+  if (!session) {
+    return { user: null };
+  }
+
+  try {
+    const auth = getAdminAuth();
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    return { user: { id: decodedClaims.uid, email: decodedClaims.email } };
+  } catch {
+    return { user: null };
+  }
+}
+
 // GET: Check access status for a session
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { user } = await getAuthenticatedUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -34,52 +52,52 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
-    // Get user's tier
-    const { data: userData } = await (supabase as any)
-      .from('users')
-      .select('tier')
-      .eq('id', user.id)
-      .single();
+    const db = getAdminDb();
 
+    // Get user's tier
+    const userDoc = await db.collection('users').doc(user.id).get();
+    const userData = userDoc.data();
     const userTier = (userData?.tier as string) || 'student';
 
     // Get session details
-    const { data: session, error } = await (supabase as any)
-      .from('live_sessions')
-      .select('id, target_tier, seat_price, max_seats, early_bird_price, early_bird_deadline')
-      .eq('id', sessionId)
-      .single();
+    const sessionDoc = await db.collection('liveSessions').doc(sessionId).get();
 
-    if (error || !session) {
+    if (!sessionDoc.exists) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
+    const session = sessionDoc.data()!;
+
     // Check if user already purchased
-    const { data: existingPurchase } = await (supabase as any)
-      .from('seat_purchases')
-      .select('id, payment_status')
-      .eq('session_id', sessionId)
-      .eq('user_id', user.id)
-      .eq('payment_status', 'completed')
-      .single();
+    const purchaseQuery = await db
+      .collection('seatPurchases')
+      .where('sessionId', '==', sessionId)
+      .where('userId', '==', user.id)
+      .where('paymentStatus', '==', 'completed')
+      .limit(1)
+      .get();
+
+    const hasPurchased = !purchaseQuery.empty;
 
     // Check current enrollment count
-    const { count: enrollmentCount } = await (supabase as any)
-      .from('session_enrollments')
-      .select('*', { count: 'exact', head: true })
-      .eq('session_id', sessionId);
+    const enrollmentQuery = await db
+      .collection('sessionEnrollments')
+      .where('sessionId', '==', sessionId)
+      .get();
 
-    const hasFreeAccess = hasFreeTierAccess(userTier, session.target_tier);
-    const hasPurchased = !!existingPurchase;
+    const enrollmentCount = enrollmentQuery.size;
+
+    const hasFreeAccess = hasFreeTierAccess(userTier, session.targetTier);
     const hasAccess = hasFreeAccess || hasPurchased;
-    const seatsAvailable = (session.max_seats || 100) - (enrollmentCount || 0);
+    const seatsAvailable = (session.maxSeats || 100) - enrollmentCount;
 
     // Calculate price (check early bird)
-    let price = session.seat_price || 0;
+    let price = session.seatPrice || 0;
     let isEarlyBird = false;
-    if (session.early_bird_price && session.early_bird_deadline) {
-      if (new Date() < new Date(session.early_bird_deadline)) {
-        price = session.early_bird_price;
+    if (session.earlyBirdPrice && session.earlyBirdDeadline) {
+      const deadline = session.earlyBirdDeadline.toDate?.() || new Date(session.earlyBirdDeadline);
+      if (new Date() < deadline) {
+        price = session.earlyBirdPrice;
         isEarlyBird = true;
       }
     }
@@ -87,15 +105,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       sessionId,
       userTier,
-      sessionTier: session.target_tier,
+      sessionTier: session.targetTier,
       hasFreeAccess,
       hasPurchased,
       hasAccess,
       price: hasFreeAccess ? 0 : price,
       isEarlyBird,
-      earlyBirdDeadline: session.early_bird_deadline,
+      earlyBirdDeadline: session.earlyBirdDeadline?.toDate?.()?.toISOString() || null,
       seatsAvailable,
-      maxSeats: session.max_seats,
+      maxSeats: session.maxSeats,
     });
   } catch (error) {
     console.error('Session access check error:', error);
@@ -106,8 +124,7 @@ export async function GET(request: NextRequest) {
 // POST: Purchase a seat
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { user } = await getAuthenticatedUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -120,87 +137,91 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
-    // Get user's tier
-    const { data: userData } = await (supabase as any)
-      .from('users')
-      .select('tier')
-      .eq('id', user.id)
-      .single();
+    const db = getAdminDb();
 
+    // Get user's tier
+    const userDoc = await db.collection('users').doc(user.id).get();
+    const userData = userDoc.data();
     const userTier = (userData?.tier as string) || 'student';
 
     // Get session details
-    const { data: session, error: sessionError } = await (supabase as any)
-      .from('live_sessions')
-      .select('id, target_tier, seat_price, max_seats, early_bird_price, early_bird_deadline')
-      .eq('id', sessionId)
-      .single();
+    const sessionDoc = await db.collection('liveSessions').doc(sessionId).get();
 
-    if (sessionError || !session) {
+    if (!sessionDoc.exists) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
+    const session = sessionDoc.data()!;
+
     // Check if user already has free access
-    if (hasFreeTierAccess(userTier, session.target_tier)) {
-      return NextResponse.json({ error: 'You already have free access to this session' }, { status: 400 });
+    if (hasFreeTierAccess(userTier, session.targetTier)) {
+      return NextResponse.json(
+        { error: 'You already have free access to this session' },
+        { status: 400 }
+      );
     }
 
     // Check if already purchased
-    const { data: existingPurchase } = await (supabase as any)
-      .from('seat_purchases')
-      .select('id')
-      .eq('session_id', sessionId)
-      .eq('user_id', user.id)
-      .eq('payment_status', 'completed')
-      .single();
+    const existingPurchaseQuery = await db
+      .collection('seatPurchases')
+      .where('sessionId', '==', sessionId)
+      .where('userId', '==', user.id)
+      .where('paymentStatus', '==', 'completed')
+      .limit(1)
+      .get();
 
-    if (existingPurchase) {
-      return NextResponse.json({ error: 'You already purchased a seat for this session' }, { status: 400 });
+    if (!existingPurchaseQuery.empty) {
+      return NextResponse.json(
+        { error: 'You already purchased a seat for this session' },
+        { status: 400 }
+      );
     }
 
     // Check seat availability
-    const { count: enrollmentCount } = await (supabase as any)
-      .from('session_enrollments')
-      .select('*', { count: 'exact', head: true })
-      .eq('session_id', sessionId);
+    const enrollmentQuery = await db
+      .collection('sessionEnrollments')
+      .where('sessionId', '==', sessionId)
+      .get();
 
-    if ((enrollmentCount || 0) >= (session.max_seats || 100)) {
+    const enrollmentCount = enrollmentQuery.size;
+
+    if (enrollmentCount >= (session.maxSeats || 100)) {
       return NextResponse.json({ error: 'No seats available' }, { status: 400 });
     }
 
     // Calculate price
-    let price = session.seat_price || 0;
-    if (session.early_bird_price && session.early_bird_deadline) {
-      if (new Date() < new Date(session.early_bird_deadline)) {
-        price = session.early_bird_price;
+    let price = session.seatPrice || 0;
+    if (session.earlyBirdPrice && session.earlyBirdDeadline) {
+      const deadline = session.earlyBirdDeadline.toDate?.() || new Date(session.earlyBirdDeadline);
+      if (new Date() < deadline) {
+        price = session.earlyBirdPrice;
       }
     }
 
+    // Create purchase record
     // For now, create a "completed" purchase (integrate Stripe later)
     // In production, you'd create a Stripe checkout session here
-    const { data: purchase, error: purchaseError } = await (supabase as any)
-      .from('seat_purchases')
-      .insert({
-        session_id: sessionId,
-        user_id: user.id,
-        amount_paid: price,
-        payment_status: 'completed', // Would be 'pending' with real payments
-        payment_intent_id: `demo_${Date.now()}`, // Placeholder
-      })
-      .select()
-      .single();
+    const purchaseRef = await db.collection('seatPurchases').add({
+      sessionId,
+      userId: user.id,
+      amountPaid: price,
+      paymentStatus: 'completed', // Would be 'pending' with real payments
+      paymentIntentId: `demo_${Date.now()}`, // Placeholder
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
 
-    if (purchaseError) throw purchaseError;
+    const purchaseDoc = await purchaseRef.get();
+    const purchase = { id: purchaseDoc.id, ...purchaseDoc.data() };
 
     // Also enroll the user in the session
-    await (supabase as any)
-      .from('session_enrollments')
-      .insert({
-        session_id: sessionId,
-        student_id: user.id,
-        access_type: 'purchased',
-        purchase_id: purchase.id,
-      });
+    await db.collection('sessionEnrollments').add({
+      sessionId,
+      studentId: user.id,
+      accessType: 'purchased',
+      purchaseId: purchase.id,
+      createdAt: Timestamp.now(),
+    });
 
     return NextResponse.json({
       success: true,

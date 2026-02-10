@@ -1,34 +1,44 @@
 /**
- * STRIPE SUBSCRIPTION MANAGEMENT API
+ * STRIPE SUBSCRIPTION MANAGEMENT API (Firebase)
  * Handles subscription updates, cancellations, and billing portal access
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import { getStripe } from '@/lib/stripe/config';
 
 // GET - Get current subscription details
 export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (authError || !user) {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: subscription, error } = await (supabase as any)
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'trialing', 'past_due'])
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    const auth = getAdminAuth();
+    const db = getAdminDb();
 
-    if (error || !subscription) {
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
+    const subscriptionQuery = await db
+      .collection('subscriptions')
+      .where('userId', '==', userId)
+      .where('status', 'in', ['active', 'trialing', 'past_due'])
+      .orderBy('createdAt', 'desc')
+      .limit(1)
+      .get();
+
+    if (subscriptionQuery.empty) {
       return NextResponse.json({ subscription: null });
     }
+
+    const subscriptionDoc = subscriptionQuery.docs[0];
+    const subscription = { id: subscriptionDoc.id, ...subscriptionDoc.data() };
 
     return NextResponse.json({ subscription });
   } catch (error) {
@@ -40,72 +50,74 @@ export async function GET() {
 // POST - Manage subscription (cancel, resume, portal)
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (authError || !user) {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
     const body = await request.json();
     const { action } = body as { action: 'cancel' | 'resume' | 'portal' };
 
     // Get user's subscription
-    const { data: subscription, error: subError } = await (supabase as any)
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'trialing', 'past_due'])
-      .order('created_at', { ascending: false })
+    const subscriptionQuery = await db
+      .collection('subscriptions')
+      .where('userId', '==', userId)
+      .where('status', 'in', ['active', 'trialing', 'past_due'])
+      .orderBy('createdAt', 'desc')
       .limit(1)
-      .single();
+      .get();
 
-    if (subError || !subscription) {
+    if (subscriptionQuery.empty) {
       return NextResponse.json({ error: 'No active subscription found' }, { status: 404 });
     }
+
+    const subscriptionDoc = subscriptionQuery.docs[0];
+    const subscription = subscriptionDoc.data();
 
     const stripe = getStripe();
 
     switch (action) {
       case 'cancel': {
         // Cancel at period end (user keeps access until end of billing period)
-        await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+        await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
           cancel_at_period_end: true,
         });
 
         // Update local record
-        await (supabase as any)
-          .from('subscriptions')
-          .update({
-            cancel_at_period_end: true,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', subscription.id);
+        await subscriptionDoc.ref.update({
+          cancelAtPeriodEnd: true,
+          updatedAt: Timestamp.now(),
+        });
 
         return NextResponse.json({
           success: true,
           message: 'Subscription will cancel at the end of your billing period',
-          cancelAt: subscription.current_period_end,
+          cancelAt: subscription.currentPeriodEnd,
         });
       }
 
       case 'resume': {
         // Resume a subscription that was set to cancel
-        if (!subscription.cancel_at_period_end) {
+        if (!subscription.cancelAtPeriodEnd) {
           return NextResponse.json({ error: 'Subscription is not set to cancel' }, { status: 400 });
         }
 
-        await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+        await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
           cancel_at_period_end: false,
         });
 
-        await (supabase as any)
-          .from('subscriptions')
-          .update({
-            cancel_at_period_end: false,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', subscription.id);
+        await subscriptionDoc.ref.update({
+          cancelAtPeriodEnd: false,
+          updatedAt: Timestamp.now(),
+        });
 
         return NextResponse.json({
           success: true,
@@ -115,12 +127,12 @@ export async function POST(request: NextRequest) {
 
       case 'portal': {
         // Create Stripe billing portal session
-        if (!subscription.stripe_customer_id) {
+        if (!subscription.stripeCustomerId) {
           return NextResponse.json({ error: 'No Stripe customer found' }, { status: 400 });
         }
 
         const portalSession = await stripe.billingPortal.sessions.create({
-          customer: subscription.stripe_customer_id,
+          customer: subscription.stripeCustomerId,
           return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/subscription`,
         });
 

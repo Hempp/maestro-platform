@@ -1,11 +1,13 @@
 /**
- * ADMIN SINGLE SUBMISSION API
+ * ADMIN SINGLE SUBMISSION API (Firebase)
  * GET /api/admin/submissions/[id] - Get a single submission
  * PATCH /api/admin/submissions/[id] - Update submission (start review)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 export async function GET(
   request: NextRequest,
@@ -13,59 +15,64 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createServerSupabaseClient();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    // Check admin/teacher role
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    // Verify session and check role
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
 
     if (!userData || !['admin', 'instructor'].includes(userData.role || '')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     // Get the submission
-    const { data: submission, error } = await supabase
-      .from('certification_submissions')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const submissionDoc = await db.collection('certificationSubmissions').doc(id).get();
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
-      }
-      throw error;
+    if (!submissionDoc.exists) {
+      return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
     }
 
-    // Get user details separately
-    const userId = submission.user_id;
+    const submission = { id: submissionDoc.id, ...submissionDoc.data() } as any;
+
+    // Get user details
     let submissionUser = null;
     let reviewer = null;
 
-    if (userId) {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('id, email, full_name, avatar_url, created_at')
-        .eq('id', userId)
-        .single();
-      submissionUser = userData;
+    if (submission.userId) {
+      const subUserDoc = await db.collection('users').doc(submission.userId).get();
+      if (subUserDoc.exists) {
+        const subUserData = subUserDoc.data();
+        submissionUser = {
+          id: subUserDoc.id,
+          email: subUserData?.email,
+          fullName: subUserData?.fullName,
+          avatarUrl: subUserData?.avatarUrl,
+          createdAt: subUserData?.createdAt,
+        };
+      }
     }
 
-    if (submission.reviewed_by) {
-      const { data: reviewerData } = await supabase
-        .from('users')
-        .select('id, email, full_name')
-        .eq('id', submission.reviewed_by)
-        .single();
-      reviewer = reviewerData;
+    if (submission.reviewedBy) {
+      const reviewerDoc = await db.collection('users').doc(submission.reviewedBy).get();
+      if (reviewerDoc.exists) {
+        const reviewerData = reviewerDoc.data();
+        reviewer = {
+          id: reviewerDoc.id,
+          email: reviewerData?.email,
+          fullName: reviewerData?.fullName,
+        };
+      }
     }
 
     // Add user data to submission response
@@ -74,33 +81,40 @@ export async function GET(
       user: submissionUser,
       reviewer,
     };
-    if (userId) {
+
+    if (submission.userId) {
       // Get learner profile
-      const { data: learnerProfile } = await supabase
-        .from('learner_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      const profileQuery = await db
+        .collection('learnerProfiles')
+        .where('userId', '==', submission.userId)
+        .limit(1)
+        .get();
+
+      const learnerProfile = profileQuery.empty ? null : profileQuery.docs[0].data();
 
       // Get completed AKUs count
-      const { count: akusCompleted } = await supabase
-        .from('aku_progress')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('status', 'verified');
+      const akuQuery = await db
+        .collection('akuProgress')
+        .where('userId', '==', submission.userId)
+        .where('status', '==', 'verified')
+        .get();
+
+      const akusCompleted = akuQuery.size;
 
       // Get certificates count
-      const { count: certificatesCount } = await supabase
-        .from('certificates')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
+      const certsQuery = await db
+        .collection('certificates')
+        .where('userId', '==', submission.userId)
+        .get();
+
+      const certificatesCount = certsQuery.size;
 
       return NextResponse.json({
         submission: submissionWithUser,
         userStats: {
           learnerProfile,
-          akusCompleted: akusCompleted || 0,
-          certificatesCount: certificatesCount || 0,
+          akusCompleted,
+          certificatesCount,
         },
       });
     }
@@ -121,19 +135,22 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createServerSupabaseClient();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    // Check admin/teacher role
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    // Verify session and check role
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
 
     if (!userData || !['admin', 'instructor'].includes(userData.role || '')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -142,28 +159,24 @@ export async function PATCH(
     const body = await request.json();
 
     // Build update object
-    const updateData: Record<string, unknown> = {};
+    const updateData: Record<string, unknown> = {
+      updatedAt: Timestamp.now(),
+    };
 
     // Allow updating status to under_review
     if (body.status === 'under_review') {
       updateData.status = 'under_review';
-      updateData.reviewed_by = user.id;
+      updateData.reviewedBy = userId;
     }
 
-    if (Object.keys(updateData).length === 0) {
+    if (Object.keys(updateData).length === 1) {
       return NextResponse.json({ error: 'No valid updates provided' }, { status: 400 });
     }
 
-    const { data: submission, error } = await supabase
-      .from('certification_submissions')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    await db.collection('certificationSubmissions').doc(id).update(updateData);
 
-    if (error) {
-      throw error;
-    }
+    const updatedDoc = await db.collection('certificationSubmissions').doc(id).get();
+    const submission = { id: updatedDoc.id, ...updatedDoc.data() };
 
     return NextResponse.json({ submission });
   } catch (error) {

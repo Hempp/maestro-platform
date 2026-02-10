@@ -1,5 +1,5 @@
 /**
- * CERTIFICATION SUBMISSION API
+ * CERTIFICATION SUBMISSION API (Firebase)
  * Called when user completes milestone 10 (final milestone)
  *
  * Flow:
@@ -10,9 +10,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { stripe, CERTIFICATION_PRICES, isValidTier, type CertificationTier } from '@/lib/stripe/config';
-import type { Json } from '@/types/database.types';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
+import { stripe, CERTIFICATION_PRICES, type CertificationTier } from '@/lib/stripe/config';
 
 interface SubmissionArtifacts {
   architectureUrl?: string;
@@ -24,16 +25,21 @@ interface SubmissionArtifacts {
 
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate user
-    const supabase = await createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (authError || !user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
+
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
     // Parse request body
     const body = await request.json();
@@ -51,27 +57,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify user has completed all 10 milestones (at least 9 approved + 1 submitted/active for M10)
-    const { data: milestones, error: milestoneError } = await supabase
-      .from('user_milestones')
-      .select('milestone_number, status')
-      .eq('user_id', user.id)
-      .eq('path', path)
-      .order('milestone_number');
+    const milestonesQuery = await db
+      .collection('userMilestones')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .orderBy('milestoneNumber')
+      .get();
 
-    if (milestoneError) {
-      console.error('Error fetching milestones:', milestoneError);
-      return NextResponse.json(
-        { error: 'Failed to verify milestone progress' },
-        { status: 500 }
-      );
-    }
-
-    const approvedMilestones = milestones?.filter(
-      m => m.status === 'approved'
-    ) || [];
+    const milestones = milestonesQuery.docs.map(doc => doc.data());
+    const approvedMilestones = milestones.filter(m => m.status === 'approved');
 
     // User must have at least 9 approved milestones to submit certification
-    // (M10 is the certification submission itself)
     if (approvedMilestones.length < 9) {
       return NextResponse.json(
         {
@@ -85,14 +81,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already submitted
-    const { data: existingSubmission } = await supabase
-      .from('certification_submissions')
-      .select('id, status')
-      .eq('user_id', user.id)
-      .eq('path', path)
-      .single();
+    const existingQuery = await db
+      .collection('certificationSubmissions')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .limit(1)
+      .get();
 
-    if (existingSubmission) {
+    if (!existingQuery.empty) {
+      const existingSubmission = existingQuery.docs[0].data();
+
       if (existingSubmission.status === 'passed') {
         return NextResponse.json(
           { error: 'You have already been certified for this path' },
@@ -101,63 +99,52 @@ export async function POST(request: NextRequest) {
       }
 
       if (existingSubmission.status === 'submitted' || existingSubmission.status === 'under_review') {
-        // Return existing checkout URL if not paid yet
         return NextResponse.json({
           message: 'Submission already exists',
-          submissionId: existingSubmission.id,
+          submissionId: existingQuery.docs[0].id,
           status: existingSubmission.status,
           nextStep: 'Complete payment to finalize certification',
         });
       }
     }
 
-    // Create or update certification submission
+    // Create certification submission
     const submissionData = {
-      user_id: user.id,
+      userId,
       path,
-      architecture_url: artifacts?.architectureUrl || null,
-      demo_video_url: artifacts?.demoVideoUrl || null,
-      production_logs: (artifacts?.productionLogs as Json) || null,
-      roi_document: artifacts?.roiDocument || null,
-      documentation_url: artifacts?.documentationUrl || null,
+      architectureUrl: artifacts?.architectureUrl || null,
+      demoVideoUrl: artifacts?.demoVideoUrl || null,
+      productionLogs: artifacts?.productionLogs || null,
+      roiDocument: artifacts?.roiDocument || null,
+      documentationUrl: artifacts?.documentationUrl || null,
       status: 'submitted',
-      submitted_at: new Date().toISOString(),
+      submittedAt: Timestamp.now(),
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     };
 
-    const { data: submission, error: submitError } = await supabase
-      .from('certification_submissions')
-      .upsert(submissionData, {
-        onConflict: 'user_id,path',
-      })
-      .select()
-      .single();
-
-    if (submitError) {
-      console.error('Error creating submission:', submitError);
-      return NextResponse.json(
-        { error: 'Failed to create certification submission' },
-        { status: 500 }
-      );
-    }
+    const submissionRef = await db.collection('certificationSubmissions').add(submissionData);
 
     // Mark milestone 10 as submitted
-    await supabase
-      .from('user_milestones')
-      .update({
+    const milestone10Query = await db
+      .collection('userMilestones')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .where('milestoneNumber', '==', 10)
+      .limit(1)
+      .get();
+
+    if (!milestone10Query.empty) {
+      await milestone10Query.docs[0].ref.update({
         status: 'submitted',
-        submitted_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', user.id)
-      .eq('path', path)
-      .eq('milestone_number', 10);
+        submittedAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+    }
 
     // Get user details for checkout
-    const { data: userData } = await supabase
-      .from('users')
-      .select('full_name, email')
-      .eq('id', user.id)
-      .single();
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
 
     // Create Stripe checkout session
     const tierConfig = CERTIFICATION_PRICES[path as CertificationTier];
@@ -165,12 +152,12 @@ export async function POST(request: NextRequest) {
     const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
-      customer_email: userData?.email || user.email,
-      client_reference_id: user.id,
+      customer_email: userData?.email || decodedClaims.email,
+      client_reference_id: userId,
       metadata: {
-        userId: user.id,
+        userId: userId,
         path: path,
-        submissionId: submission.id,
+        submissionId: submissionRef.id,
         type: 'certification_submission',
       },
       line_items: [
@@ -182,7 +169,7 @@ export async function POST(request: NextRequest) {
               description: `${tierConfig.description} - Includes Soulbound Token (SBT) credential`,
               metadata: {
                 path: path,
-                submissionId: submission.id,
+                submissionId: submissionRef.id,
               },
             },
             unit_amount: tierConfig.amount,
@@ -196,7 +183,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      submissionId: submission.id,
+      submissionId: submissionRef.id,
       checkoutUrl: checkoutSession.url,
       checkoutSessionId: checkoutSession.id,
       message: 'Certification submitted! Complete payment to receive your credential.',
@@ -221,55 +208,71 @@ export async function POST(request: NextRequest) {
 // GET: Check submission status
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (authError || !user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
 
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
     const { searchParams } = new URL(request.url);
     const path = searchParams.get('path');
 
     if (!path) {
       // Get all submissions for user
-      const { data: submissions } = await supabase
-        .from('certification_submissions')
-        .select('*')
-        .eq('user_id', user.id);
+      const submissionsQuery = await db
+        .collection('certificationSubmissions')
+        .where('userId', '==', userId)
+        .get();
 
-      return NextResponse.json({ submissions: submissions || [] });
+      const submissions = submissionsQuery.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      return NextResponse.json({ submissions });
     }
 
     // Get specific path submission
-    const { data: submission } = await supabase
-      .from('certification_submissions')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('path', path)
-      .single();
+    const submissionQuery = await db
+      .collection('certificationSubmissions')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .limit(1)
+      .get();
 
-    if (!submission) {
+    if (submissionQuery.empty) {
       return NextResponse.json(
         { error: 'No submission found for this path' },
         { status: 404 }
       );
     }
 
-    // Get milestone progress
-    const { data: milestones } = await supabase
-      .from('user_milestones')
-      .select('milestone_number, status')
-      .eq('user_id', user.id)
-      .eq('path', path)
-      .order('milestone_number');
+    const submission = {
+      id: submissionQuery.docs[0].id,
+      ...submissionQuery.docs[0].data(),
+    };
 
-    const approvedCount = milestones?.filter(
-      m => m.status === 'approved'
-    ).length || 0;
+    // Get milestone progress
+    const milestonesQuery = await db
+      .collection('userMilestones')
+      .where('userId', '==', userId)
+      .where('path', '==', path)
+      .orderBy('milestoneNumber')
+      .get();
+
+    const approvedCount = milestonesQuery.docs.filter(
+      doc => doc.data().status === 'approved'
+    ).length;
 
     return NextResponse.json({
       submission,

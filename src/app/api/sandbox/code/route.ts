@@ -6,8 +6,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-// Database import for future logging
-// import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 let openaiClient: OpenAI | null = null;
 function getOpenAI(): OpenAI {

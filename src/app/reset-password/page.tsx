@@ -1,38 +1,50 @@
 'use client';
 
 /**
- * RESET PASSWORD PAGE
+ * RESET PASSWORD PAGE (Firebase)
  * Allows users to set a new password after clicking reset link
  */
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { getAuth, confirmPasswordReset, verifyPasswordResetCode } from 'firebase/auth';
+import { getFirebaseApp } from '@/lib/firebase/config';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const oobCode = searchParams.get('oobCode');
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
 
-  // Check if we have a valid session from the reset link
+  // Verify the reset code on mount
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    if (!oobCode) {
+      setError('Invalid or missing reset link. Please request a new password reset.');
+      setIsVerifying(false);
+      return;
+    }
 
-    // Listen for auth state changes (when user clicks reset link)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        // User has clicked the reset link and is ready to set new password
-        console.log('Password recovery mode active');
-      }
-    });
+    const app = getFirebaseApp();
+    const auth = getAuth(app);
 
-    return () => subscription.unsubscribe();
-  }, []);
+    verifyPasswordResetCode(auth, oobCode)
+      .then((userEmail) => {
+        setEmail(userEmail);
+        setIsVerifying(false);
+      })
+      .catch(() => {
+        setError('This password reset link has expired or is invalid. Please request a new one.');
+        setIsVerifying(false);
+      });
+  }, [oobCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,19 +60,18 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    if (!oobCode) {
+      setError('Invalid reset link');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const supabase = getSupabaseClient();
+      const app = getFirebaseApp();
+      const auth = getAuth(app);
 
-      const { error } = await supabase.auth.updateUser({
-        password: password,
-      });
-
-      if (error) {
-        setError(error.message);
-        return;
-      }
+      await confirmPasswordReset(auth, oobCode, password);
 
       setSuccess(true);
 
@@ -69,11 +80,23 @@ export default function ResetPasswordPage() {
         router.push('/login');
       }, 3000);
     } catch (err) {
-      setError('Failed to reset password. Please try again.');
+      const message = err instanceof Error ? err.message : 'Failed to reset password';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen bg-[#0f1115] flex items-center justify-center p-4">
+        <div className="w-full max-w-md text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto" />
+          <p className="text-slate-400 mt-4">Verifying reset link...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (success) {
     return (
@@ -112,7 +135,9 @@ export default function ResetPasswordPage() {
             <h1 className="text-2xl font-bold text-white">PHAZUR</h1>
           </Link>
           <h2 className="text-xl font-semibold text-white mb-2">Reset Your Password</h2>
-          <p className="text-slate-400 text-sm">Enter your new password below</p>
+          <p className="text-slate-400 text-sm">
+            {email ? `Enter a new password for ${email}` : 'Enter your new password below'}
+          </p>
         </div>
 
         {/* Form */}
@@ -137,6 +162,7 @@ export default function ResetPasswordPage() {
                 className="w-full px-4 py-3 bg-slate-900/60 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
                 required
                 minLength={8}
+                disabled={!!error && !email}
               />
               <p className="mt-1 text-xs text-slate-500">Minimum 8 characters</p>
             </div>
@@ -153,12 +179,13 @@ export default function ResetPasswordPage() {
                 placeholder="Confirm new password"
                 className="w-full px-4 py-3 bg-slate-900/60 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
                 required
+                disabled={!!error && !email}
               />
             </div>
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || (!!error && !email)}
               className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-medium transition"
             >
               {isLoading ? 'Resetting...' : 'Reset Password'}

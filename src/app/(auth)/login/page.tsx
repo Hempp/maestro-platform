@@ -10,7 +10,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAnalytics } from '@/components/providers/AnalyticsProvider';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { getAuth, signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
+import { getFirebaseApp } from '@/lib/firebase/config';
 
 // Form validation types
 interface FormErrors {
@@ -76,21 +77,34 @@ export default function LoginPage() {
     trackEvent('login_started', { method: provider });
 
     try {
-      const supabase = getSupabaseClient();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`,
-        },
+      const app = getFirebaseApp();
+      const auth = getAuth(app);
+      const authProvider = provider === 'google'
+        ? new GoogleAuthProvider()
+        : new GithubAuthProvider();
+
+      const result = await signInWithPopup(auth, authProvider);
+      const idToken = await result.user.getIdToken();
+
+      // Create session cookie via API
+      const response = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
       });
 
-      if (error) {
-        trackEvent('login_error', { error: error.message, method: provider });
-        setErrors({ general: error.message });
-        setSocialLoading(null);
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create session');
       }
+
+      trackEvent('login_completed', { method: provider });
+      router.push('/dashboard');
+      router.refresh();
     } catch (err) {
-      setErrors({ general: 'Failed to connect with ' + provider });
+      const message = err instanceof Error ? err.message : 'Failed to connect with ' + provider;
+      trackEvent('login_error', { error: message, method: provider });
+      setErrors({ general: message });
       setSocialLoading(null);
     }
   };

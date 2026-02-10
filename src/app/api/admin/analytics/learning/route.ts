@@ -1,11 +1,12 @@
 /**
- * LEARNING EFFECTIVENESS ANALYTICS API
+ * LEARNING EFFECTIVENESS ANALYTICS API (Firebase)
  * Returns comprehensive learning analytics with mock data
  * Supports filtering by learning path and date range
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -90,7 +91,6 @@ interface AICoachingStats {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function generateMockData(days: number, pathFilter?: string) {
-  // Seeded random for consistent mock data
   const seed = days + (pathFilter?.length || 0);
   const random = (min: number, max: number) => {
     const x = Math.sin(seed + min * max) * 10000;
@@ -120,13 +120,13 @@ function generateMockData(days: number, pathFilter?: string) {
     { label: '81-100', min: 81, max: 100 },
   ];
 
-  // Create realistic bell-curve-like distribution skewed towards lower struggle
   const weights = [0.25, 0.35, 0.22, 0.12, 0.06];
   let remaining = totalLearners;
   const ranges = distribution.map((d, i) => {
-    const count = i === distribution.length - 1
-      ? remaining
-      : Math.floor(totalLearners * weights[i] + random(-20, 20));
+    const count =
+      i === distribution.length - 1
+        ? remaining
+        : Math.floor(totalLearners * weights[i] + random(-20, 20));
     remaining -= count;
     return {
       ...d,
@@ -367,19 +367,22 @@ function generateMockData(days: number, pathFilter?: string) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    // Check admin/teacher role
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
+    // Check admin/teacher role
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
 
     if (!userData || !['admin', 'teacher'].includes(userData.role || '')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -408,7 +411,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate mock data
-    // In production, this would be replaced with actual database queries
     const analytics = generateMockData(days, pathFilter);
 
     return NextResponse.json(analytics);

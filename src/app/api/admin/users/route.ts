@@ -1,234 +1,126 @@
 /**
- * ADMIN USERS API
+ * ADMIN USERS API (Firebase)
  * Manage all platform users with admin tier system
- *
- * NOTE: This API gracefully handles the case where admin_tier column
- * or admin_tier_permissions table doesn't exist yet (pre-migration)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import type { AdminTier } from '@/types';
 import { TIER_PERMISSIONS } from '@/types';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// PERMISSION HELPERS (with graceful degradation)
-// ═══════════════════════════════════════════════════════════════════════════
+// Get permissions for a user based on their admin tier
+function getUserPermissions(adminTier?: string | null): string[] {
+  if (!adminTier) return [];
+  return TIER_PERMISSIONS[adminTier as AdminTier] || [];
+}
 
-/**
- * Get all permissions for a user based on their admin_tier
- * Falls back to in-memory TIER_PERMISSIONS if database table doesn't exist
- */
-async function getUserPermissions(supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>, userId: string, adminTier?: string | null): Promise<string[]> {
-  // If we already have the admin_tier from the user query, use it directly
-  const tier = adminTier;
+// Helper to check admin role
+async function checkAdminRole() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get('session')?.value;
 
-  if (!tier) {
-    // Try to fetch from database if not provided
-    try {
-      const { data } = await supabase
-        .from('users')
-        .select('admin_tier')
-        .eq('id', userId)
-        .single() as { data: { admin_tier: string | null } | null };
-
-      if (!data?.admin_tier) return [];
-
-      // Fall back to in-memory permissions
-      return TIER_PERMISSIONS[data.admin_tier as AdminTier] || [];
-    } catch {
-      return [];
-    }
+  if (!session) {
+    return { authorized: false, user: null, role: null, adminTier: null };
   }
 
-  // Use in-memory TIER_PERMISSIONS as the source of truth
-  // This works even if the admin_tier_permissions table doesn't exist
-  return TIER_PERMISSIONS[tier as AdminTier] || [];
-}
-
-/**
- * Check if a user has a specific permission
- * Uses in-memory TIER_PERMISSIONS for reliability
- */
-async function checkPermission(supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>, userId: string, permission: string): Promise<boolean> {
-  const perms = await getUserPermissions(supabase, userId);
-  return perms.includes(permission);
-}
-
-/**
- * Check if admin_tier column exists in users table
- * Returns false if column doesn't exist (pre-migration state)
- */
-async function adminTierColumnExists(supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>): Promise<boolean> {
   try {
-    // Try a query that selects admin_tier - if it fails, column doesn't exist
-    const { error } = await supabase
-      .from('users')
-      .select('admin_tier')
-      .limit(1);
+    const auth = getAdminAuth();
+    const db = getAdminDb();
 
-    // If error contains "column" and "does not exist", the column is missing
-    if (error?.message?.includes('does not exist')) {
-      return false;
-    }
-    return true;
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+
+    const role = userData?.role;
+    const adminTier = userData?.adminTier as AdminTier | null;
+    const authorized = role === 'admin' || role === 'teacher';
+
+    return { authorized, user: { id: userId, email: decodedClaims.email }, role, adminTier };
   } catch {
-    return false;
+    return { authorized: false, user: null, role: null, adminTier: null };
   }
 }
 
-// Helper to check admin/teacher role
-async function checkAdminRole(supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { authorized: false, user: null, role: null, adminTier: null, adminTierExists: true };
-
-  // Check if admin_tier column exists
-  const adminTierExists = await adminTierColumnExists(supabase);
-
-  // Build query based on what columns exist
-  const selectFields = adminTierExists ? 'role, admin_tier' : 'role';
-
-  const { data: userData } = await supabase
-    .from('users')
-    .select(selectFields)
-    .eq('id', user.id)
-    .single() as { data: { role: string | null; admin_tier?: string | null } | null };
-
-  const role = userData?.role;
-  const adminTier = adminTierExists ? (userData?.admin_tier as AdminTier | null) : null;
-  const authorized = role === 'admin' || role === 'teacher';
-  return { authorized, user, role, adminTier, adminTierExists };
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
 // GET - Fetch users with filtering
-// ═══════════════════════════════════════════════════════════════════════════
-
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { authorized, adminTierExists } = await checkAdminRole(supabase);
+    const { authorized } = await checkAdminRole();
 
     if (!authorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
+    const db = getAdminDb();
+
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search') || '';
-    // Support array of roles: ?role=admin&role=teacher
+    const search = searchParams.get('search')?.toLowerCase() || '';
     const roleFilters = searchParams.getAll('role');
     const tierFilter = searchParams.get('tier') || '';
-    // Support filtering by admin_tier
     const adminTierFilter = searchParams.get('admin_tier') || '';
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // Build select fields based on whether admin_tier column exists
-    const selectFields = adminTierExists
-      ? `
-        id,
-        email,
-        full_name,
-        avatar_url,
-        tier,
-        role,
-        admin_tier,
-        created_at,
-        updated_at,
-        learner_profiles (
-          current_path,
-          total_learning_time,
-          current_streak,
-          struggle_score,
-          last_activity_at
-        )
-      `
-      : `
-        id,
-        email,
-        full_name,
-        avatar_url,
-        tier,
-        role,
-        created_at,
-        updated_at,
-        learner_profiles (
-          current_path,
-          total_learning_time,
-          current_streak,
-          struggle_score,
-          last_activity_at
-        )
-      `;
+    // Get all users and filter in memory (Firestore doesn't support complex queries)
+    const usersSnapshot = await db.collection('users').orderBy('createdAt', 'desc').get();
 
-    let query = supabase
-      .from('users')
-      .select(selectFields, { count: 'exact' });
+    let users = usersSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
 
     // Apply filters
     if (search) {
-      query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`);
+      users = users.filter((u: any) =>
+        u.email?.toLowerCase().includes(search) ||
+        u.fullName?.toLowerCase().includes(search)
+      );
     }
 
-    // Support array of role filters
-    if (roleFilters.length === 1) {
-      query = query.eq('role', roleFilters[0] as any);
-    } else if (roleFilters.length > 1) {
-      query = query.in('role', roleFilters as any);
+    if (roleFilters.length > 0) {
+      users = users.filter((u: any) => roleFilters.includes(u.role));
     }
 
     if (tierFilter) {
-      query = query.eq('tier', tierFilter as any);
+      users = users.filter((u: any) => u.tier === tierFilter);
     }
 
-    // Filter by admin_tier (only if column exists)
-    if (adminTierFilter && adminTierExists) {
-      query = query.eq('admin_tier', adminTierFilter as any);
+    if (adminTierFilter) {
+      users = users.filter((u: any) => u.adminTier === adminTierFilter);
     }
 
-    // Pagination
-    query = query.range(offset, offset + limit - 1).order('created_at', { ascending: false });
+    const total = users.length;
+    const paginatedUsers = users.slice(offset, offset + limit);
 
-    const { data: users, error, count } = await query as {
-      data: Array<{
-        id: string;
-        email: string;
-        full_name: string | null;
-        avatar_url: string | null;
-        tier: string | null;
-        role: string | null;
-        admin_tier?: string | null;
-        created_at: string | null;
-        updated_at: string | null;
-        learner_profiles: unknown;
-      }> | null;
-      error: Error | null;
-      count: number | null;
-    };
+    // Get learner profiles for each user
+    const usersWithProfiles = await Promise.all(
+      paginatedUsers.map(async (user: any) => {
+        const profileQuery = await db
+          .collection('learnerProfiles')
+          .where('userId', '==', user.id)
+          .limit(1)
+          .get();
 
-    if (error) throw error;
+        const learnerProfile = profileQuery.empty ? null : profileQuery.docs[0].data();
+        const permissions = getUserPermissions(user.adminTier);
 
-    // Normalize users and fetch permissions for each user with an admin_tier
-    const usersWithPermissions = await Promise.all(
-      (users || []).map(async (user) => {
-        // Ensure admin_tier is always present (null if column doesn't exist)
-        const adminTier = adminTierExists ? (user.admin_tier || null) : null;
-
-        if (adminTier) {
-          const permissions = await getUserPermissions(supabase, user.id, adminTier);
-          return { ...user, admin_tier: adminTier, permissions };
-        }
-        return { ...user, admin_tier: null, permissions: [] };
+        return {
+          ...user,
+          learnerProfiles: learnerProfile ? [learnerProfile] : [],
+          permissions,
+        };
       })
     );
 
     return NextResponse.json({
-      users: usersWithPermissions,
-      total: count,
+      users: usersWithProfiles,
+      total,
       limit,
       offset,
-      // Include metadata about admin tier system status
-      adminTierSystemActive: adminTierExists,
+      adminTierSystemActive: true,
     });
   } catch (error) {
     console.error('Admin users API error:', error);
@@ -239,22 +131,23 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
 // POST - Invite/create admin users
-// ═══════════════════════════════════════════════════════════════════════════
-
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { authorized, user, adminTierExists } = await checkAdminRole(supabase);
+    const { authorized, user } = await checkAdminRole();
 
     if (!authorized || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
+    const db = getAdminDb();
+
     // Check if current user has 'manage_admins' permission
-    const hasPermission = await checkPermission(supabase, user.id, 'manage_admins');
-    if (!hasPermission) {
+    const currentUserDoc = await db.collection('users').doc(user.id).get();
+    const currentUserData = currentUserDoc.data();
+    const permissions = getUserPermissions(currentUserData?.adminTier);
+
+    if (!permissions.includes('manage_admins')) {
       return NextResponse.json({ error: 'Insufficient permissions - requires manage_admins' }, { status: 403 });
     }
 
@@ -276,96 +169,56 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid admin_tier' }, { status: 400 });
     }
 
-    // If admin_tier is provided but column doesn't exist, return error with helpful message
-    if (admin_tier && !adminTierExists) {
-      return NextResponse.json({
-        error: 'Admin tier system not available',
-        message: 'The admin_tier column has not been created yet. Please run the database migration first.',
-      }, { status: 400 });
-    }
-
-    // Build select fields based on whether admin_tier column exists
-    const existingUserSelectFields = adminTierExists
-      ? 'id, email, full_name, role, admin_tier'
-      : 'id, email, full_name, role';
-
     // Check if user with this email already exists
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select(existingUserSelectFields)
-      .eq('email', email)
-      .single() as { data: { id: string; email: string; full_name: string | null; role: string | null; admin_tier?: string | null } | null };
+    const existingQuery = await db
+      .collection('users')
+      .where('email', '==', email)
+      .limit(1)
+      .get();
 
-    if (existingUser) {
+    if (!existingQuery.empty) {
       // Update existing user's role and admin_tier
+      const existingDoc = existingQuery.docs[0];
       const updateData: Record<string, unknown> = {
-        updated_at: new Date().toISOString(),
+        updatedAt: Timestamp.now(),
       };
 
       if (role) updateData.role = role;
-      if (admin_tier !== undefined && adminTierExists) updateData.admin_tier = admin_tier;
-      if (full_name) updateData.full_name = full_name;
+      if (admin_tier !== undefined) updateData.adminTier = admin_tier;
+      if (full_name) updateData.fullName = full_name;
 
-      const updateSelectFields = adminTierExists
-        ? 'id, email, full_name, role, admin_tier, created_at, updated_at'
-        : 'id, email, full_name, role, created_at, updated_at';
+      await existingDoc.ref.update(updateData);
 
-      const { data: updatedUser, error: updateError } = await supabase
-        .from('users')
-        .update(updateData as never)
-        .eq('id', existingUser.id)
-        .select(updateSelectFields)
-        .single() as { data: { id: string; email: string; full_name: string | null; role: string | null; admin_tier?: string | null; created_at: string | null; updated_at: string | null } | null; error: Error | null };
-
-      if (updateError) throw updateError;
-      if (!updatedUser) throw new Error('Failed to update user');
-
-      // Get permissions for the updated user
-      const adminTierValue = adminTierExists ? (updatedUser.admin_tier || null) : null;
-      const permissions = adminTierValue ? await getUserPermissions(supabase, updatedUser.id, adminTierValue) : [];
+      const updatedDoc = await existingDoc.ref.get();
+      const updatedUserData = updatedDoc.data() as Record<string, unknown>;
+      const updatedUser = { id: updatedDoc.id, ...updatedUserData };
+      const updatedPermissions = getUserPermissions(updatedUserData?.adminTier as string | null);
 
       return NextResponse.json({
-        user: { ...updatedUser, admin_tier: adminTierValue, permissions },
+        user: { ...updatedUser, permissions: updatedPermissions },
         action: 'updated',
         message: 'Existing user updated with new admin privileges',
       });
     }
 
-    // Create new user with pending status (invitation)
-    // Note: The actual auth account will be created when they accept the invitation
-    const insertData: Record<string, unknown> = {
+    // Create new user
+    const newUserRef = await db.collection('users').add({
       email,
-      full_name: full_name || null,
+      fullName: full_name || null,
       role: role || 'admin',
-      tier: 'student', // Default business tier
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+      adminTier: admin_tier || null,
+      tier: 'student',
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
 
-    // Only include admin_tier if column exists
-    if (adminTierExists) {
-      insertData.admin_tier = admin_tier || null;
-    }
-
-    const insertSelectFields = adminTierExists
-      ? 'id, email, full_name, role, admin_tier, created_at, updated_at'
-      : 'id, email, full_name, role, created_at, updated_at';
-
-    const { data: newUser, error: createError } = await supabase
-      .from('users')
-      .insert(insertData as never)
-      .select(insertSelectFields)
-      .single() as { data: { id: string; email: string; full_name: string | null; role: string | null; admin_tier?: string | null; created_at: string | null; updated_at: string | null } | null; error: Error | null };
-
-    if (createError) throw createError;
-    if (!newUser) throw new Error('Failed to create user');
-
-    // Get permissions for the new user
-    const newUserTier = adminTierExists ? (newUser.admin_tier || null) : null;
-    const permissions = newUserTier ? await getUserPermissions(supabase, newUser.id, newUserTier) : [];
+    const newUserDoc = await newUserRef.get();
+    const newUserData = newUserDoc.data() as Record<string, unknown>;
+    const newUser = { id: newUserDoc.id, ...newUserData };
+    const newUserPermissions = getUserPermissions(newUserData?.adminTier as string | null);
 
     return NextResponse.json({
-      user: { ...newUser, admin_tier: newUserTier, permissions },
+      user: { ...newUser, permissions: newUserPermissions },
       action: 'created',
       message: 'New admin user created. They will need to be invited via auth system.',
     }, { status: 201 });
@@ -379,19 +232,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
 // PATCH - Update user details including admin_tier
-// ═══════════════════════════════════════════════════════════════════════════
-
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { authorized, user, role, adminTierExists } = await checkAdminRole(supabase);
+    const { authorized, user, role } = await checkAdminRole();
 
     if (!authorized || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
+    const db = getAdminDb();
     const body = await request.json();
     const { userId, updates } = body;
 
@@ -400,29 +250,19 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Check if trying to update admin_tier - requires manage_admins permission
-    if (updates.admin_tier !== undefined) {
-      // If admin_tier column doesn't exist, return helpful error
-      if (!adminTierExists) {
-        return NextResponse.json({
-          error: 'Admin tier system not available',
-          message: 'The admin_tier column has not been created yet. Please run the database migration first.',
-        }, { status: 400 });
-      }
+    if (updates.admin_tier !== undefined || updates.adminTier !== undefined) {
+      const currentUserDoc = await db.collection('users').doc(user.id).get();
+      const currentUserData = currentUserDoc.data();
+      const permissions = getUserPermissions(currentUserData?.adminTier);
 
-      const hasPermission = await checkPermission(supabase, user.id, 'manage_admins');
-      if (!hasPermission) {
+      if (!permissions.includes('manage_admins')) {
         return NextResponse.json({ error: 'Insufficient permissions - requires manage_admins to change admin_tier' }, { status: 403 });
       }
 
       // Prevent self-demotion for super_admins
-      if (userId === user.id) {
-        const { data: currentUserData } = await supabase
-          .from('users')
-          .select('admin_tier')
-          .eq('id', user.id)
-          .single() as { data: { admin_tier: string | null } | null };
-
-        if (currentUserData?.admin_tier === 'super_admin' && updates.admin_tier !== 'super_admin') {
+      if (userId === user.id && currentUserData?.adminTier === 'super_admin') {
+        const newTier = updates.admin_tier ?? updates.adminTier;
+        if (newTier !== 'super_admin') {
           return NextResponse.json({ error: 'Cannot demote yourself from super_admin' }, { status: 403 });
         }
       }
@@ -433,51 +273,35 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Only admins can change user roles' }, { status: 403 });
     }
 
-    const allowedUpdates: Record<string, unknown> = {};
+    const allowedUpdates: Record<string, unknown> = {
+      updatedAt: Timestamp.now(),
+    };
 
-    // Role changes require admin role
+    // Map updates
     if (updates.role && role === 'admin') {
       allowedUpdates.role = updates.role;
-
-      // If changing role to 'learner' and admin_tier is being set to null, this effectively removes admin
-      if (updates.role === 'learner' && adminTierExists) {
-        allowedUpdates.admin_tier = null;
+      if (updates.role === 'learner') {
+        allowedUpdates.adminTier = null;
       }
     }
-
-    // Handle admin_tier updates (only if column exists)
-    if (updates.admin_tier !== undefined && adminTierExists) {
-      allowedUpdates.admin_tier = updates.admin_tier;
-    }
-
+    if (updates.admin_tier !== undefined) allowedUpdates.adminTier = updates.admin_tier;
+    if (updates.adminTier !== undefined) allowedUpdates.adminTier = updates.adminTier;
     if (updates.tier) allowedUpdates.tier = updates.tier;
-    if (updates.full_name) allowedUpdates.full_name = updates.full_name;
+    if (updates.full_name) allowedUpdates.fullName = updates.full_name;
+    if (updates.fullName) allowedUpdates.fullName = updates.fullName;
 
-    if (Object.keys(allowedUpdates).length === 0) {
+    if (Object.keys(allowedUpdates).length === 1) {
       return NextResponse.json({ error: 'No valid updates provided' }, { status: 400 });
     }
 
-    allowedUpdates.updated_at = new Date().toISOString();
+    await db.collection('users').doc(userId).update(allowedUpdates);
 
-    const selectFields = adminTierExists
-      ? 'id, email, full_name, role, admin_tier, tier, created_at, updated_at'
-      : 'id, email, full_name, role, tier, created_at, updated_at';
+    const updatedDoc = await db.collection('users').doc(userId).get();
+    const updatedUserData = updatedDoc.data() as Record<string, unknown>;
+    const updatedUser = { id: updatedDoc.id, ...updatedUserData };
+    const updatedPermissions = getUserPermissions(updatedUserData?.adminTier as string | null);
 
-    const { data, error } = await supabase
-      .from('users')
-      .update(allowedUpdates as never)
-      .eq('id', userId)
-      .select(selectFields)
-      .single() as { data: { id: string; email: string; full_name: string | null; role: string | null; admin_tier?: string | null; tier: string | null; created_at: string | null; updated_at: string | null } | null; error: Error | null };
-
-    if (error) throw error;
-    if (!data) throw new Error('User not found');
-
-    // Get updated permissions
-    const adminTierValue = adminTierExists ? (data.admin_tier || null) : null;
-    const permissions = adminTierValue ? await getUserPermissions(supabase, data.id, adminTierValue) : [];
-
-    return NextResponse.json({ user: { ...data, admin_tier: adminTierValue, permissions } });
+    return NextResponse.json({ user: { ...updatedUser, permissions: updatedPermissions } });
   } catch (error) {
     console.error('Admin users PATCH error:', error);
     return NextResponse.json(
@@ -487,22 +311,23 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
 // DELETE - Remove admin privileges from a user
-// ═══════════════════════════════════════════════════════════════════════════
-
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { authorized, user, adminTierExists } = await checkAdminRole(supabase);
+    const { authorized, user } = await checkAdminRole();
 
     if (!authorized || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
+    const db = getAdminDb();
+
     // Check if current user has 'manage_admins' permission
-    const hasPermission = await checkPermission(supabase, user.id, 'manage_admins');
-    if (!hasPermission) {
+    const currentUserDoc = await db.collection('users').doc(user.id).get();
+    const currentUserData = currentUserDoc.data();
+    const permissions = getUserPermissions(currentUserData?.adminTier);
+
+    if (!permissions.includes('manage_admins')) {
       return NextResponse.json({ error: 'Insufficient permissions - requires manage_admins' }, { status: 403 });
     }
 
@@ -518,33 +343,18 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot remove your own admin privileges' }, { status: 403 });
     }
 
-    // Build update data based on whether admin_tier column exists
-    const updateData: Record<string, unknown> = {
+    // Remove admin privileges
+    await db.collection('users').doc(userId).update({
       role: 'learner',
-      updated_at: new Date().toISOString(),
-    };
+      adminTier: null,
+      updatedAt: Timestamp.now(),
+    });
 
-    if (adminTierExists) {
-      updateData.admin_tier = null;
-    }
-
-    const selectFields = adminTierExists
-      ? 'id, email, full_name, role, admin_tier, tier, created_at, updated_at'
-      : 'id, email, full_name, role, tier, created_at, updated_at';
-
-    // Remove admin privileges by setting admin_tier to null and role to 'learner'
-    const { data, error } = await supabase
-      .from('users')
-      .update(updateData as never)
-      .eq('id', userId)
-      .select(selectFields)
-      .single() as { data: { id: string; email: string; full_name: string | null; role: string | null; admin_tier?: string | null; tier: string | null; created_at: string | null; updated_at: string | null } | null; error: Error | null };
-
-    if (error) throw error;
-    if (!data) throw new Error('User not found');
+    const updatedDoc = await db.collection('users').doc(userId).get();
+    const updatedUser = { id: updatedDoc.id, ...updatedDoc.data() };
 
     return NextResponse.json({
-      user: { ...data, admin_tier: null, permissions: [] },
+      user: { ...updatedUser, permissions: [] },
       message: 'Admin privileges removed successfully',
     });
   } catch (error) {

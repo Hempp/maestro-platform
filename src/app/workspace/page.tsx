@@ -74,14 +74,14 @@ function WorkspaceContent() {
           const moduleData = await moduleResponse.json();
 
           initSession(
-            user?.id || 'anonymous',
+            user?.uid || 'anonymous',
             data.module.tier as BusinessTier,
             moduleData.akus || [data.aku]
           );
         } else if (data.akus && data.akus.length > 0) {
           // Module AKUs
           initSession(
-            user?.id || 'anonymous',
+            user?.uid || 'anonymous',
             tier as BusinessTier,
             data.akus
           );
@@ -97,7 +97,7 @@ function WorkspaceContent() {
     }
 
     loadAKUs();
-  }, [moduleId, tier, akuId, user?.id, authLoading, initSession]);
+  }, [moduleId, tier, akuId, user?.uid, authLoading, initSession]);
 
   // Loading state
   if (authLoading || isLoading) {

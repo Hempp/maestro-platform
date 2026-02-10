@@ -1,17 +1,16 @@
 /**
- * AUTH HOOK
- * Client-side authentication state management
+ * AUTH HOOK (Firebase)
+ * Client-side authentication state management using Firebase
  */
 
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
-import type { User, Session } from '@supabase/supabase-js';
+import { getAuth, onAuthStateChanged, signOut as firebaseSignOut, User } from 'firebase/auth';
+import { getFirebaseApp } from '@/lib/firebase/config';
 
 interface AuthState {
   user: User | null;
-  session: Session | null;
   loading: boolean;
   error: string | null;
 }
@@ -19,37 +18,30 @@ interface AuthState {
 export function useAuth() {
   const [state, setState] = useState<AuthState>({
     user: null,
-    session: null,
     loading: true,
     error: null,
   });
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    const app = getFirebaseApp();
+    const auth = getAuth(app);
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    // Listen for auth state changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setState({
-        user: session?.user ?? null,
-        session,
-        loading: false,
-        error: error?.message ?? null,
-      });
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setState({
-        user: session?.user ?? null,
-        session,
+        user,
         loading: false,
         error: null,
       });
+    }, (error) => {
+      setState({
+        user: null,
+        loading: false,
+        error: error.message,
+      });
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, fullName?: string) => {
@@ -92,10 +84,7 @@ export function useAuth() {
         throw new Error(data.error || 'Sign in failed');
       }
 
-      // Refresh the client state
-      const supabase = getSupabaseClient();
-      await supabase.auth.getSession();
-
+      // Auth state will be updated by onAuthStateChanged listener
       return data;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Sign in failed';
@@ -108,6 +97,7 @@ export function useAuth() {
     setState(prev => ({ ...prev, loading: true }));
 
     try {
+      // Call logout API to clear session cookie
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
       });
@@ -116,12 +106,13 @@ export function useAuth() {
         throw new Error('Sign out failed');
       }
 
-      const supabase = getSupabaseClient();
-      await supabase.auth.signOut();
+      // Sign out from Firebase client
+      const app = getFirebaseApp();
+      const auth = getAuth(app);
+      await firebaseSignOut(auth);
 
       setState({
         user: null,
-        session: null,
         loading: false,
         error: null,
       });
@@ -132,31 +123,14 @@ export function useAuth() {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    const supabase = getSupabaseClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/api/auth/callback`,
-      },
-    });
-
-    if (error) {
-      setState(prev => ({ ...prev, error: error.message }));
-    }
+    // OAuth is handled by the login page with popup flow
+    // This redirects to the login page with OAuth intent
+    window.location.href = '/login?provider=google';
   }, []);
 
   const signInWithGithub = useCallback(async () => {
-    const supabase = getSupabaseClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/api/auth/callback`,
-      },
-    });
-
-    if (error) {
-      setState(prev => ({ ...prev, error: error.message }));
-    }
+    // OAuth is handled by the login page with popup flow
+    window.location.href = '/login?provider=github';
   }, []);
 
   return {

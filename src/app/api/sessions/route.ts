@@ -1,25 +1,34 @@
 /**
- * PUBLIC SESSIONS API
+ * PUBLIC SESSIONS API (Firebase)
  * Get available live sessions for learners (with tier-based access)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const db = getAdminDb();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
     // Get user tier if authenticated
+    let userId: string | null = null;
     let userTier = 'student';
-    if (user) {
-      const { data: userData } = await (supabase as any)
-        .from('users')
-        .select('tier')
-        .eq('id', user.id)
-        .single();
-      userTier = (userData?.tier as string) || 'student';
+
+    if (session) {
+      try {
+        const auth = getAdminAuth();
+        const decodedClaims = await auth.verifySessionCookie(session, true);
+        userId = decodedClaims.uid;
+
+        const userDoc = await db.collection('users').doc(userId).get();
+        userTier = userDoc.data()?.tier || 'student';
+      } catch {
+        // Session invalid, continue as unauthenticated
+      }
     }
 
     const { searchParams } = new URL(request.url);
@@ -27,99 +36,91 @@ export async function GET(request: NextRequest) {
     const includeAll = searchParams.get('includeAll') === 'true';
 
     // Get sessions
-    let query = (supabase as any)
-      .from('live_sessions')
-      .select(`
-        id,
-        title,
-        description,
-        scheduled_at,
-        duration_minutes,
-        platform,
-        target_tier,
-        seat_price,
-        max_seats,
-        status,
-        course:live_courses (
-          id,
-          title,
-          description
-        )
-      `)
-      .order('scheduled_at', { ascending: true });
+    let sessionsQuery = db.collection('liveSessions').orderBy('scheduledAt', 'asc');
 
     if (!includeAll) {
-      query = query.eq('status', status);
-      if (status === 'scheduled') {
-        query = query.gte('scheduled_at', new Date().toISOString());
-      }
+      sessionsQuery = sessionsQuery.where('status', '==', status);
     }
 
-    const { data: sessions, error } = await query;
+    const sessionsSnapshot = await sessionsQuery.get();
+    const sessions = sessionsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
 
-    if (error) throw error;
+    // Filter for future sessions if scheduled
+    const filteredSessions = includeAll
+      ? sessions
+      : sessions.filter((s: any) => {
+          if (status === 'scheduled') {
+            const scheduledAt = s.scheduledAt?.toDate?.() || new Date(s.scheduledAt);
+            return scheduledAt >= new Date();
+          }
+          return true;
+        });
 
     // Get enrollment counts and user's purchase status
     const sessionsWithAccess = await Promise.all(
-      (sessions || []).map(async (session: any) => {
+      filteredSessions.map(async (sessionData: any) => {
         // Get enrollment count
-        const { count: enrollmentCount } = await (supabase as any)
-          .from('session_enrollments')
-          .select('*', { count: 'exact', head: true })
-          .eq('session_id', session.id);
+        const enrollmentQuery = await db
+          .collection('sessionEnrollments')
+          .where('sessionId', '==', sessionData.id)
+          .get();
+        const enrollmentCount = enrollmentQuery.size;
 
         // Check user's access
         let hasAccess = false;
         let hasPurchased = false;
         let isEnrolled = false;
 
-        if (user) {
+        if (userId) {
           // Check tier-based access
           if (userTier === 'owner') {
             hasAccess = true;
-          } else if (userTier === 'employee' && ['student', 'employee'].includes(session.target_tier)) {
+          } else if (userTier === 'employee' && ['student', 'employee'].includes(sessionData.targetTier)) {
             hasAccess = true;
-          } else if (userTier === 'student' && session.target_tier === 'student') {
+          } else if (userTier === 'student' && sessionData.targetTier === 'student') {
             hasAccess = true;
           }
 
           // Check if purchased
           if (!hasAccess) {
-            const { data: purchase } = await (supabase as any)
-              .from('seat_purchases')
-              .select('id')
-              .eq('session_id', session.id)
-              .eq('user_id', user.id)
-              .eq('payment_status', 'completed')
-              .single();
+            const purchaseQuery = await db
+              .collection('seatPurchases')
+              .where('sessionId', '==', sessionData.id)
+              .where('userId', '==', userId)
+              .where('paymentStatus', '==', 'completed')
+              .limit(1)
+              .get();
 
-            if (purchase) {
+            if (!purchaseQuery.empty) {
               hasPurchased = true;
               hasAccess = true;
             }
           }
 
           // Check if enrolled
-          const { data: enrollment } = await (supabase as any)
-            .from('session_enrollments')
-            .select('id')
-            .eq('session_id', session.id)
-            .eq('student_id', user.id)
-            .single();
+          const enrollmentCheck = await db
+            .collection('sessionEnrollments')
+            .where('sessionId', '==', sessionData.id)
+            .where('studentId', '==', userId)
+            .limit(1)
+            .get();
 
-          isEnrolled = !!enrollment;
+          isEnrolled = !enrollmentCheck.empty;
         }
 
         return {
-          ...session,
-          enrollmentCount: enrollmentCount || 0,
-          seatsAvailable: (session.max_seats || 100) - (enrollmentCount || 0),
+          ...sessionData,
+          enrollmentCount,
+          seatsAvailable: (sessionData.maxSeats || 100) - enrollmentCount,
           userAccess: {
             hasAccess,
             hasPurchased,
             isEnrolled,
-            requiresPurchase: !hasAccess && session.target_tier !== 'student',
-            price: hasAccess ? 0 : session.seat_price,
+            requiresPurchase: !hasAccess && sessionData.targetTier !== 'student',
+            price: hasAccess ? 0 : sessionData.seatPrice,
           },
         };
       })
@@ -138,12 +139,18 @@ export async function GET(request: NextRequest) {
 // POST: Enroll in a session (free access only)
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
 
     const body = await request.json();
     const { sessionId } = body;
@@ -153,46 +160,39 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user tier
-    const { data: userData } = await (supabase as any)
-      .from('users')
-      .select('tier')
-      .eq('id', user.id)
-      .single();
-
-    const userTier = (userData?.tier as string) || 'student';
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userTier = userDoc.data()?.tier || 'student';
 
     // Get session
-    const { data: session, error: sessionError } = await (supabase as any)
-      .from('live_sessions')
-      .select('id, target_tier, max_seats')
-      .eq('id', sessionId)
-      .single();
+    const sessionDoc = await db.collection('liveSessions').doc(sessionId).get();
 
-    if (sessionError || !session) {
+    if (!sessionDoc.exists) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
+
+    const sessionData = sessionDoc.data();
 
     // Check tier access
     let hasAccess = false;
     if (userTier === 'owner') {
       hasAccess = true;
-    } else if (userTier === 'employee' && ['student', 'employee'].includes(session.target_tier)) {
+    } else if (userTier === 'employee' && ['student', 'employee'].includes(sessionData?.targetTier)) {
       hasAccess = true;
-    } else if (userTier === 'student' && session.target_tier === 'student') {
+    } else if (userTier === 'student' && sessionData?.targetTier === 'student') {
       hasAccess = true;
     }
 
     // Check if purchased
     if (!hasAccess) {
-      const { data: purchase } = await (supabase as any)
-        .from('seat_purchases')
-        .select('id')
-        .eq('session_id', sessionId)
-        .eq('user_id', user.id)
-        .eq('payment_status', 'completed')
-        .single();
+      const purchaseQuery = await db
+        .collection('seatPurchases')
+        .where('sessionId', '==', sessionId)
+        .where('userId', '==', userId)
+        .where('paymentStatus', '==', 'completed')
+        .limit(1)
+        .get();
 
-      if (purchase) hasAccess = true;
+      if (!purchaseQuery.empty) hasAccess = true;
     }
 
     if (!hasAccess) {
@@ -200,39 +200,38 @@ export async function POST(request: NextRequest) {
     }
 
     // Check seat availability
-    const { count: enrollmentCount } = await (supabase as any)
-      .from('session_enrollments')
-      .select('*', { count: 'exact', head: true })
-      .eq('session_id', sessionId);
+    const enrollmentQuery = await db
+      .collection('sessionEnrollments')
+      .where('sessionId', '==', sessionId)
+      .get();
+    const enrollmentCount = enrollmentQuery.size;
 
-    if ((enrollmentCount || 0) >= (session.max_seats || 100)) {
+    if (enrollmentCount >= (sessionData?.maxSeats || 100)) {
       return NextResponse.json({ error: 'No seats available' }, { status: 400 });
     }
 
     // Check if already enrolled
-    const { data: existing } = await (supabase as any)
-      .from('session_enrollments')
-      .select('id')
-      .eq('session_id', sessionId)
-      .eq('student_id', user.id)
-      .single();
+    const existingEnrollment = await db
+      .collection('sessionEnrollments')
+      .where('sessionId', '==', sessionId)
+      .where('studentId', '==', userId)
+      .limit(1)
+      .get();
 
-    if (existing) {
+    if (!existingEnrollment.empty) {
       return NextResponse.json({ error: 'Already enrolled' }, { status: 400 });
     }
 
     // Enroll
-    const { data: enrollment, error } = await (supabase as any)
-      .from('session_enrollments')
-      .insert({
-        session_id: sessionId,
-        student_id: user.id,
-        access_type: 'tier_included',
-      })
-      .select()
-      .single();
+    const enrollmentRef = await db.collection('sessionEnrollments').add({
+      sessionId,
+      studentId: userId,
+      accessType: 'tier_included',
+      createdAt: Timestamp.now(),
+    });
 
-    if (error) throw error;
+    const enrollmentDoc = await enrollmentRef.get();
+    const enrollment = { id: enrollmentDoc.id, ...enrollmentDoc.data() };
 
     return NextResponse.json({ success: true, enrollment });
   } catch (error) {

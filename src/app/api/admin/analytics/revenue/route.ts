@@ -1,10 +1,11 @@
 /**
- * ADMIN REVENUE ANALYTICS API
+ * ADMIN REVENUE ANALYTICS API (Firebase)
  * Returns revenue metrics, subscription data, and churn analysis
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
 
 // Tier pricing configuration
 const TIER_PRICING = {
@@ -104,7 +105,7 @@ function generateMockData(days: number, tierFilter: string | null) {
   }
 
   // Subscription flow (this period)
-  const flowBase = Math.ceil(days / 30); // Scale by period length
+  const flowBase = Math.ceil(days / 30);
   const flow = {
     newSubscriptions: Math.round(45 * flowBase * (0.9 + Math.random() * 0.2)),
     upgrades: Math.round(18 * flowBase * (0.9 + Math.random() * 0.2)),
@@ -131,7 +132,6 @@ function generateMockData(days: number, tierFilter: string | null) {
     const monthName = monthNames[cohortDate.getMonth()];
     const year = cohortDate.getFullYear().toString().slice(-2);
 
-    // Older cohorts have higher LTV (more time to accumulate revenue)
     const ageMonths = i + 1;
     const baseLTV = 180 + ageMonths * 45;
     const variance = 0.9 + Math.random() * 0.2;
@@ -147,7 +147,7 @@ function generateMockData(days: number, tierFilter: string | null) {
 
   // Churn analysis
   const totalChurned = flow.churns;
-  const studentChurns = Math.round(totalChurned * 0.55); // Higher churn at lower tier
+  const studentChurns = Math.round(totalChurned * 0.55);
   const employeeChurns = Math.round(totalChurned * 0.32);
   const ownerChurns = totalChurned - studentChurns - employeeChurns;
 
@@ -210,23 +210,22 @@ function generateMockData(days: number, tierFilter: string | null) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const cookieStore = await cookies();
+    const session = cookieStore.get('session')?.value;
 
-    // Check authentication
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    if (!session) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
+    const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    const decodedClaims = await auth.verifySessionCookie(session, true);
+    const userId = decodedClaims.uid;
+
     // Check admin/teacher role
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single() as { data: { role: string | null } | null };
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
 
     if (!userData || !['admin', 'teacher'].includes(userData.role || '')) {
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });

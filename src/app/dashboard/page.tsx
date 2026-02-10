@@ -936,7 +936,7 @@ function DashboardContent() {
     addLocalMessage,
   } = useChat({ tier: selectedPath || undefined });
   const { stats, progress: akuProgress } = useProgress();
-  const { presence, updatePresence } = useRealtime(user?.id);
+  const { presence, updatePresence } = useRealtime(user?.uid);
   const { streak: localStreak, recordActivity } = useLocalStreak();
 
   // Sync stored path with local state
@@ -1020,10 +1020,10 @@ function DashboardContent() {
 
   // Update presence
   useEffect(() => {
-    if (user?.id) {
+    if (user?.uid) {
       updatePresence('chat');
     }
-  }, [user?.id, updatePresence]);
+  }, [user?.uid, updatePresence]);
 
   // Initialize chat with module context if module param is present
   useEffect(() => {

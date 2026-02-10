@@ -2,60 +2,116 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ========================================================================
+    // ════════════════════════════════════════════════════════════════════════════
     // HELPER FUNCTIONS
-    // ========================================================================
+    // ════════════════════════════════════════════════════════════════════════════
 
     // Check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Check if user owns the document
+    // Check if user owns the document (by userId parameter)
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if user owns the document (by resource data field)
+    function isResourceOwner() {
+      return isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Check if incoming request data has matching userId
+    function isRequestOwner() {
+      return isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Get current user's document
+    function getUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Get current user's role
+    function getUserRole() {
+      return getUserDoc().data.role;
     }
 
     // Check if user has admin role
     function isAdmin() {
       return isAuthenticated() &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'teacher', 'instructor'];
+        getUserRole() == 'admin';
     }
 
-    // Check if user has specific tier
+    // Check if user has teacher role (includes instructors)
+    function isTeacher() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        getUserRole() in ['teacher', 'instructor'];
+    }
+
+    // Check if user is admin or teacher
+    function isAdminOrTeacher() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        getUserRole() in ['admin', 'teacher', 'instructor'];
+    }
+
+    // Check if user has specific tier subscription
     function hasTier(tiers) {
       return isAuthenticated() &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tier in tiers;
+        getUserDoc().data.tier in tiers;
     }
 
-    // Validate required fields exist
+    // Validate required fields exist in request data
     function hasRequiredFields(fields) {
       return request.resource.data.keys().hasAll(fields);
     }
 
-    // ========================================================================
-    // USER COLLECTIONS
-    // ========================================================================
-
-    // Users - main profile
-    match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
-      allow delete: if false; // Never allow client deletion
+    // Check if the current user is the teacher of a specific course
+    function isCourseTeacher(courseId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/liveCourses/$(courseId)) &&
+        get(/databases/$(database)/documents/liveCourses/$(courseId)).data.teacherId == request.auth.uid;
     }
 
-    // Learner profiles - learning state
-    match /learnerProfiles/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
+    // Check if user is enrolled in a course
+    function isEnrolledInCourse(courseId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/courseEnrollments/$(request.auth.uid + '_' + courseId));
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // USER COLLECTIONS
+    // ════════════════════════════════════════════════════════════════════════════
+
+    // Users - main profile with role field (admin, teacher, learner)
+    match /users/{userId} {
+      // Users can read their own data; admins/teachers can read all
+      allow read: if isOwner(userId) || isAdminOrTeacher();
+      // Users can create their own profile
+      allow create: if isOwner(userId) &&
+        hasRequiredFields(['email']) &&
+        (!('role' in request.resource.data) || request.resource.data.role == 'learner');
+      // Users can update their own profile; admins can update any
+      // Users cannot change their own role (prevent privilege escalation)
+      allow update: if (isOwner(userId) && !('role' in request.resource.data)) ||
+        (isOwner(userId) && request.resource.data.role == resource.data.role) ||
+        isAdmin();
+      // Never allow client-side deletion (use Admin SDK for account cleanup)
       allow delete: if false;
     }
 
-    // User settings
+    // Learner profiles - learning progress and state
+    match /learnerProfiles/{docId} {
+      allow read: if isResourceOwner() || isAdminOrTeacher();
+      allow create: if isRequestOwner();
+      allow update: if isResourceOwner();
+      allow delete: if false;
+    }
+
+    // User settings - preferences and notification settings
     match /userSettings/{userId} {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId);
@@ -63,120 +119,199 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
-    // ========================================================================
-    // LEARNING COLLECTIONS
-    // ========================================================================
+    // ════════════════════════════════════════════════════════════════════════════
+    // LEARNING PROGRESS COLLECTIONS
+    // ════════════════════════════════════════════════════════════════════════════
 
-    // AKU Progress
+    // AKU Progress - module completion status
     match /akuProgress/{progressId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow create: if isOwner(request.resource.data.userId);
-      allow update: if isOwner(resource.data.userId);
+      allow read: if isResourceOwner() || isAdminOrTeacher();
+      allow create: if isRequestOwner();
+      allow update: if isResourceOwner();
       allow delete: if false;
     }
 
-    // Chat sessions
+    // Chat sessions - AI tutor conversations
     match /chatSessions/{sessionId} {
-      allow read: if isOwner(resource.data.userId);
-      allow create: if isOwner(request.resource.data.userId);
-      allow update: if isOwner(resource.data.userId);
+      allow read: if isResourceOwner();
+      allow create: if isRequestOwner();
+      allow update: if isResourceOwner();
       allow delete: if false;
     }
 
-    // Tutor conversations
+    // Tutor conversations - detailed conversation history
     match /tutorConversations/{convId} {
-      allow read: if isOwner(resource.data.userId);
-      allow create: if isOwner(request.resource.data.userId);
-      allow update: if isOwner(resource.data.userId);
+      allow read: if isResourceOwner();
+      allow create: if isRequestOwner();
+      allow update: if isResourceOwner();
       allow delete: if false;
     }
 
-    // User milestones
+    // User milestones - achievement tracking
     match /userMilestones/{milestoneId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow create: if isOwner(request.resource.data.userId);
-      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isResourceOwner() || isAdmin();
+      allow create: if isRequestOwner();
+      allow update: if isResourceOwner() || isAdmin();
       allow delete: if false;
     }
 
-    // Sandbox sessions
+    // Sandbox sessions - code sandbox state
     match /sandboxSessions/{sessionId} {
-      allow read: if isOwner(resource.data.userId);
-      allow create: if isOwner(request.resource.data.userId);
-      allow update: if isOwner(resource.data.userId);
-      allow delete: if isOwner(resource.data.userId);
+      allow read: if isResourceOwner();
+      allow create: if isRequestOwner();
+      allow update: if isResourceOwner();
+      allow delete: if isResourceOwner();
     }
 
-    // Terminal history
+    // Terminal history - command history
     match /terminalHistory/{historyId} {
-      allow read: if isOwner(resource.data.userId);
-      allow create: if isOwner(request.resource.data.userId);
+      allow read: if isResourceOwner();
+      allow create: if isRequestOwner();
       allow delete: if false;
     }
 
-    // ========================================================================
+    // ════════════════════════════════════════════════════════════════════════════
     // CERTIFICATES & CREDENTIALS
-    // ========================================================================
+    // ════════════════════════════════════════════════════════════════════════════
 
-    // Certificates - public read for verification
+    // Certificates - PUBLIC read for employer verification
     match /certificates/{certId} {
-      allow read: if true; // Public for verification
-      allow create: if isOwner(request.resource.data.userId);
-      allow update: if false; // Only via Admin SDK
-      allow delete: if false;
-    }
-
-    // Certification submissions
-    match /certificationSubmissions/{submissionId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow create: if isOwner(request.resource.data.userId);
-      allow update: if (isOwner(resource.data.userId) && resource.data.status == 'submitted') || isAdmin();
-      allow delete: if false;
-    }
-
-    // Claimable credentials
-    match /claimableCredentials/{credId} {
-      allow read: if isOwner(resource.data.userId);
-      allow create: if false; // Only via Admin SDK
-      allow update: if isOwner(resource.data.userId);
-      allow delete: if false;
-    }
-
-    // ========================================================================
-    // SUBSCRIPTIONS & PAYMENTS
-    // ========================================================================
-
-    // Subscriptions - read only, write via webhooks
-    match /subscriptions/{subId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow write: if false; // Only via Admin SDK (webhooks)
-    }
-
-    // Subscription history
-    match /subscriptionHistory/{historyId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow write: if false; // Only via Admin SDK
-    }
-
-    // Payments
-    match /payments/{paymentId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow write: if false; // Only via Admin SDK
-    }
-
-    // Usage tracking
-    match /usageTracking/{usageId} {
-      allow read: if isOwner(resource.data.userId);
-      allow write: if false; // Only via Admin SDK
-    }
-
-    // ========================================================================
-    // COURSES & ENROLLMENT
-    // ========================================================================
-
-    // Courses - public read
-    match /courses/{courseId} {
+      // Anyone can read certificates (verification by employers/third parties)
       allow read: if true;
+      // Only admins create certificates (via Admin SDK after certification approval)
+      allow create: if false;
+      // Certificates are immutable once issued
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Certification submissions - learner exam/project submissions
+    match /certificationSubmissions/{submissionId} {
+      // Owner can read their submissions; admins can read all for review
+      allow read: if isResourceOwner() || isAdmin();
+      // Learners can create submissions
+      allow create: if isRequestOwner() &&
+        hasRequiredFields(['userId', 'moduleId', 'status']);
+      // Owner can update while in draft/submitted state; admins can grade
+      allow update: if (isResourceOwner() && resource.data.status in ['draft', 'submitted']) ||
+        isAdmin();
+      allow delete: if false;
+    }
+
+    // Claimable credentials - blockchain credential claims
+    match /claimableCredentials/{credId} {
+      allow read: if isResourceOwner();
+      // Only Admin SDK creates these (after certification)
+      allow create: if false;
+      // Owner can claim/update status
+      allow update: if isResourceOwner();
+      allow delete: if false;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // SUBSCRIPTIONS & PAYMENTS (Stripe Integration)
+    // ════════════════════════════════════════════════════════════════════════════
+
+    // Subscriptions - Stripe subscription data (read-only for users)
+    match /subscriptions/{subId} {
+      // Owner can read their subscription; admins can read all
+      allow read: if isResourceOwner() || isAdmin();
+      // ONLY Admin SDK (webhooks) can write - prevents manipulation
+      allow write: if false;
+    }
+
+    // Subscription history - payment history
+    match /subscriptionHistory/{historyId} {
+      allow read: if isResourceOwner() || isAdmin();
+      // Only Admin SDK writes (from webhooks)
+      allow write: if false;
+    }
+
+    // Payments - individual payment records
+    match /payments/{paymentId} {
+      allow read: if isResourceOwner() || isAdmin();
+      // Only Admin SDK writes (from webhooks)
+      allow write: if false;
+    }
+
+    // Usage tracking - API usage and quota tracking
+    match /usageTracking/{usageId} {
+      allow read: if isResourceOwner() || isAdmin();
+      // Only Admin SDK/Cloud Functions write
+      allow write: if false;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // LIVE COURSES & SESSIONS (Teacher Management)
+    // ════════════════════════════════════════════════════════════════════════════
+
+    // Live courses - teacher-managed courses
+    match /liveCourses/{courseId} {
+      // Public read for course catalog
+      allow read: if true;
+      // Teachers can create courses (they become the teacherId)
+      allow create: if isAdminOrTeacher() &&
+        request.resource.data.teacherId == request.auth.uid;
+      // Only course teacher or admin can update
+      allow update: if isAdmin() ||
+        (isTeacher() && resource.data.teacherId == request.auth.uid);
+      // Only admin can delete courses
+      allow delete: if isAdmin();
+    }
+
+    // Live sessions - individual class sessions linked to courses
+    match /liveSessions/{sessionId} {
+      // Public read for session schedule
+      allow read: if true;
+      // Teachers can create sessions for their own courses
+      allow create: if isAdminOrTeacher() &&
+        isCourseTeacher(request.resource.data.courseId);
+      // Course teacher or admin can update
+      allow update: if isAdmin() ||
+        (isTeacher() && isCourseTeacher(resource.data.courseId));
+      // Admin can delete; teacher can delete their own course sessions
+      allow delete: if isAdmin() ||
+        (isTeacher() && isCourseTeacher(resource.data.courseId));
+    }
+
+    // Course enrollments - learner course registrations
+    match /courseEnrollments/{enrollId} {
+      // Owner can read their enrollments; teachers can read for their courses; admin reads all
+      allow read: if isResourceOwner() ||
+        isCourseTeacher(resource.data.courseId) ||
+        isAdmin();
+      // Learners can enroll themselves
+      allow create: if isRequestOwner();
+      // Owner can update enrollment status; teacher/admin can also update
+      allow update: if isResourceOwner() ||
+        isCourseTeacher(resource.data.courseId) ||
+        isAdmin();
+      // No deletion - use status field for cancellation
+      allow delete: if false;
+    }
+
+    // Session enrollments - individual session registrations
+    match /sessionEnrollments/{enrollId} {
+      // Owner can read; course teacher can read for attendance
+      allow read: if (isAuthenticated() && resource.data.studentId == request.auth.uid) ||
+        isAdmin();
+      // Learners can enroll themselves
+      allow create: if isAuthenticated() &&
+        request.resource.data.studentId == request.auth.uid;
+      // Teacher/admin can update attendance status
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // COURSES & CURRICULUM (Static Content)
+    // ════════════════════════════════════════════════════════════════════════════
+
+    // Courses - static curriculum courses
+    match /courses/{courseId} {
+      // Public read for course catalog
+      allow read: if true;
+      // Only admin can modify curriculum
       allow write: if isAdmin();
 
       // Modules subcollection
@@ -192,46 +327,46 @@ service cloud.firestore {
       }
     }
 
-    // Enrollments
+    // General enrollments (for static courses)
     match /enrollments/{enrollmentId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow create: if isOwner(request.resource.data.userId);
-      allow update: if isOwner(resource.data.userId);
+      allow read: if isResourceOwner() || isAdmin();
+      allow create: if isRequestOwner();
+      allow update: if isResourceOwner();
       allow delete: if false;
     }
 
-    // Live sessions - public read
-    match /liveSessions/{sessionId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Session enrollments
-    match /sessionEnrollments/{enrollmentId} {
-      allow read: if isOwner(resource.data.studentId) || isAdmin();
-      allow create: if isOwner(request.resource.data.studentId);
-      allow update: if false;
-      allow delete: if false;
-    }
-
-    // ========================================================================
+    // ════════════════════════════════════════════════════════════════════════════
     // NOTIFICATIONS
-    // ========================================================================
+    // ════════════════════════════════════════════════════════════════════════════
 
     match /notifications/{notificationId} {
-      allow read: if isOwner(resource.data.userId);
-      allow create: if false; // Only via Admin SDK
-      allow update: if isOwner(resource.data.userId); // Mark as read
-      allow delete: if isOwner(resource.data.userId);
+      // Users read their own notifications
+      allow read: if isResourceOwner();
+      // Only Admin SDK/Cloud Functions create notifications
+      allow create: if false;
+      // Users can mark as read/dismiss
+      allow update: if isResourceOwner();
+      // Users can delete their notifications
+      allow delete: if isResourceOwner();
     }
 
-    // ========================================================================
-    // ADMIN ONLY
-    // ========================================================================
+    // ════════════════════════════════════════════════════════════════════════════
+    // ADMIN-ONLY COLLECTIONS
+    // ════════════════════════════════════════════════════════════════════════════
 
-    // Platform settings
+    // Retention emails - email tracking (admin/system only)
+    match /retentionEmails/{docId} {
+      // Only admin can read retention email logs
+      allow read: if isAdmin();
+      // Only Admin SDK (cron jobs) can write
+      allow write: if false;
+    }
+
+    // Platform settings - global configuration
     match /platformSettings/{settingId} {
+      // All authenticated users can read (for feature flags, etc.)
       allow read: if isAuthenticated();
+      // Only admin can modify
       allow write: if isAdmin();
     }
 
@@ -241,16 +376,35 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Analytics - admin only
+    // Analytics - aggregated metrics
     match /analytics/{document=**} {
       allow read: if isAdmin();
-      allow write: if false; // Only via Cloud Functions
+      // Only Cloud Functions write analytics
+      allow write: if false;
     }
 
-    // Daily metrics
+    // Daily metrics - per-user daily stats
     match /dailyMetrics/{date}/users/{userId} {
+      // Users can read their own metrics; admin reads all
       allow read: if isOwner(userId) || isAdmin();
-      allow write: if false; // Only via Cloud Functions
+      // Only Cloud Functions write
+      allow write: if false;
     }
+
+    // Admin audit logs
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // CATCH-ALL DENY RULE
+    // Any collection not explicitly defined above is denied by default
+    // ════════════════════════════════════════════════════════════════════════════
+
+    // Uncomment below to explicitly deny all other paths (recommended for production)
+    // match /{document=**} {
+    //   allow read, write: if false;
+    // }
   }
 }
